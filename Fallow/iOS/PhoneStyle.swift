@@ -7,6 +7,10 @@ enum Haze {
     static let dawn = Color(hex: 0xF2D6BD)
     static let sand = Color(hex: 0xBFA393)
     static let dusk = Color(hex: 0xA69485)
+    /// Earth tones for actions: bark fills, dawn is the label on top of it.
+    static let bark = Color(hex: 0x59514D)
+    static let clay = Color(hex: 0xA6978A)
+    static let soot = Color(hex: 0x262623)
 }
 
 extension View {
@@ -43,9 +47,11 @@ struct PrimaryButton: View {
         Button(action: action) {
             Text(title)
                 .font(FallowType.button)
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Haze.dawn)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .hazeSurface(Capsule())
+                .background(Capsule().fill(Haze.bark))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.1), lineWidth: 1))
+                .shadow(color: Haze.soot.opacity(0.18), radius: 12, y: 5)
                 .contentShape(Capsule())
         }
         .buttonStyle(PressableStyle())
@@ -104,10 +110,10 @@ struct GlassSurface: ViewModifier {
                 .background {
                     shape
                         .fill(.ultraThinMaterial)
-                        .overlay(shape.fill(Color.white.opacity(0.5)))
+                        .overlay(shape.fill(Theme.paper.opacity(0.4)))
                 }
-                .overlay(shape.strokeBorder(Color.white.opacity(0.85), lineWidth: 1))
-                .shadow(color: Color(hex: 0x5C4A32).opacity(0.1), radius: 10, y: 4)
+                .overlay(shape.strokeBorder(Haze.clay.opacity(0.3), lineWidth: 1))
+                .shadow(color: Color(hex: 0x5C4A32).opacity(0.08), radius: 10, y: 4)
         }
     }
 }
