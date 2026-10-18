@@ -104,10 +104,10 @@ struct GlassSurface: ViewModifier {
                 .background {
                     shape
                         .fill(.ultraThinMaterial)
-                        .overlay(shape.fill(Theme.paper.opacity(0.5)))
+                        .overlay(shape.fill(Color.white.opacity(0.5)))
                 }
-                .overlay(shape.strokeBorder(Color.white.opacity(0.6), lineWidth: 1))
-                .shadow(color: Color(hex: 0x5C4A32).opacity(0.07), radius: 10, y: 5)
+                .overlay(shape.strokeBorder(Color.white.opacity(0.85), lineWidth: 1))
+                .shadow(color: Color(hex: 0x5C4A32).opacity(0.1), radius: 10, y: 4)
         }
     }
 }

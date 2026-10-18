@@ -80,7 +80,7 @@ private struct CaptureStep: View {
                 Spacer(minLength: 0)
                 ZStack {
                     Circle()
-                        .fill(store.isRecording ? Theme.ink.opacity(0.85) : Theme.light.opacity(0.9))
+                        .fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7))
                     Image(systemName: store.isRecording ? "stop.fill" : "mic")
                         .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
                         .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
@@ -182,45 +182,57 @@ private struct RefineStep: View {
 
                 VStack(spacing: 8) {
                     ForEach(CreativeState.allCases) { state in
-                        card(state)
+                        ChoiceRow(
+                            title: state.title,
+                            subtitle: state.subtitle,
+                            note: state == store.suggestedState ? "Suggested" : nil,
+                            selected: store.creativeState == state
+                        ) { store.choose(state) }
                     }
                 }
-                .padding(.top, 20)
+                .padding(.top, geo.size.height * 0.07)
 
                 Spacer(minLength: 12)
-
-                PrimaryButton(title: "Continue") { store.continueFromRefine() }
-                    .padding(.bottom, 20)
             }
             .padding(.horizontal, 24)
         }
     }
+}
 
-    private func card(_ state: CreativeState) -> some View {
-        let selected = store.creativeState == state
-        return Button { store.choose(state) } label: {
+/// One answer in a short list. Tapping it is the answer; there is no separate Continue.
+private struct ChoiceRow: View {
+    var title: String
+    var subtitle: String? = nil
+    var note: String? = nil
+    var selected: Bool
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
             HStack(spacing: 14) {
                 Circle()
-                    .fill(selected ? Haze.sand : Theme.rim.opacity(0.6))
+                    .fill(selected ? Haze.sand : Theme.rim)
                     .frame(width: 8, height: 8)
                     .shadow(color: Haze.dawn.opacity(selected ? 0.9 : 0), radius: 6)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(state.title)
+                    Text(title)
                         .font(.system(size: 16, weight: selected ? .semibold : .regular))
                         .foregroundStyle(Theme.ink)
-                    Text(state.subtitle)
-                        .font(FallowType.caption)
-                        .foregroundStyle(Theme.ash)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(FallowType.caption)
+                            .foregroundStyle(Theme.mute)
+                    }
                 }
                 Spacer(minLength: 0)
-                if state == store.suggestedState {
-                    Text("Suggested")
+                if let note {
+                    Text(note)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.ash)
                 }
             }
             .padding(.horizontal, 16)
-            .frame(minHeight: 58)
+            .frame(minHeight: subtitle == nil ? 52 : 58)
             .glass(radius: 16, lit: selected)
             .animation(.easeInOut(duration: 0.35), value: selected)
         }
@@ -245,38 +257,19 @@ private struct DistanceStep: View {
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
                 .padding(.top, 14)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, 16)
 
             Spacer(minLength: 0)
 
-            VStack(spacing: 4) {
+            VStack(spacing: 8) {
                 ForEach(DistanceKind.allCases) { kind in
-                    option(kind)
-                }
-            }
-            .padding(.bottom, 36)
-        }
-        .padding(.horizontal, 28)
-    }
-
-    private func option(_ kind: DistanceKind) -> some View {
-        let selected = store.distance == kind
-        return Button { store.choose(kind) } label: {
-            Text(kind.title)
-                .font(.system(size: 18, weight: selected ? .medium : .regular))
-                .foregroundStyle(selected ? Theme.ink : Theme.mute)
-                .frame(maxWidth: .infinity, minHeight: 54)
-                .background {
-                    if selected {
-                        Color.clear
-                            .hazeSurface(Capsule(), strength: 0.8)
-                            .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    ChoiceRow(title: kind.title, selected: store.distance == kind) {
+                        store.choose(kind)
                     }
                 }
-                .contentShape(Capsule())
-                .animation(.easeInOut(duration: 0.35), value: selected)
+            }
+            .padding(.bottom, 28)
         }
-        .buttonStyle(PressableStyle())
-        .accessibilityAddTraits(selected ? .isSelected : [])
+        .padding(.horizontal, 24)
     }
 }

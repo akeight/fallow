@@ -123,7 +123,7 @@ struct ReturnView: View {
                                 .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
                                 .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
                                 .frame(width: 38, height: 38)
-                                .background(Circle().fill(store.isRecording ? Theme.ink.opacity(0.85) : Theme.light.opacity(0.9)))
+                                .background(Circle().fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7)))
                                 .contentTransition(.symbolEffect(.replace))
                         }
                         .buttonStyle(PressableStyle())

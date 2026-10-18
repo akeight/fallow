@@ -298,10 +298,12 @@ final class PhoneStore {
     func choose(_ state: CreativeState) {
         creativeState = state
         selectionTick += 1
-    }
-
-    func continueFromRefine() {
-        go(.distance, openness: 0.15, duration: 1.4)
+        flowTask?.cancel()
+        flowTask = Task {
+            try? await Task.sleep(nanoseconds: 550_000_000)
+            guard !Task.isCancelled, step == .refine else { return }
+            go(.distance, openness: 0.15, duration: 1.4)
+        }
     }
 
     func choose(_ kind: DistanceKind) {
