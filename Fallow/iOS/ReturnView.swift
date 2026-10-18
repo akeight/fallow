@@ -39,12 +39,7 @@ struct ReturnView: View {
 
                     ZStack {
                         if session.origin == .mac {
-                            if store.handedToMac {
-                                Text("\(session.projectName) is open on your Mac.")
-                                    .font(FallowType.secondary)
-                                    .foregroundStyle(Theme.mute)
-                                    .transition(.fallowText)
-                            } else {
+                            if !store.handedToMac {
                                 PrimaryButton(title: DemoCopy.returnOnMac) { store.returnOnMac() }
                                     .transition(.fallowText)
                             }
@@ -58,9 +53,10 @@ struct ReturnView: View {
 
                 // The prompt and the thought sit on the lower third, under the orb.
                 VStack(spacing: 14) {
-                    Text(session.origin == .mac ? "\(session.projectName) is waiting for you." : DemoCopy.different)
+                    Text(welcomeLine(for: session))
                         .font(FallowType.secondary)
                         .foregroundStyle(Theme.mute)
+                        .contentTransition(.opacity)
 
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: "You left with")
@@ -74,6 +70,13 @@ struct ReturnView: View {
             }
             .padding(.horizontal, 28)
         }
+    }
+
+    private func welcomeLine(for session: FallowSession) -> String {
+        guard session.origin == .mac else { return DemoCopy.different }
+        return store.handedToMac
+            ? "\(session.projectName) is open on your Mac."
+            : "\(session.projectName) is waiting for you."
     }
 
     // MARK: Phone-originated reflection
