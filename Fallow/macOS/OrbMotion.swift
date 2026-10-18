@@ -31,6 +31,13 @@ enum OrbPalette {
     static let core = RGB(r: 1, g: 247 / 255, b: 223 / 255)
     static let warm = RGB(r: 229 / 255, g: 200 / 255, b: 146 / 255)
     static let gold = RGB(r: 216 / 255, g: 183 / 255, b: 122 / 255)
+    static let sky = RGB(r: 0.80, g: 0.81, b: 0.90)
+    static let peach = RGB(r: 0.96, g: 0.80, b: 0.64)
+    static let ember = RGB(r: 1, g: 0.88, b: 0.66)
+    static let amber = RGB(r: 0.62, g: 0.48, b: 0.34)
+    static let glassCore = RGB(r: 0.995, g: 0.955, b: 0.88)
+    static let glassBody = RGB(r: 0.92, g: 0.87, b: 0.82)
+    static let glassEdge = RGB(r: 0.72, g: 0.62, b: 0.52)
 }
 
 struct OrbDraw {
@@ -377,14 +384,17 @@ enum OrbMotion {
 
     static func canvasExtent(phase: SessionPhase, config: OrbTuningConfig) -> Double {
         switch phase {
-        case .dormant, .reentering:
+        case .dormant:
             max(200, config.idleSize * 2.05)
+        case .reentering:
+            max(360, config.returnSize * 1.65)
         case .capture, .classifyStuck, .chooseDistance:
             max(220, config.idleSize * 2.25)
         case .threshold, .holding:
             max(420, config.holdEndSize * 1.42)
         case .resting:
-            max(230, config.restSize * 2.45)
+            // Starts from the full hold shape, then settles inside the same canvas.
+            max(420, config.holdEndSize * 1.42, config.restSize * 2.45)
         case .returnDoorway, .reflecting, .beforeAfter:
             max(360, config.returnSize * 1.65)
         }

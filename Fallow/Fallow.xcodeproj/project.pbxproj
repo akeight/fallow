@@ -24,6 +24,7 @@
 		B10000000000000000000014 /* AuraTransition.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* AuraTransition.wav */; };
 		B10000000000000000000015 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
 		B10000000000000000000017 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
+		B10000000000000000000027 /* RestLandscape.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000020 /* RestLandscape.jpg */; };
 		B10000000000000000000016 /* BreakSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000016 /* BreakSounds.swift */; };
 		B1000000000000000000000C /* SessionPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* SessionPhase.swift */; };
 		B1000000000000000000000D /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
@@ -64,6 +65,7 @@
 		F10000000000000000000014 /* AuraTransition.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraTransition.wav; sourceTree = "<group>"; };
 		F10000000000000000000015 /* MagicalAura.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = MagicalAura.wav; sourceTree = "<group>"; };
 		F10000000000000000000017 /* AuraWoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraWoosh.wav; sourceTree = "<group>"; };
+		F10000000000000000000020 /* RestLandscape.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = RestLandscape.jpg; sourceTree = "<group>"; };
 		F10000000000000000000016 /* BreakSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakSounds.swift; sourceTree = "<group>"; };
 		F1000000000000000000000C /* FallowIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowIOSApp.swift; sourceTree = "<group>"; };
 		F10000000000000000000018 /* FallowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSession.swift; sourceTree = "<group>"; };
@@ -153,6 +155,7 @@
 				F10000000000000000000014 /* AuraTransition.wav */,
 				F10000000000000000000015 /* MagicalAura.wav */,
 				F10000000000000000000017 /* AuraWoosh.wav */,
+				F10000000000000000000020 /* RestLandscape.jpg */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -261,6 +264,7 @@
 				B10000000000000000000014 /* AuraTransition.wav in Resources */,
 				B10000000000000000000015 /* MagicalAura.wav in Resources */,
 				B10000000000000000000017 /* AuraWoosh.wav in Resources */,
+				B10000000000000000000027 /* RestLandscape.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
