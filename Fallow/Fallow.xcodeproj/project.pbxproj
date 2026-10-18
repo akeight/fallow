@@ -38,13 +38,29 @@
 		B1000000000000000000001D /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
 		B1000000000000000000001E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* RootView.swift */; };
 		B1000000000000000000001F /* RestingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001A /* RestingView.swift */; };
-		B10000000000000000000020 /* NudgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001B /* NudgeView.swift */; };
-		B10000000000000000000021 /* ReturnHandoffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001C /* ReturnHandoffView.swift */; };
-		B10000000000000000000022 /* QuietOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001D /* QuietOrb.swift */; };
 		B10000000000000000000023 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
 		B10000000000000000000024 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
 		B10000000000000000000025 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
 		B10000000000000000000026 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
+		B10000000000000000000030 /* PhoneStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000030 /* PhoneStore.swift */; };
+		B10000000000000000000031 /* Leaves.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000031 /* Leaves.swift */; };
+		B10000000000000000000032 /* Atmosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000032 /* Atmosphere.swift */; };
+		B10000000000000000000033 /* PhoneStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000033 /* PhoneStyle.swift */; };
+		B10000000000000000000034 /* FallowTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000034 /* FallowTabBar.swift */; };
+		B10000000000000000000035 /* PhoneOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000035 /* PhoneOrb.swift */; };
+		B10000000000000000000036 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000036 /* HomeView.swift */; };
+		B10000000000000000000037 /* PauseFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000037 /* PauseFlowView.swift */; };
+		B10000000000000000000038 /* ReleaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000038 /* ReleaseView.swift */; };
+		B10000000000000000000039 /* ReturnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000039 /* ReturnView.swift */; };
+		B1000000000000000000003A /* PastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003A /* PastView.swift */; };
+		B1000000000000000000003B /* VoiceCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCapture.swift */; };
+		B10000000000000000000050 /* SceneWall.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000050 /* SceneWall.jpg */; };
+		B10000000000000000000051 /* SceneThreshold.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000051 /* SceneThreshold.jpg */; };
+		B10000000000000000000052 /* SceneValley.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000052 /* SceneValley.jpg */; };
+		B10000000000000000000053 /* SceneMeadow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000053 /* SceneMeadow.jpg */; };
+		B10000000000000000000054 /* SceneWater.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000054 /* SceneWater.jpg */; };
+		B10000000000000000000055 /* Leaf1.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000055 /* Leaf1.png */; };
+		B10000000000000000000056 /* Leaf2.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000056 /* Leaf2.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,13 +87,29 @@
 		F10000000000000000000018 /* FallowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSession.swift; sourceTree = "<group>"; };
 		F10000000000000000000019 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F1000000000000000000001A /* RestingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestingView.swift; sourceTree = "<group>"; };
-		F1000000000000000000001B /* NudgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeView.swift; sourceTree = "<group>"; };
-		F1000000000000000000001C /* ReturnHandoffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnHandoffView.swift; sourceTree = "<group>"; };
-		F1000000000000000000001D /* QuietOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuietOrb.swift; sourceTree = "<group>"; };
 		F1000000000000000000001E /* FallowFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowFont.swift; sourceTree = "<group>"; };
 		F1000000000000000000001F /* CultVP-Branding.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CultVP-Branding.otf"; sourceTree = "<group>"; };
 		F1000000000000000000000D /* FALLOW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FALLOW.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F1000000000000000000000E /* FALLOW Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FALLOW Companion.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F10000000000000000000030 /* PhoneStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneStore.swift; sourceTree = "<group>"; };
+		F10000000000000000000031 /* Leaves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaves.swift; sourceTree = "<group>"; };
+		F10000000000000000000032 /* Atmosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Atmosphere.swift; sourceTree = "<group>"; };
+		F10000000000000000000033 /* PhoneStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneStyle.swift; sourceTree = "<group>"; };
+		F10000000000000000000034 /* FallowTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowTabBar.swift; sourceTree = "<group>"; };
+		F10000000000000000000035 /* PhoneOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneOrb.swift; sourceTree = "<group>"; };
+		F10000000000000000000036 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		F10000000000000000000037 /* PauseFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PauseFlowView.swift; sourceTree = "<group>"; };
+		F10000000000000000000038 /* ReleaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseView.swift; sourceTree = "<group>"; };
+		F10000000000000000000039 /* ReturnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnView.swift; sourceTree = "<group>"; };
+		F1000000000000000000003A /* PastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastView.swift; sourceTree = "<group>"; };
+		F1000000000000000000003B /* VoiceCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCapture.swift; sourceTree = "<group>"; };
+		F10000000000000000000050 /* SceneWall.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneWall.jpg; sourceTree = "<group>"; };
+		F10000000000000000000051 /* SceneThreshold.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneThreshold.jpg; sourceTree = "<group>"; };
+		F10000000000000000000052 /* SceneValley.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneValley.jpg; sourceTree = "<group>"; };
+		F10000000000000000000053 /* SceneMeadow.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneMeadow.jpg; sourceTree = "<group>"; };
+		F10000000000000000000054 /* SceneWater.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneWater.jpg; sourceTree = "<group>"; };
+		F10000000000000000000055 /* Leaf1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf1.png; sourceTree = "<group>"; };
+		F10000000000000000000056 /* Leaf2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf2.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -166,9 +198,19 @@
 				F1000000000000000000000C /* FallowIOSApp.swift */,
 				F10000000000000000000019 /* RootView.swift */,
 				F1000000000000000000001A /* RestingView.swift */,
-				F1000000000000000000001B /* NudgeView.swift */,
-				F1000000000000000000001C /* ReturnHandoffView.swift */,
-				F1000000000000000000001D /* QuietOrb.swift */,
+				F10000000000000000000030 /* PhoneStore.swift */,
+				F10000000000000000000031 /* Leaves.swift */,
+				F10000000000000000000032 /* Atmosphere.swift */,
+				F10000000000000000000033 /* PhoneStyle.swift */,
+				F10000000000000000000034 /* FallowTabBar.swift */,
+				F10000000000000000000035 /* PhoneOrb.swift */,
+				F10000000000000000000036 /* HomeView.swift */,
+				F10000000000000000000037 /* PauseFlowView.swift */,
+				F10000000000000000000038 /* ReleaseView.swift */,
+				F10000000000000000000039 /* ReturnView.swift */,
+				F1000000000000000000003A /* PastView.swift */,
+				F1000000000000000000003B /* VoiceCapture.swift */,
+				G10000000000000000000008 /* Resources */,
 			);
 			path = iOS;
 			sourceTree = "<group>";
@@ -180,6 +222,20 @@
 				F1000000000000000000000E /* FALLOW Companion.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000008 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000050 /* SceneWall.jpg */,
+				F10000000000000000000051 /* SceneThreshold.jpg */,
+				F10000000000000000000052 /* SceneValley.jpg */,
+				F10000000000000000000053 /* SceneMeadow.jpg */,
+				F10000000000000000000054 /* SceneWater.jpg */,
+				F10000000000000000000055 /* Leaf1.png */,
+				F10000000000000000000056 /* Leaf2.png */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -273,6 +329,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				B10000000000000000000026 /* CultVP-Branding.otf in Resources */,
+				B10000000000000000000050 /* SceneWall.jpg in Resources */,
+				B10000000000000000000051 /* SceneThreshold.jpg in Resources */,
+				B10000000000000000000052 /* SceneValley.jpg in Resources */,
+				B10000000000000000000053 /* SceneMeadow.jpg in Resources */,
+				B10000000000000000000054 /* SceneWater.jpg in Resources */,
+				B10000000000000000000055 /* Leaf1.png in Resources */,
+				B10000000000000000000056 /* Leaf2.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,9 +382,18 @@
 				B1000000000000000000000F /* FallowIOSApp.swift in Sources */,
 				B1000000000000000000001E /* RootView.swift in Sources */,
 				B1000000000000000000001F /* RestingView.swift in Sources */,
-				B10000000000000000000020 /* NudgeView.swift in Sources */,
-				B10000000000000000000021 /* ReturnHandoffView.swift in Sources */,
-				B10000000000000000000022 /* QuietOrb.swift in Sources */,
+				B10000000000000000000030 /* PhoneStore.swift in Sources */,
+				B10000000000000000000031 /* Leaves.swift in Sources */,
+				B10000000000000000000032 /* Atmosphere.swift in Sources */,
+				B10000000000000000000033 /* PhoneStyle.swift in Sources */,
+				B10000000000000000000034 /* FallowTabBar.swift in Sources */,
+				B10000000000000000000035 /* PhoneOrb.swift in Sources */,
+				B10000000000000000000036 /* HomeView.swift in Sources */,
+				B10000000000000000000037 /* PauseFlowView.swift in Sources */,
+				B10000000000000000000038 /* ReleaseView.swift in Sources */,
+				B10000000000000000000039 /* ReturnView.swift in Sources */,
+				B1000000000000000000003A /* PastView.swift in Sources */,
+				B1000000000000000000003B /* VoiceCapture.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -432,6 +504,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed on this iPhone so the thought can rest in your own words.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -461,6 +535,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed on this iPhone so the thought can rest in your own words.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

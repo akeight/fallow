@@ -115,6 +115,15 @@ enum OrbMotion {
         return 0.62 + smooth(u) * 0.38
     }
 
+    /// Inner light gathers with the voice. Applied after smoothing so it can follow speech.
+    static func applyVoice(_ draw: inout OrbDraw, level: Double) {
+        let v = min(1, max(0, level))
+        draw.lightFraction *= 1 + 0.35 * v
+        draw.lightOpacity = min(1, draw.lightOpacity + 0.18 * v)
+        draw.lightPulse = min(1.15, draw.lightPulse + 0.12 * v)
+        draw.breathScale *= 1 + 0.025 * v
+    }
+
     static func smooth(_ t: Double) -> Double {
         let x = min(1, max(0, t))
         return x * x * (3 - 2 * x)
