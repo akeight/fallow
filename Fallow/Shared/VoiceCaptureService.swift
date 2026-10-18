@@ -53,6 +53,11 @@ final class VoiceCaptureService {
     @ObservationIgnored private var finalText: String?
     @ObservationIgnored private var recognitionEnded = false
     @ObservationIgnored private var finalWaiter: CheckedContinuation<Void, Never>?
+    @ObservationIgnored private var onDevice = false
+    /// The recognizer itself could not run, as opposed to hearing nothing.
+    @ObservationIgnored private var recognizerFailed = false
+    /// Callbacks from a replaced recognition task are ignored.
+    @ObservationIgnored private var generation = 0
 
     var isListening: Bool { state == .listening }
 
@@ -80,6 +85,7 @@ final class VoiceCaptureService {
         partialTranscript = ""
         finalText = nil
         recognitionEnded = false
+        recognizerFailed = false
         state = .requestingPermission
 
         guard let recognizer, recognizer.isAvailable else {
@@ -104,36 +110,14 @@ final class VoiceCaptureService {
             try session.setActive(true, options: .notifyOthersOnDeactivation)
             #endif
 
-            let request = SFSpeechAudioBufferRecognitionRequest()
-            request.shouldReportPartialResults = true
-            request.addsPunctuation = true
-            if recognizer.supportsOnDeviceRecognition {
-                request.requiresOnDeviceRecognition = true
-            }
-            self.request = request
-
-            let input = engine.inputNode
-            let format = input.outputFormat(forBus: 0)
-            guard format.sampleRate > 0 else {
+            guard engine.inputNode.outputFormat(forBus: 0).sampleRate > 0 else {
                 teardown()
                 fail(.recognizerUnavailable)
                 return
             }
-            input.removeTap(onBus: 0)
-            input.installTap(onBus: 0, bufferSize: 1024, format: format, block: Self.tap(request: request) { [weak self] value in
-                Task { @MainActor in self?.receive(level: value) }
-            })
+            beginRecognition(with: recognizer, onDevice: recognizer.supportsOnDeviceRecognition)
             engine.prepare()
             try engine.start()
-
-            task = recognizer.recognitionTask(with: request, resultHandler: Self.results(
-                text: { [weak self] text, isFinal in
-                    Task { @MainActor in self?.receive(text: text, isFinal: isFinal) }
-                },
-                ended: { [weak self] in
-                    Task { @MainActor in self?.recognitionDidEnd() }
-                }
-            ))
             state = .listening
         } catch {
             teardown()
@@ -156,7 +140,7 @@ final class VoiceCaptureService {
 
         let text = (finalText ?? partialTranscript).trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
-            fail(.noSpeech)
+            fail(recognizerFailed ? .recognizerUnavailable : .noSpeech)
             return nil
         }
         state = .complete(text)
@@ -179,6 +163,41 @@ final class VoiceCaptureService {
     }
 
     // MARK: Private
+
+    /// A fresh request and tap. The engine keeps running when this replaces an earlier task.
+    private func beginRecognition(with recognizer: SFSpeechRecognizer, onDevice: Bool) {
+        generation += 1
+        let current = generation
+        self.onDevice = onDevice
+        recognitionEnded = false
+
+        let request = SFSpeechAudioBufferRecognitionRequest()
+        request.shouldReportPartialResults = true
+        request.addsPunctuation = true
+        request.requiresOnDeviceRecognition = onDevice
+        self.request = request
+
+        let input = engine.inputNode
+        input.removeTap(onBus: 0)
+        input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0), block: Self.tap(request: request) { [weak self] value in
+            Task { @MainActor in self?.receive(level: value) }
+        })
+
+        task = recognizer.recognitionTask(with: request, resultHandler: Self.results(
+            text: { [weak self] text, isFinal in
+                Task { @MainActor in
+                    guard self?.generation == current else { return }
+                    self?.receive(text: text, isFinal: isFinal)
+                }
+            },
+            ended: { [weak self] unavailable in
+                Task { @MainActor in
+                    guard self?.generation == current else { return }
+                    self?.recognitionDidEnd(unavailable: unavailable)
+                }
+            }
+        ))
+    }
 
     private func fail(_ error: VoiceCaptureError) {
         state = .failed(error)
@@ -204,8 +223,16 @@ final class VoiceCaptureService {
         }
     }
 
-    private func recognitionDidEnd() {
+    private func recognitionDidEnd(unavailable: Bool = false) {
         guard !recognitionEnded else { return }
+        // A device can report on-device support without the model installed. Before any words
+        // have arrived, retry once with Apple's speech service instead of reporting silence.
+        if onDevice, state == .listening, partialTranscript.isEmpty, let recognizer, recognizer.isAvailable {
+            task?.cancel()
+            beginRecognition(with: recognizer, onDevice: false)
+            return
+        }
+        if unavailable, partialTranscript.isEmpty { recognizerFailed = true }
         recognitionEnded = true
         resumeFinalWaiter()
         if state == .listening {
@@ -280,14 +307,16 @@ final class VoiceCaptureService {
 
     nonisolated private static func results(
         text: @escaping @Sendable (String, Bool) -> Void,
-        ended: @escaping @Sendable () -> Void
+        ended: @escaping @Sendable (_ unavailable: Bool) -> Void
     ) -> (SFSpeechRecognitionResult?, Error?) -> Void {
         { result, error in
             if let result {
                 text(result.bestTranscription.formattedString, result.isFinal)
             }
-            if error != nil {
-                ended()
+            if let error {
+                // The speech framework's own domain means the recognizer failed to run (for example,
+                // no model on this device, as in the Simulator). Silence comes from a different domain.
+                ended((error as NSError).domain == "kLSRErrorDomain")
             }
         }
     }
