@@ -20,14 +20,15 @@ final class SessionModel {
     var phase: OrbPhase = .dormant
     /// The Mac's session record. The orb phase above is only how it is being shown.
     var current = FallowSession(originDevice: .mac, phase: .dormant)
-    var thoughtIsCaptured = false
     /// Raw recession, 0 through 1. The veil shapes this; it is not pre-curved.
     var softness: Double = 0
     var showsLens = false
     var holdDuration = 1.8
     var reentryDuration = 0.9
-    /// Smoothed microphone level, 0 through 1. Only the phone sets it.
+    /// Smoothed microphone level, 0 through 1.
     var voiceLevel = 0.0
+    /// The microphone is open. Under Reduce Motion the orb holds a still gather instead of following the level.
+    var isListening = false
     /// Increments only when a hold completes, so an early release never settles.
     var settleID = 0
     /// Increments when the return entrance should play again.
@@ -77,17 +78,21 @@ final class SessionModel {
         }
     }
 
-    func revealThought() {
-        thought = DemoCopy.unresolved
-        thoughtIsCaptured = true
+    /// Keeps the whole note and places its concise thought in the card for editing.
+    func captureVoice(raw: String, distilled: String?) {
+        current.captureVoice(raw: raw, distilled: distilled)
+        current.phase = .capturing
+    }
+
+    func captureText(_ text: String) {
+        current.captureText(text)
+        current.phase = .capturing
     }
 
     func confirmThought() {
-        if thought.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            thought = DemoCopy.unresolved
-        }
-        thoughtIsCaptured = true
-        current.capture(thought)
+        let text = thought.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        current.confirmCapture(text)
         phase = .classifyStuck
     }
 
@@ -201,7 +206,6 @@ final class SessionModel {
             self.phase = .dormant
         case .capture:
             thought = DemoCopy.unresolved
-            thoughtIsCaptured = true
             softness = 0
             showsLens = false
             self.phase = .capture
@@ -259,7 +263,6 @@ final class SessionModel {
         breakCue?(.stop)
         cancelMotion()
         showsLens = false
-        thoughtIsCaptured = false
         current = FallowSession(originDevice: .mac, phase: .dormant)
         let from = softness
         phase = .dormant

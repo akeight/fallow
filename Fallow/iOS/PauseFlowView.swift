@@ -47,22 +47,21 @@ private struct CaptureStep: View {
             Spacer(minLength: 0)
 
             VStack(spacing: 14) {
-                if store.isRecording {
-                    Text(store.voice.transcript.isEmpty ? " " : store.voice.transcript)
-                        .font(FallowType.process)
-                        .foregroundStyle(Theme.mute)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .truncationMode(.head)
-                        .frame(minHeight: 44, alignment: .bottom)
-                        .animation(.easeOut(duration: 0.3), value: store.voice.transcript)
-                        .transition(.fallowText)
-                }
+                status
+                    .frame(minHeight: 66, alignment: .bottom)
 
                 field
 
-                QuietButton(title: store.isRecording ? "Cancel" : "Type instead") {
-                    store.isRecording ? store.cancelFlow() : store.typeInstead()
+                VStack(spacing: 0) {
+                    QuietButton(title: store.isRecording ? "Cancel" : "Type instead") {
+                        store.isRecording ? store.cancelListening() : store.typeInstead()
+                    }
+                    .disabled(store.isGathering)
+                    #if DEBUG
+                    if !store.isRecording && !store.isGathering {
+                        QuietButton(title: "Use the demo note", color: Theme.ash) { store.useDemoNote() }
+                    }
+                    #endif
                 }
             }
             .padding(.bottom, store.isRecording ? 40 : 96)
@@ -70,10 +69,40 @@ private struct CaptureStep: View {
         .padding(.horizontal, 28)
     }
 
+    /// Only the latest words while listening; older ones fade away so the screen stays calm.
+    @ViewBuilder
+    private var status: some View {
+        if store.isRecording {
+            Text(store.voice.recentTranscript.isEmpty ? " " : store.voice.recentTranscript)
+                .font(FallowType.process)
+                .foregroundStyle(Theme.mute)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .truncationMode(.head)
+                .mask(LinearGradient(colors: [.clear, .black, .black], startPoint: .top, endPoint: .center))
+                .animation(.easeOut(duration: 0.3), value: store.voice.recentTranscript)
+                .accessibilityHidden(true)
+                .transition(.fallowText)
+        } else if let error = store.voiceError {
+            Text(error.message)
+                .font(FallowType.secondary)
+                .foregroundStyle(Theme.mute)
+                .multilineTextAlignment(.center)
+                .transition(.fallowText)
+        }
+    }
+
+    private var label: String {
+        if store.isRecording { return DemoCopy.listening }
+        if store.isGathering { return DemoCopy.gathering }
+        if store.voiceError != nil { return DemoCopy.tryAgain }
+        return "Speak it, and let it out"
+    }
+
     private var field: some View {
         Button { store.toggleRecording() } label: {
             HStack(spacing: 12) {
-                Text(store.isRecording ? "Listening" : "Speak it, and let it out")
+                Text(label)
                     .font(FallowType.secondary)
                     .foregroundStyle(store.isRecording ? Theme.ink : Theme.mute)
                     .contentTransition(.opacity)
@@ -94,13 +123,21 @@ private struct CaptureStep: View {
             .glass(radius: 26, lit: store.isRecording)
         }
         .buttonStyle(PressableStyle())
+        .disabled(store.isGathering)
         .accessibilityLabel(store.isRecording ? "Stop listening" : "Speak your thought")
+        .accessibilityValue(store.isRecording ? "Recording" : "")
     }
 }
 
+/// After voice, the carried thought is the object; the full note sits behind a quiet link.
+/// After typing, the editor comes first.
 private struct TranscriptStep: View {
     @Bindable var store: PhoneStore
     @FocusState private var focused: Bool
+    @State private var editing = false
+    @State private var showsNote = false
+
+    private var spoken: Bool { store.session?.captureMethod == .voice }
 
     var body: some View {
         GeometryReader { geo in
@@ -111,34 +148,39 @@ private struct TranscriptStep: View {
                 }
                 .padding(.top, 4)
 
-                Eyebrow(text: store.focusTyping ? "What are you carrying?" : "You’re carrying")
+                Eyebrow(text: spoken ? DemoCopy.carryingVoice : (store.focusTyping ? "What are you carrying?" : "You’re carrying"))
                     .padding(.top, geo.size.height * 0.26)
 
-                ZStack(alignment: .topLeading) {
-                    if store.draft.isEmpty {
-                        Text("Write it the way it sounds in your head.")
-                            .font(FallowType.process)
-                            .foregroundStyle(Theme.ash)
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
-                            .allowsHitTesting(false)
+                Group {
+                    if spoken && !editing {
+                        carried
+                    } else {
+                        editor
                     }
-                    TextEditor(text: $store.draft)
-                        .font(FallowType.process)
-                        .foregroundStyle(Theme.ink)
-                        .lineSpacing(5)
-                        .scrollContentBackground(.hidden)
-                        .focused($focused)
                 }
-                .frame(height: 130)
-                .padding(14)
-                .glass(radius: 20)
                 .padding(.top, 14)
+
+                if spoken {
+                    HStack(spacing: 4) {
+                        if !editing {
+                            QuietButton(title: DemoCopy.edit) {
+                                editing = true
+                                focused = true
+                            }
+                        }
+                        if store.session?.hasFullNote == true {
+                            QuietButton(title: DemoCopy.viewFullNote, color: Theme.ash) { showsNote = true }
+                        }
+                    }
+                    .padding(.top, 6)
+                }
 
                 Spacer(minLength: 16)
 
                 VStack(spacing: 6) {
                     PrimaryButton(title: "Continue") { store.continueFromTranscript() }
+                        .disabled(isEmpty)
+                        .opacity(isEmpty ? 0.5 : 1)
                     Button { store.rerecord() } label: {
                         Label("Say it again", systemImage: "mic")
                             .font(FallowType.quietButton)
@@ -155,6 +197,71 @@ private struct TranscriptStep: View {
         .onAppear {
             if store.focusTyping { focused = true }
         }
+        .sheet(isPresented: $showsNote) {
+            FullNoteSheet(text: store.session?.rawTranscript ?? "")
+        }
+    }
+
+    private var isEmpty: Bool {
+        store.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var carried: some View {
+        ThoughtText(text: store.draft)
+            .frame(maxWidth: .infinity, minHeight: 102, alignment: .topLeading)
+            .padding(20)
+            .glass(radius: 20)
+    }
+
+    private var editor: some View {
+        ZStack(alignment: .topLeading) {
+            if store.draft.isEmpty {
+                Text("Write it the way it sounds in your head.")
+                    .font(FallowType.process)
+                    .foregroundStyle(Theme.ash)
+                    .padding(.top, 8)
+                    .padding(.leading, 5)
+                    .allowsHitTesting(false)
+            }
+            TextEditor(text: $store.draft)
+                .font(FallowType.process)
+                .foregroundStyle(Theme.ink)
+                .lineSpacing(5)
+                .scrollContentBackground(.hidden)
+                .focused($focused)
+        }
+        .frame(height: 130)
+        .padding(14)
+        .glass(radius: 20)
+    }
+}
+
+/// The whole spoken note, as source material. Read-only and selectable.
+private struct FullNoteSheet: View {
+    var text: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Eyebrow(text: DemoCopy.fullNote)
+                Spacer()
+                QuietButton(title: "Done") { dismiss() }
+            }
+            ScrollView {
+                Text(text)
+                    .font(FallowType.process)
+                    .foregroundStyle(Theme.ink)
+                    .lineSpacing(5)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 12)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 20)
+        .background(Theme.canvas)
+        .presentationDetents([.medium, .large])
     }
 }
 

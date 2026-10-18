@@ -6,7 +6,12 @@ struct FallowSession: Equatable, Codable, Identifiable {
     let id: UUID
 
     var projectName: String?
+    /// The concise thread FALLOW carries through rest and return. Always editable.
     var unresolvedThought: String
+    /// The complete speech-to-text result, kept as source material.
+    /// Never shown on Home, Rest, Return, or Past; only behind "View full note".
+    var rawTranscript: String?
+    var captureMethod: CaptureMethod
 
     /// Nil until chosen. A low-confidence interpretation also leaves it nil.
     var creativeState: CreativeState?
@@ -37,6 +42,8 @@ struct FallowSession: Equatable, Codable, Identifiable {
         id: UUID = UUID(),
         projectName: String? = nil,
         unresolvedThought: String = "",
+        rawTranscript: String? = nil,
+        captureMethod: CaptureMethod = .text,
         creativeState: CreativeState? = nil,
         difficultyDisengaging: Bool = false,
         distance: FallowDistance? = nil,
@@ -55,6 +62,8 @@ struct FallowSession: Equatable, Codable, Identifiable {
         self.id = id
         self.projectName = projectName
         self.unresolvedThought = unresolvedThought
+        self.rawTranscript = rawTranscript
+        self.captureMethod = captureMethod
         self.creativeState = creativeState
         self.difficultyDisengaging = difficultyDisengaging
         self.distance = distance
@@ -84,6 +93,12 @@ struct FallowSession: Equatable, Codable, Identifiable {
         reframedThought ?? returnedThought
     }
 
+    /// The spoken note says more than the carried thought, so it is worth offering.
+    var hasFullNote: Bool {
+        guard let rawTranscript else { return false }
+        return rawTranscript != unresolvedThought
+    }
+
     var lastTouched: Date {
         completedAt ?? returnedAt ?? releasedAt ?? startedAt
     }
@@ -92,8 +107,26 @@ struct FallowSession: Equatable, Codable, Identifiable {
 // MARK: - Transitions
 
 extension FallowSession {
-    mutating func capture(_ thought: String) {
+    mutating func captureText(_ thought: String) {
         unresolvedThought = thought
+        rawTranscript = nil
+        captureMethod = .text
+        phase = .interpreting
+    }
+
+    /// The person accepts the carried thought, edited or not. A spoken note is kept as it was.
+    mutating func confirmCapture(_ thought: String) {
+        unresolvedThought = thought
+        if captureMethod == .text { rawTranscript = nil }
+        phase = .interpreting
+    }
+
+    /// Keeps the whole spoken note and carries forward the distilled thread, or the note itself
+    /// when distillation had nothing to offer. Re-recording calls this again; nothing else replaces the note.
+    mutating func captureVoice(raw: String, distilled: String?) {
+        rawTranscript = raw
+        unresolvedThought = distilled ?? raw
+        captureMethod = .voice
         phase = .interpreting
     }
 
@@ -204,6 +237,12 @@ enum SessionPhase: String, Equatable, Codable {
 enum OriginDevice: String, Equatable, Codable {
     case mac
     case iPhone
+}
+
+/// How the thought arrived. Voice and typing fill the same `unresolvedThought`.
+enum CaptureMethod: String, Equatable, Codable {
+    case voice
+    case text
 }
 
 /// The return does not assume the break worked.

@@ -164,7 +164,7 @@ struct ReturnView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     ZStack(alignment: .topLeading) {
                         if text.wrappedValue.isEmpty {
-                            Text(store.isRecording ? "Listening…" : "Say it, or write it.")
+                            Text(store.isRecording ? DemoCopy.listening : (store.voiceError?.message ?? "Say it, or write it."))
                                 .font(FallowType.process)
                                 .foregroundStyle(Theme.ash)
                                 .padding(.top, 8)
@@ -193,6 +193,7 @@ struct ReturnView: View {
                         }
                         .buttonStyle(PressableStyle())
                         .accessibilityLabel(store.isRecording ? "Stop listening" : "Speak it")
+                        .accessibilityValue(store.isRecording ? "Recording" : "")
                     }
                 }
                 .padding(14)

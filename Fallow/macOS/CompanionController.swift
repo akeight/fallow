@@ -262,7 +262,7 @@ final class CompanionController {
         case .dormant, .reentering:
             return NSSize(width: homeSide, height: homeSide)
         case .capture:
-            return session.thoughtIsCaptured ? NSSize(width: 480, height: 540) : NSSize(width: 480, height: 500)
+            return NSSize(width: 480, height: 600)
         case .classifyStuck:
             return NSSize(width: 480, height: 680)
         case .chooseDistance:
