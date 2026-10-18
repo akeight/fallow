@@ -84,7 +84,10 @@ struct OrbView: View {
     }
 
     private func withVoice(_ draw: OrbDraw) -> OrbDraw {
-        guard session.phase == .capture else { return draw }
+        switch session.phase {
+        case .capture, .returnDoorway, .reflecting: break
+        default: return draw
+        }
         let level = reduceMotion ? (session.isListening ? 0.3 : 0) : session.voiceLevel
         guard level > 0.001 else { return draw }
         var voiced = draw
