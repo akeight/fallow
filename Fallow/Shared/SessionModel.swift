@@ -28,6 +28,8 @@ final class SessionModel {
     var showsLens = false
     var holdDuration = 1.8
     var reentryDuration = 0.9
+    /// Smoothed microphone level, 0 through 1. Only the phone sets it.
+    var voiceLevel = 0.0
     /// Increments only when a hold completes, so an early release never settles.
     var settleID = 0
     /// Increments when the return entrance should play again.

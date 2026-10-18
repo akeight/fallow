@@ -106,20 +106,6 @@ final class OrbTuningConfig {
         lightSettlingDuration = OrbTuningDefaults.lightSettlingDuration
     }
 
-    /// A smaller, slower stone for the phone. Does not change the Mac defaults.
-    func applyQuietCompanion() {
-        restSize = 140
-        restBreathDuration = 12
-        restGlowOpacity = 0.85
-        returnSize = 134
-        returnDuration = 1.6
-        breathAmplitude = 0.01
-        deformationAmount = 0.16
-        deformationSpeed = 0.015
-        lightOpacity = 0.7
-        lightBlur = 18
-    }
-
     func swiftSource() -> String {
         """
         config.idleSize = \(n(idleSize))

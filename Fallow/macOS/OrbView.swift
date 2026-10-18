@@ -36,7 +36,7 @@ struct OrbView: View {
                 laggedEase: lagged
             )
             let holding: Bool = if case .holding = session.phase { true } else { false }
-            let draw = pose.follow(target, now: now, tau: holding ? 0.28 : 1.05, reduced: reduceMotion)
+            let draw = withVoice(pose.follow(target, now: now, tau: holding ? 0.28 : 1.05, reduced: reduceMotion))
             OrbCanvas(draw: draw, liftsForDarkDesktop: colorScheme == .dark)
                 .frame(width: CGFloat(target.canvas), height: CGFloat(target.canvas))
         }
@@ -81,6 +81,13 @@ struct OrbView: View {
         }
         }
         .accessibilityLabel("FALLOW")
+    }
+
+    private func withVoice(_ draw: OrbDraw) -> OrbDraw {
+        guard session.phase == .capture, session.voiceLevel > 0.001 else { return draw }
+        var voiced = draw
+        OrbMotion.applyVoice(&voiced, level: session.voiceLevel)
+        return voiced
     }
 }
 

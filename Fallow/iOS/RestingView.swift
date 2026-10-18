@@ -1,54 +1,56 @@
 import SwiftUI
 
+/// The Fallow state. Nothing to do here, which is the point: close the app.
+/// Title and the quiet line sit on either side of the orb, balanced on the thirds.
 struct RestingView: View {
-    var session: FallowSession
-    var onSpacePassed: () -> Void
+    var store: PhoneStore
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            FallowWordmark(size: 32)
-                .padding(.top, 28)
+        let session = store.active
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    HStack {
+                        CornerButton(systemName: "chevron.down", label: "Close", color: Theme.mute.opacity(0.7)) {
+                            store.closeRest()
+                        }
+                        Spacer()
+                    }
+                    .padding(.top, 4)
 
-            Text("\(session.projectName) is resting.")
-                .font(FallowType.screenTitle)
-                .foregroundStyle(Theme.ink)
-                .padding(.top, 124)
+                    VStack(spacing: 12) {
+                        Text(DemoCopy.itsHere)
+                            .font(FallowType.display(34))
+                            .foregroundStyle(Theme.ink)
+                        Eyebrow(text: DemoCopy.letItBe)
+                            .frame(maxWidth: 200)
+                    }
+                    .padding(.top, geo.size.height * 0.14)
 
-            Text("You left with")
-                .font(FallowType.caption)
-                .foregroundStyle(Theme.mute)
-                .padding(.top, 32)
+                    Spacer(minLength: 0)
+                }
 
-            Text(session.unresolvedThought)
-                .font(FallowType.process)
-                .foregroundStyle(Theme.ink)
-                .lineSpacing(6)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 12)
-
-            Text(session.distance.title)
-                .font(FallowType.caption)
-                .foregroundStyle(Theme.ash)
-                .padding(.top, 20)
-
-            QuietOrb()
-                .frame(maxWidth: .infinity)
-
-            Spacer(minLength: 16)
-
-            Button("Some time has passed", action: onSpacePassed)
-                .buttonStyle(.plain)
-                .font(FallowType.quietButton)
-                .foregroundStyle(Theme.mute)
-                .frame(minHeight: 44, alignment: .leading)
-                .padding(.bottom, 8)
+                VStack(spacing: 14) {
+                    if let line = session?.creativeState.restLine {
+                        Text(line)
+                            .font(FallowType.secondary)
+                            .foregroundStyle(Color.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(3)
+                            .frame(maxWidth: 270)
+                    }
+                    HStack(spacing: 8) {
+                        Text("Resting here")
+                        Text("·").accessibilityHidden(true)
+                        Text(store.restScene.title)
+                    }
+                    .font(FallowType.caption)
+                    .foregroundStyle(Color.white.opacity(0.75))
+                }
+                .shadow(color: Color(hex: 0x2A1D12).opacity(0.45), radius: 8)
+                .position(x: geo.size.width / 2 - 28, y: geo.size.height * 0.72)
+            }
+            .padding(.horizontal, 28)
         }
-        .padding(.horizontal, 28)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Theme.canvas)
     }
-}
-
-#Preview("Resting") {
-    RestingView(session: .demo, onSpacePassed: {})
 }
