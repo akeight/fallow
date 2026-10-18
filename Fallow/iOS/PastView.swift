@@ -44,11 +44,11 @@ private struct PastCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
-                MiniOrb(diameter: 20, glow: session.returnedWith == nil ? 0.3 : 0.7)
-                Text(Self.day(session.date))
+                MiniOrb(diameter: 20, glow: session.latestThought == nil ? 0.3 : 0.7)
+                Text(Self.day(session.lastTouched))
                     .font(FallowType.caption)
                     .foregroundStyle(Theme.ash)
-                Text(session.projectName)
+                Text(session.projectName ?? "")
                     .font(FallowType.eyebrow)
                     .tracking(2)
                     .foregroundStyle(Theme.mute)
@@ -67,8 +67,8 @@ private struct PastCard: View {
                 .frame(width: 24, height: 1)
                 .padding(.vertical, 16)
 
-            if let returned = session.returnedWith {
-                Text("You returned with")
+            if let returned = session.latestThought {
+                Text(session.reframedThought == nil ? "You returned with" : "It became")
                     .font(FallowType.caption)
                     .foregroundStyle(Theme.ash)
                 ThoughtText(text: returned)
