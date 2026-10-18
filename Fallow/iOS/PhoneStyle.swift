@@ -1,11 +1,28 @@
 import SwiftUI
 
-/// The action color: a muted petal mauve from the dusk haze and the orb's cool shadow.
-/// Distinct from the ink, and cooler than the warm surfaces around it.
-enum Petal {
-    static let fill = Color(hex: 0xCDBAC5)
-    static let soft = Color(hex: 0xEADFE5)
-    static let deep = Color(hex: 0x9C8292)
+/// The action color: the frosted sunset haze from the Mac landscape, so actions
+/// read as a piece of that glass rather than paint. Stone carries it; dawn is the glow.
+enum Haze {
+    static let stone = Color(hex: 0xD9D3D0)
+    static let dawn = Color(hex: 0xF2D6BD)
+    static let sand = Color(hex: 0xBFA393)
+    static let dusk = Color(hex: 0xA69485)
+}
+
+extension View {
+    /// Frosted stone with a faint sunset along the top edge. `strength` softens it for selections.
+    func hazeSurface<S: InsettableShape>(_ shape: S, strength: Double = 1) -> some View {
+        background {
+            shape
+                .fill(.ultraThinMaterial)
+                .overlay(shape.fill(Haze.stone.opacity(0.88 * strength)))
+                .overlay(shape.fill(LinearGradient(
+                    colors: [Haze.dawn.opacity(0.55 * strength), Haze.dawn.opacity(0)],
+                    startPoint: .top, endPoint: .center)))
+        }
+        .overlay(shape.strokeBorder(Color.white.opacity(0.7), lineWidth: 1))
+        .shadow(color: Haze.dusk.opacity(0.22 * strength), radius: 14, y: 5)
+    }
 }
 
 /// A small give under the finger. Nothing bounces.
@@ -28,9 +45,7 @@ struct PrimaryButton: View {
                 .font(FallowType.button)
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .background(Capsule().fill(Petal.fill))
-                .overlay(Capsule().strokeBorder(Color.white.opacity(0.45), lineWidth: 1))
-                .shadow(color: Petal.deep.opacity(0.25), radius: 12, y: 5)
+                .hazeSurface(Capsule())
                 .contentShape(Capsule())
         }
         .buttonStyle(PressableStyle())
@@ -82,14 +97,18 @@ struct GlassSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        content
-            .background {
-                shape
-                    .fill(.ultraThinMaterial)
-                    .overlay(shape.fill((lit ? Petal.soft : Theme.paper).opacity(lit ? 0.85 : 0.5)))
-            }
-            .overlay(shape.strokeBorder(Color.white.opacity(lit ? 0.9 : 0.6), lineWidth: 1))
-            .shadow(color: (lit ? Petal.deep : Color(hex: 0x5C4A32)).opacity(lit ? 0.16 : 0.07), radius: lit ? 16 : 10, y: 5)
+        if lit {
+            content.hazeSurface(shape, strength: 0.8)
+        } else {
+            content
+                .background {
+                    shape
+                        .fill(.ultraThinMaterial)
+                        .overlay(shape.fill(Theme.paper.opacity(0.5)))
+                }
+                .overlay(shape.strokeBorder(Color.white.opacity(0.6), lineWidth: 1))
+                .shadow(color: Color(hex: 0x5C4A32).opacity(0.07), radius: 10, y: 5)
+        }
     }
 }
 

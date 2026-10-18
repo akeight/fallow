@@ -201,9 +201,9 @@ private struct RefineStep: View {
         return Button { store.choose(state) } label: {
             HStack(spacing: 14) {
                 Circle()
-                    .fill(selected ? Petal.deep : Theme.rim.opacity(0.6))
+                    .fill(selected ? Haze.sand : Theme.rim.opacity(0.6))
                     .frame(width: 8, height: 8)
-                    .shadow(color: Petal.fill.opacity(selected ? 0.9 : 0), radius: 6)
+                    .shadow(color: Haze.dawn.opacity(selected ? 0.9 : 0), radius: 6)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(state.title)
                         .font(.system(size: 16, weight: selected ? .semibold : .regular))
@@ -268,11 +268,8 @@ private struct DistanceStep: View {
                 .frame(maxWidth: .infinity, minHeight: 54)
                 .background {
                     if selected {
-                        Capsule()
-                            .fill(.ultraThinMaterial)
-                            .overlay(Capsule().fill(Petal.soft.opacity(0.85)))
-                            .overlay(Capsule().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
-                            .shadow(color: Petal.deep.opacity(0.2), radius: 14)
+                        Color.clear
+                            .hazeSurface(Capsule(), strength: 0.8)
                             .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     }
                 }
