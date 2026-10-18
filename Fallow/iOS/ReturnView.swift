@@ -121,9 +121,9 @@ struct ReturnView: View {
                         } label: {
                             Image(systemName: store.isRecording ? "stop.fill" : "mic")
                                 .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
-                                .foregroundStyle(Haze.dawn)
+                                .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
                                 .frame(width: 38, height: 38)
-                                .background(Circle().fill(store.isRecording ? Haze.soot : Haze.bark))
+                                .background(Circle().fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7)))
                                 .contentTransition(.symbolEffect(.replace))
                         }
                         .buttonStyle(PressableStyle())

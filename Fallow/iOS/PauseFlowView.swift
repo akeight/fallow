@@ -80,10 +80,10 @@ private struct CaptureStep: View {
                 Spacer(minLength: 0)
                 ZStack {
                     Circle()
-                        .fill(store.isRecording ? Haze.soot : Haze.bark)
+                        .fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7))
                     Image(systemName: store.isRecording ? "stop.fill" : "mic")
                         .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
-                        .foregroundStyle(Haze.dawn)
+                        .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .frame(width: 38, height: 38)
