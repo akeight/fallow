@@ -203,6 +203,8 @@ struct ReturnView: View {
                 Spacer(minLength: 16)
 
                 PrimaryButton(title: "Continue", action: confirm)
+                    .disabled(text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .opacity(text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
                     .padding(.bottom, 20)
             }
             .padding(.horizontal, 28)

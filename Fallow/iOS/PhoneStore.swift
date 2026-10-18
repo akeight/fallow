@@ -535,9 +535,10 @@ final class PhoneStore {
     }
 
     func confirmReflection() {
-        cancelRecording()
         let text = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
-        session?.recordShift(text.isEmpty ? DemoCopy.phoneReflection : text)
+        guard !text.isEmpty else { return }
+        cancelRecording()
+        session?.recordShift(text)
         go(.beforeAfter)
     }
 
@@ -551,9 +552,10 @@ final class PhoneStore {
     }
 
     func confirmReframe() {
-        cancelRecording()
         let text = reframe.trimmingCharacters(in: .whitespacesAndNewlines)
-        session?.recordReframe(text.isEmpty ? DemoCopy.phoneReframe : text)
+        guard !text.isEmpty else { return }
+        cancelRecording()
+        session?.recordReframe(text)
         go(.reframeCompare)
     }
 

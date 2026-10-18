@@ -12,6 +12,8 @@ struct CompanionView: View {
     @State private var voice = VoiceCaptureService()
     @State private var gathering = false
     @State private var showsNote = false
+    /// Which field the microphone is filling.
+    @State private var voiceTarget: VoiceTarget = .thought
     private let distiller: any ThoughtDistilling = HeuristicDistiller()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -60,7 +62,7 @@ struct CompanionView: View {
             syncChrome()
         }
         .onChange(of: session.phase) { _, phase in
-            if phase != .capture { cancelListening() }
+            if !voiceTarget.lives(in: phase) { cancelListening() }
         }
         .onChange(of: layoutKey) { _, _ in syncChrome() }
         .onChange(of: session.softness) { _, _ in syncVeil() }
@@ -173,7 +175,7 @@ struct CompanionView: View {
                         .disabled(voice.isListening || gathering)
                         .onSubmit(session.confirmThought)
                         .padding(.vertical, 6)
-                    micButton
+                    micButton(.thought)
                 }
                 .padding(.leading, 12)
                 .padding(.trailing, 4)
@@ -184,7 +186,7 @@ struct CompanionView: View {
                         .strokeBorder(Color.white.opacity(0.7), lineWidth: 1)
                 )
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    captureStatus
+                    voiceStatus(hint: session.current.hasFullNote ? nil : "Voice, or text. The canvas stays visible.")
                     Spacer(minLength: 0)
                     if session.current.hasFullNote && !voice.isBusy && !gathering {
                         Button(DemoCopy.viewFullNote) { showsNote = true }
@@ -219,27 +221,28 @@ struct CompanionView: View {
         session.thought.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private var micButton: some View {
-        Button {
-            voice.isListening ? stopListening() : startListening()
+    private func micButton(_ target: VoiceTarget) -> some View {
+        let listening = voice.isListening && voiceTarget == target
+        return Button {
+            listening ? stopListening() : startListening(target)
         } label: {
-            Image(systemName: voice.isListening ? "stop.fill" : "mic")
-                .font(.system(size: voice.isListening ? 10 : 13, weight: .medium))
-                .foregroundStyle(voice.isListening ? Theme.canvas : Theme.ink)
+            Image(systemName: listening ? "stop.fill" : "mic")
+                .font(.system(size: listening ? 10 : 13, weight: .medium))
+                .foregroundStyle(listening ? Theme.canvas : Theme.ink)
                 .frame(width: 30, height: 30)
-                .background(voice.isListening ? Theme.ink.opacity(0.85) : Color.white.opacity(0.8), in: Circle())
-                .overlay(Circle().strokeBorder(Color.white.opacity(voice.isListening ? 0 : 1), lineWidth: 1))
+                .background(listening ? Theme.ink.opacity(0.85) : Color.white.opacity(0.8), in: Circle())
+                .overlay(Circle().strokeBorder(Color.white.opacity(listening ? 0 : 1), lineWidth: 1))
                 .contentTransition(.symbolEffect(.replace))
         }
         .buttonStyle(.plain)
         .disabled(gathering || voice.state == .requestingPermission)
-        .help(voice.isListening ? "Stop listening" : "Speak it")
-        .accessibilityLabel(voice.isListening ? "Stop listening" : "Speak your thought")
-        .accessibilityValue(voice.isListening ? "Recording" : "")
+        .help(listening ? "Stop listening" : "Speak it")
+        .accessibilityLabel(listening ? "Stop listening" : target == .thought ? "Speak your thought" : "Speak what feels different")
+        .accessibilityValue(listening ? "Recording" : "")
     }
 
     /// One quiet line: the latest words while listening, then gathering, or why voice did not work.
-    private var captureStatus: some View {
+    private func voiceStatus(hint: String?) -> some View {
         Group {
             if voice.isListening {
                 Text(voice.recentTranscript.isEmpty ? DemoCopy.listening : voice.recentTranscript)
@@ -251,8 +254,8 @@ struct CompanionView: View {
             } else if let error = voice.error {
                 Text(error.message)
                     .fixedSize(horizontal: false, vertical: true)
-            } else if !session.current.hasFullNote {
-                Text("Voice, or text. The canvas stays visible.")
+            } else if let hint {
+                Text(hint)
             }
         }
         .font(.system(size: 13))
@@ -276,8 +279,9 @@ struct CompanionView: View {
         .frame(width: 340, height: 260)
     }
 
-    private func startListening() {
+    private func startListening(_ target: VoiceTarget) {
         guard !voice.isBusy, !gathering else { return }
+        voiceTarget = target
         Task {
             await voice.start()
             if voice.isListening {
@@ -290,9 +294,21 @@ struct CompanionView: View {
     }
 
     /// The whole note is kept; its concise thought lands in the field for editing.
+    /// A reflection is a short answer, so it goes into its field as spoken.
     private func stopListening() {
         guard voice.isListening else { return }
         session.isListening = false
+        if voiceTarget == .reflection {
+            Task {
+                if let heard = await voice.stop(), voiceTarget.lives(in: session.phase) {
+                    session.reflection = heard
+                    voice.reset()
+                } else if let error = voice.error {
+                    announce(error.message)
+                }
+            }
+            return
+        }
         gathering = true
         announce("Gathering the thought")
         Task {
@@ -481,7 +497,9 @@ struct CompanionView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 15))
                     .foregroundStyle(Theme.ink)
+                    .disabled(voice.isListening)
                     .onSubmit(session.confirmReflection)
+                micButton(.reflection)
                 Button(action: session.confirmReflection) {
                     Image(systemName: "arrow.right")
                         .font(.system(size: 13, weight: .semibold))
@@ -491,6 +509,8 @@ struct CompanionView: View {
                         .overlay(Circle().strokeBorder(Color.white, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .disabled(reflectionIsEmpty || voice.isListening)
+                .opacity(reflectionIsEmpty ? 0.45 : 1)
                 .help("Continue")
                 .accessibilityLabel("Continue")
             }
@@ -499,7 +519,14 @@ struct CompanionView: View {
             .padding(.vertical, 8)
             .frostedCard()
 
-            if session.reflection.isEmpty {
+            if voiceTarget == .reflection && (voice.isListening || voice.error != nil) {
+                voiceStatus(hint: nil)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 18)
+            }
+
+            #if DEBUG
+            if reflectionIsEmpty && !voice.isBusy {
                 Button(DemoCopy.showThought) {
                     session.reflection = DemoCopy.reflection
                 }
@@ -507,7 +534,12 @@ struct CompanionView: View {
                 .font(.system(size: 12))
                 .foregroundStyle(Theme.ash)
             }
+            #endif
         }
+    }
+
+    private var reflectionIsEmpty: Bool {
+        session.reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var leftWith: String {
@@ -521,7 +553,7 @@ struct CompanionView: View {
                 Text(DemoCopy.beforeLabel)
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Theme.ash)
-                Text(DemoCopy.before)
+                Text(session.thought)
                     .font(.system(size: 16))
                     .foregroundStyle(Theme.mute)
                     .fixedSize(horizontal: false, vertical: true)
@@ -529,7 +561,7 @@ struct CompanionView: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Theme.ash)
                     .padding(.top, 12)
-                Text(session.reflection.isEmpty ? DemoCopy.after : session.reflection)
+                Text(session.reflection)
                     .font(.system(size: 17))
                     .foregroundStyle(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -697,6 +729,18 @@ private struct OrbInput: ViewModifier {
             content.onTapGesture { session.tapOrb() }
         default:
             content
+        }
+    }
+}
+
+private enum VoiceTarget {
+    case thought
+    case reflection
+
+    func lives(in phase: OrbPhase) -> Bool {
+        switch self {
+        case .thought: phase == .capture
+        case .reflection: phase == .returnDoorway || phase == .reflecting
         }
     }
 }

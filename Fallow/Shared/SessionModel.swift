@@ -169,10 +169,9 @@ final class SessionModel {
     }
 
     func confirmReflection() {
-        if reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            reflection = DemoCopy.reflection
-        }
-        current.recordShift(reflection)
+        let text = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        current.recordShift(text)
         phase = .beforeAfter
     }
 

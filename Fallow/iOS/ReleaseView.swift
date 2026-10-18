@@ -61,7 +61,7 @@ struct ReleaseView: View {
     /// 100% → 70% → 35% → nearly gone, softening and drifting back as it leaves attention.
     private func thought(hold: Double) -> some View {
         let fade = interpolate(hold, [(0, 1), (0.33, 0.7), (0.66, 0.35), (1, 0.03)])
-        return ThoughtText(text: store.draft.isEmpty ? DemoCopy.phoneUnresolved : store.draft, alignment: .center)
+        return ThoughtText(text: store.draft, alignment: .center)
             .opacity(fade)
             .blur(radius: 5 * ramp(hold, 0.2, 1))
             .scaleEffect(1 - 0.06 * hold)
