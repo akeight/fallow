@@ -10,7 +10,8 @@ struct FallowSession: Equatable, Codable, Identifiable {
 
     /// Nil until chosen. A low-confidence interpretation also leaves it nil.
     var creativeState: CreativeState?
-    /// A modifier on tone, never a separate workflow.
+    /// A modifier on tone, never a separate workflow. Not shown in the interface:
+    /// only interpretation of the person's own words may set it. Defaults to false.
     var difficultyDisengaging: Bool
 
     var distance: FallowDistance?

@@ -192,33 +192,10 @@ private struct RefineStep: View {
                 }
                 .padding(.top, geo.size.height * 0.07)
 
-                stoppingToggle
-                    .padding(.top, 14)
-
                 Spacer(minLength: 12)
             }
             .padding(.horizontal, 24)
         }
-    }
-
-    /// A modifier on tone, so it sits apart from the four answers and does not advance.
-    private var stoppingToggle: some View {
-        let on = store.difficultyDisengaging
-        return Button { store.toggleDifficultyDisengaging() } label: {
-            HStack(spacing: 8) {
-                Image(systemName: on ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(on ? Haze.sand : Theme.ash)
-                    .contentTransition(.symbolEffect(.replace))
-                Text(DemoCopy.hardToStop)
-                    .foregroundStyle(Theme.mute)
-            }
-            .font(FallowType.quietButton)
-            .frame(minHeight: 44)
-            .padding(.horizontal, 8)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PressableStyle())
-        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 

@@ -356,11 +356,6 @@ final class PhoneStore {
         }
     }
 
-    func toggleDifficultyDisengaging() {
-        session?.setDifficultyDisengaging(!difficultyDisengaging)
-        selectionTick += 1
-    }
-
     func choose(_ distance: FallowDistance) {
         session?.choose(distance)
         selectionTick += 1

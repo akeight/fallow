@@ -37,7 +37,6 @@ enum DemoCopy {
 
     static let notSureYet = "Not sure yet. Choose what fits."
     static let suggestedGuess = "A guess. Change it if it doesn’t fit."
-    static let hardToStop = "It’s hard to stop right now"
     static let somethingShifted = "Something shifted"
     static let stillStuck = "Still stuck"
     static let stillCarrying = "Still carrying it?"
