@@ -1,10 +1,21 @@
 import AppKit
 import SwiftUI
 
+/// Where things sit, in screen coordinates. The view converts them into the window.
+@MainActor
+@Observable
+final class CompanionLayout {
+    var window = CGRect.zero
+    var content = CGRect.zero
+    var orbCenter = CGPoint.zero
+}
+
 @MainActor
 final class CompanionController {
     private let session: SessionModel
     private let config: OrbTuningConfig
+    private let layout = CompanionLayout()
+    private var shrinkTask: Task<Void, Never>?
     private let panel = CompanionPanel()
     private var softening: SofteningPanel?
     private var anchor = CGPoint.zero
@@ -31,6 +42,7 @@ final class CompanionController {
         let host = NSHostingView(rootView: CompanionView(
             session: session,
             config: config,
+            layout: layout,
             syncChrome: { [weak self] in self?.syncChrome() },
             syncVeil: { [weak self] in self?.syncVeil() },
             openTuner: { [weak self] in self?.showTuner() }
@@ -45,7 +57,8 @@ final class CompanionController {
         leaveHost.sizingOptions = []
         leavePanel.contentView = leaveHost
         panel.canDrag = { [weak self] in
-            self?.session.phase == .dormant
+            guard let self else { return false }
+            return self.session.phase == .dormant && self.shrinkTask == nil
         }
         panel.onQuietClick = { [weak self] in
             self?.session.tapOrb()
@@ -53,6 +66,8 @@ final class CompanionController {
         panel.onQuietMove = { [weak self] ended in
             guard let self else { return }
             self.rememberPlace()
+            let frame = self.panel.frame
+            self.place(window: frame, area: frame, center: CGPoint(x: frame.midX, y: frame.midY))
             if ended, let screen = self.hostScreen() {
                 self.softening?.follow(screen)
             }
@@ -65,10 +80,24 @@ final class CompanionController {
     func syncChrome() {
         guard let screen = hostScreen() else { return }
         softening?.follow(screen)
-        let size = panelSize
-        let frame = panelFrame(size: size, screen: screen)
-        if frame.integral != panel.frame.integral {
-            panel.setFrame(frame, display: true, animate: true)
+        let area = panelFrame(size: panelSize, screen: screen)
+        let center = orbCenter(in: area)
+        shrinkTask?.cancel()
+        shrinkTask = nil
+        if session.phase != .dormant {
+            place(window: screen.visibleFrame, area: area, center: center)
+        } else if panel.frame.width > area.width + 1 {
+            // Let the orb finish gliding home before the window closes in around it.
+            layout.content = area
+            layout.orbCenter = center
+            shrinkTask = Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 1_150_000_000)
+                guard let self, !Task.isCancelled, self.session.phase == .dormant else { return }
+                self.shrinkTask = nil
+                self.place(window: area, area: area, center: center)
+            }
+        } else {
+            place(window: area, area: area, center: center)
         }
         panel.alphaValue = 1
         syncVeil()
@@ -81,30 +110,43 @@ final class CompanionController {
 
     func syncVeil() {
         let curved = OrbMotion.veilAmount(raw: session.softness)
+        let veil = isHoldStep ? 0.32 + 0.68 * curved : curved
         softening?.setRecession(
-            amount: curved * config.workspaceRecession,
+            amount: veil * config.workspaceRecession,
             blur: config.workspaceBlur,
             contrast: config.workspaceContrast
         )
-        softening?.setLeftWash(amount: showsLeftPage ? curved : 0)
+        let landscape = isHoldStep ? 0.18 + 0.82 * curved : curved
+        softening?.setLandscape(amount: landscape * landscapeStrength)
         placeLeave()
     }
 
-    private var showsLeftPage: Bool {
+    /// The hold screen opens on a light frost that thickens as the hold builds.
+    private var isHoldStep: Bool {
         switch session.phase {
-        case .returnDoorway, .reflecting, .beforeAfter:
+        case .threshold, .holding:
             true
-        case .resting:
-            session.showsLens
         default:
             false
+        }
+    }
+
+    /// Grows with the hold, full while resting, thinner on the way back so the blurred desk shows again.
+    private var landscapeStrength: Double {
+        switch session.phase {
+        case .threshold, .holding, .resting:
+            1
+        case .returnDoorway, .reflecting, .beforeAfter:
+            0.88
+        default:
+            0
         }
     }
 
     private func placeLeave() {
         guard let screen = panel.screen ?? NSScreen.main else { return }
         let veil = OrbMotion.veilAmount(raw: session.softness)
-        let overlayIsUp = veil > 0.04 && session.phase != .dormant
+        let overlayIsUp = (veil > 0.04 || isHoldStep) && session.phase != .dormant
         guard overlayIsUp else {
             if leaveShown {
                 leavePanel.orderOut(nil)
@@ -125,6 +167,40 @@ final class CompanionController {
             leavePanel.orderFrontRegardless()
             leaveShown = true
         }
+    }
+
+    /// Dormant, the window hugs the orb so the desk stays clickable. Otherwise it spans the screen
+    /// and the orb glides inside it.
+    /// A window resize never animates the orb, or it would sweep across the new window.
+    private func place(window: NSRect, area: NSRect, center: CGPoint) {
+        var still = Transaction()
+        still.disablesAnimations = window.integral != layout.window.integral
+        withTransaction(still) {
+            layout.window = window
+            layout.content = area
+            layout.orbCenter = center
+        }
+        if window.integral != panel.frame.integral {
+            panel.setFrame(window, display: true)
+        }
+    }
+
+    /// The first steps keep the orb exactly where it was resting; hold, rest, and return center it.
+    private func orbCenter(in area: NSRect) -> CGPoint {
+        switch session.phase {
+        case .capture, .classifyStuck, .chooseDistance:
+            homeCenter
+        default:
+            CGPoint(x: area.midX, y: area.midY)
+        }
+    }
+
+    private var homeSide: CGFloat {
+        CGFloat(max(180, config.idleSize * 2.2))
+    }
+
+    private var homeCenter: CGPoint {
+        CGPoint(x: anchor.x - homeSide / 2, y: anchor.y + homeSide / 2)
     }
 
     private func rememberPlace() {
@@ -184,8 +260,7 @@ final class CompanionController {
     private var panelSize: NSSize {
         switch session.phase {
         case .dormant, .reentering:
-            let side = CGFloat(max(180, config.idleSize * 2.2))
-            return NSSize(width: side, height: side)
+            return NSSize(width: homeSide, height: homeSide)
         case .capture:
             return session.thoughtIsCaptured ? NSSize(width: 480, height: 540) : NSSize(width: 480, height: 500)
         case .classifyStuck:
@@ -195,30 +270,18 @@ final class CompanionController {
         case .threshold, .holding:
             let side = CGFloat(max(420, config.holdEndSize * 1.55 + 80))
             return NSSize(width: side, height: side + 36)
-        case .resting where session.showsLens:
-            return NSSize(width: 560, height: 440)
         case .resting:
-            let side = CGFloat(max(230, config.restSize * 2.8))
-            return NSSize(width: side, height: side)
+            return NSSize(width: 520, height: 400)
         case .returnDoorway, .reflecting, .beforeAfter:
-            return NSSize(width: 680, height: 480)
+            return NSSize(width: 560, height: 720)
         }
     }
 
     private func panelFrame(size: NSSize, screen: NSScreen) -> NSRect {
         let visible = screen.visibleFrame
         switch session.phase {
-        case .threshold, .holding:
-            return NSRect(
-                x: visible.midX - size.width * 0.72,
-                y: visible.midY - size.height * 0.35,
-                width: size.width,
-                height: size.height
-            )
-        case .returnDoorway, .reflecting, .beforeAfter:
-            return openFrame(size: size, visible: visible)
-        case .resting where session.showsLens:
-            return openFrame(size: size, visible: visible)
+        case .threshold, .holding, .resting, .returnDoorway, .reflecting, .beforeAfter:
+            return centered(size: size, visible: visible)
         case .dormant, .reentering:
             return NSRect(
                 x: anchor.x - size.width,
@@ -227,10 +290,13 @@ final class CompanionController {
                 height: size.height
             )
         default:
+            // The card sits above the orb, whose slot is the bottom-right corner of this area.
+            let half = CGFloat(OrbMotion.canvasExtent(phase: session.phase, config: config)) / 2
+            let home = homeCenter
             return fitted(
                 NSRect(
-                    x: anchor.x - size.width,
-                    y: anchor.y,
+                    x: home.x + 12 + half - size.width,
+                    y: home.y - 12 - half,
                     width: size.width,
                     height: size.height
                 ),
@@ -239,12 +305,13 @@ final class CompanionController {
         }
     }
 
-    private func openFrame(size: NSSize, visible: NSRect) -> NSRect {
-        NSRect(
-            x: visible.minX + 48,
-            y: visible.midY - size.height * 0.2,
+    private func centered(size: NSSize, visible: NSRect) -> NSRect {
+        let height = min(size.height, visible.height - 32)
+        return NSRect(
+            x: visible.midX - size.width / 2,
+            y: visible.midY - height / 2,
             width: size.width,
-            height: size.height
+            height: height
         )
     }
 }

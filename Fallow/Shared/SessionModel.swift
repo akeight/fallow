@@ -142,11 +142,6 @@ final class SessionModel {
         }
     }
 
-    func continueFromDoorway() {
-        guard phase == .returnDoorway else { return }
-        phase = .reflecting
-    }
-
     func confirmReflection() {
         if reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             reflection = DemoCopy.reflection

@@ -190,6 +190,14 @@ private struct OrbCanvas: View {
                     with: .color(lightColor.color.opacity(light * (0.5 + 0.15 * warmHalo)))
                 )
             }
+            // Bright caustic where the light passes through the base.
+            context.drawLayer { layer in
+                layer.addFilter(.blur(radius: max(3, reach * 0.05)))
+                layer.fill(
+                    Path(ellipseIn: ellipse(cx: m.cx + draw.lightCenter.width * 0.4 - m.rx * 0.05, cy: m.cy + m.ry * 1.04, width: m.rx * 0.9, height: max(3, m.ry * 0.07))),
+                    with: .color(OrbPalette.ember.color.opacity(light * 0.55))
+                )
+            }
             // Soft halo so the edge breathes into its surroundings.
             context.drawLayer { layer in
                 layer.addFilter(.blur(radius: max(8, reach * (0.16 + 0.05 * warmHalo))))
@@ -199,18 +207,19 @@ private struct OrbCanvas: View {
                 )
             }
 
+            // Glass lit from inside: warm where the light sits, cooler toward the far edge.
             context.fill(
                 path,
                 with: .radialGradient(
                     Gradient(stops: [
-                        .init(color: OrbPalette.highlight.color, location: 0),
-                        .init(color: OrbPalette.shell.color, location: 0.42),
-                        .init(color: OrbPalette.body.color, location: 0.78),
-                        .init(color: OrbPalette.edge.color, location: 1)
+                        .init(color: OrbPalette.glassCore.color, location: 0),
+                        .init(color: OrbPalette.peach.mix(OrbPalette.glassCore, 0.55).color, location: 0.24),
+                        .init(color: OrbPalette.glassBody.color, location: 0.62),
+                        .init(color: OrbPalette.glassEdge.color, location: 1)
                     ]),
-                    center: CGPoint(x: m.cx - m.rx * 0.34, y: m.cy - m.ry * 0.42),
+                    center: CGPoint(x: m.cx + draw.lightCenter.width * 0.7, y: m.cy + draw.lightCenter.height * 0.8),
                     startRadius: 0,
-                    endRadius: reach * 1.62
+                    endRadius: reach * 1.3
                 )
             )
             if liftsForDarkDesktop {
@@ -220,17 +229,39 @@ private struct OrbCanvas: View {
             context.drawLayer { layer in
                 layer.clip(to: path)
 
-                // Form shadow that wraps the lower right edge.
+                // Cool sky caught in the upper glass.
+                layer.fill(
+                    path,
+                    with: .linearGradient(
+                        Gradient(stops: [
+                            .init(color: OrbPalette.sky.color.opacity(0.6), location: 0),
+                            .init(color: OrbPalette.sky.color.opacity(0.26), location: 0.42),
+                            .init(color: OrbPalette.sky.color.opacity(0), location: 0.75)
+                        ]),
+                        startPoint: CGPoint(x: m.cx, y: m.cy - m.ry),
+                        endPoint: CGPoint(x: m.cx, y: m.cy + m.ry)
+                    )
+                )
+
+                // Warm form shadow that wraps the far right edge.
                 layer.drawLayer { shade in
                     shade.addFilter(.blur(radius: max(6, reach * 0.14)))
-                    shade.translateBy(x: m.rx * 0.07, y: m.ry * 0.1)
-                    shade.stroke(path, with: .color(OrbPalette.shadow.color.opacity(0.34 + 0.08 * draw.depth)), lineWidth: reach * 0.34)
+                    shade.translateBy(x: m.rx * 0.08, y: 0)
+                    shade.stroke(path, with: .color(OrbPalette.amber.color.opacity(0.3 + 0.08 * draw.depth)), lineWidth: reach * 0.34)
                 }
                 if draw.depth > 0.01 {
                     layer.drawLayer { shade in
                         shade.addFilter(.blur(radius: max(3, reach * 0.06)))
-                        shade.stroke(path, with: .color(OrbPalette.shadow.color.opacity(0.16 * draw.depth)), lineWidth: reach * 0.14)
+                        shade.stroke(path, with: .color(OrbPalette.amber.color.opacity(0.16 * draw.depth)), lineWidth: reach * 0.14)
                     }
+                }
+                // Amber depth behind the light, upper right.
+                layer.drawLayer { shade in
+                    shade.addFilter(.blur(radius: max(8, reach * 0.22)))
+                    shade.fill(
+                        Path(ellipseIn: ellipse(cx: m.cx + m.rx * 0.38, cy: m.cy - m.ry * 0.22, width: m.rx * 1.0, height: m.ry * 0.9)),
+                        with: .color(OrbPalette.amber.color.opacity(0.24))
+                    )
                 }
 
                 if draw.dimple > 0.01 {
@@ -257,11 +288,15 @@ private struct OrbCanvas: View {
                     layer.drawLayer { shade in
                         shade.addFilter(.blur(radius: max(4, reach * 0.07)))
                         shade.translateBy(x: m.rx * 0.05, y: m.ry * 0.04)
-                        shade.stroke(fold, with: .color(OrbPalette.shadow.color.opacity(0.3 * strength)), lineWidth: reach * 0.16)
+                        shade.stroke(fold, with: .color(OrbPalette.amber.color.opacity(0.28 * strength)), lineWidth: reach * 0.16)
                     }
                     layer.drawLayer { glow in
-                        glow.addFilter(.blur(radius: max(1.5, reach * 0.022)))
-                        glow.stroke(fold, with: .color(Color.white.opacity(0.85 * strength)), lineWidth: max(1.2, reach * 0.045))
+                        glow.addFilter(.blur(radius: max(4, reach * 0.08)))
+                        glow.stroke(fold, with: .color(OrbPalette.ember.color.opacity(0.5 * strength * min(1, light * 1.2))), lineWidth: reach * 0.18)
+                    }
+                    layer.drawLayer { glow in
+                        glow.addFilter(.blur(radius: max(1.5, reach * 0.028)))
+                        glow.stroke(fold, with: .color(Color.white.opacity(0.65 * strength)), lineWidth: max(1.2, reach * 0.045))
                     }
                 }
 
@@ -272,12 +307,79 @@ private struct OrbCanvas: View {
                     }
                 }
 
+                // Streaks of light drifting up through the glass.
+                let streakLight = min(1, light * 1.15)
+                for wisp in wisps(m) {
+                    layer.drawLayer { glow in
+                        glow.addFilter(.blur(radius: max(5, reach * 0.11)))
+                        glow.stroke(
+                            wisp.path,
+                            with: .color(OrbPalette.ember.mix(OrbPalette.peach, 0.4).color.opacity(0.55 * streakLight * wisp.weight)),
+                            style: StrokeStyle(lineWidth: reach * 0.3 * wisp.weight, lineCap: .round)
+                        )
+                    }
+                    layer.drawLayer { glow in
+                        glow.addFilter(.blur(radius: max(2, reach * 0.04)))
+                        glow.stroke(
+                            wisp.path,
+                            with: .color(OrbPalette.glassCore.color.opacity(0.6 * streakLight * wisp.weight)),
+                            style: StrokeStyle(lineWidth: reach * 0.09 * wisp.weight, lineCap: .round)
+                        )
+                    }
+                    layer.drawLayer { glow in
+                        glow.addFilter(.blur(radius: max(1, reach * 0.016)))
+                        glow.stroke(
+                            wisp.path,
+                            with: .color(Color.white.opacity(0.8 * streakLight * wisp.weight)),
+                            style: StrokeStyle(lineWidth: max(0.8, reach * 0.025 * wisp.weight), lineCap: .round)
+                        )
+                    }
+                }
+
+                // White-hot flare at the heart of the light, inside a wider ember bloom.
+                let heart = CGPoint(
+                    x: m.cx + draw.lightCenter.width * 0.8 - m.rx * 0.06,
+                    y: m.cy + draw.lightCenter.height * 0.9
+                )
+                layer.drawLayer { glow in
+                    glow.addFilter(.blur(radius: max(6, reach * 0.16)))
+                    glow.fill(
+                        Path(ellipseIn: ellipse(cx: heart.x, cy: heart.y, width: m.rx * 0.95, height: m.ry * 0.65)),
+                        with: .color(OrbPalette.ember.color.opacity(0.5 * light * draw.lightPulse))
+                    )
+                }
+                layer.drawLayer { glow in
+                    glow.addFilter(.blur(radius: max(2.5, reach * 0.055)))
+                    glow.fill(
+                        Path(ellipseIn: ellipse(cx: heart.x, cy: heart.y, width: m.rx * 0.36, height: m.ry * 0.24)),
+                        with: .color(Color.white.opacity(min(1, light * 1.25 * draw.lightPulse)))
+                    )
+                }
+
+                // Light pooling against the inside of the shell, brightest at the base.
+                layer.drawLayer { rim in
+                    rim.addFilter(.blur(radius: max(3, reach * 0.06)))
+                    rim.stroke(
+                        path,
+                        with: .linearGradient(
+                            Gradient(stops: [
+                                .init(color: OrbPalette.sky.mix(RGB(r: 1, g: 1, b: 1), 0.5).color.opacity(0.55), location: 0),
+                                .init(color: OrbPalette.peach.color.opacity(0.3), location: 0.5),
+                                .init(color: OrbPalette.ember.color.opacity(min(1, 0.5 + light * 0.5)), location: 1)
+                            ]),
+                            startPoint: CGPoint(x: m.cx, y: m.cy - m.ry),
+                            endPoint: CGPoint(x: m.cx, y: m.cy + m.ry)
+                        ),
+                        lineWidth: reach * 0.16
+                    )
+                }
+
                 // Broad sheen across the upper body.
                 layer.drawLayer { glow in
                     glow.addFilter(.blur(radius: max(6, m.ry * 0.18)))
                     glow.fill(
                         Path(ellipseIn: ellipse(cx: m.cx - m.rx * 0.18, cy: m.cy - m.ry * 0.72, width: m.rx * 1.5, height: m.ry * 0.7)),
-                        with: .color(Color.white.opacity(0.5 - 0.2 * draw.dimple))
+                        with: .color(Color.white.opacity(0.42 - 0.18 * draw.dimple))
                     )
                 }
                 // Specular point, upper left.
@@ -294,6 +396,11 @@ private struct OrbCanvas: View {
                     rim.translateBy(x: -m.rx * 0.015, y: -m.ry * 0.02)
                     rim.stroke(path, with: .color(Color.white.opacity(0.55)), lineWidth: max(1, reach * 0.018))
                 }
+            }
+            // A faint luminous edge so the glass reads against light surroundings.
+            context.drawLayer { edge in
+                edge.addFilter(.blur(radius: max(1.5, reach * 0.03)))
+                edge.stroke(path, with: .color(OrbPalette.ember.color.opacity(0.35 * light)), lineWidth: max(1, reach * 0.03))
             }
 
             if draw.arc > 0.01 {
@@ -336,6 +443,28 @@ private struct OrbCanvas: View {
         path.addCurve(to: p(-0.38, 0.32), control1: p(-0.1, -0.86 + lift), control2: p(-0.72, -0.18))
         path.addCurve(to: p(0.3, 0.3), control1: p(-0.12, 0.66), control2: p(0.26, 0.6))
         return path
+    }
+
+    /// Curved streaks rising from the lower left, following the light as it drifts.
+    private func wisps(_ m: (cx: CGFloat, cy: CGFloat, rx: CGFloat, ry: CGFloat)) -> [(path: Path, weight: CGFloat)] {
+        let sway = CGFloat(sin(draw.arcPhase))
+        let roll = CGFloat(cos(draw.arcPhase * 0.8 + 1))
+        let follow = CGSize(width: draw.lightCenter.width * 0.35, height: draw.lightCenter.height * 0.2)
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: m.cx + m.rx * x + follow.width, y: m.cy + m.ry * y + follow.height)
+        }
+        func curve(_ a: CGPoint, _ c1: CGPoint, _ c2: CGPoint, _ b: CGPoint) -> Path {
+            var path = Path()
+            path.move(to: a)
+            path.addCurve(to: b, control1: c1, control2: c2)
+            return path
+        }
+        return [
+            (curve(p(-0.55, 0.55), p(-0.1, 0.35 + 0.05 * sway), p(0.25, -0.05), p(0.6, -0.45)), 1),
+            (curve(p(-0.35, 0.7), p(0, 0.45), p(0.4, 0.2 + 0.04 * roll), p(0.72, -0.1)), 0.7),
+            (curve(p(-0.7, 0.2), p(-0.35, 0.05), p(0, -0.4 - 0.05 * roll), p(0.35, -0.68)), 0.55),
+            (curve(p(-0.3, 0.45), p(-0.1, 0.32), p(0.08, 0.15 + 0.04 * sway), p(0.25, 0)), 0.9)
+        ]
     }
 
     private func drawArc(in context: inout GraphicsContext, m: (cx: CGFloat, cy: CGFloat, rx: CGFloat, ry: CGFloat)) {

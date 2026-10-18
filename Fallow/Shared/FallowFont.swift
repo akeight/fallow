@@ -26,6 +26,21 @@ enum FallowType {
     static let quietButton = Font.system(size: 16, weight: .regular)
     static let process = Font.system(size: 16, weight: .regular, design: .monospaced)
     static let macProcess = Font.system(size: 15, weight: .regular, design: .monospaced)
+    static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .regular, design: .serif) }
+    static let eyebrow = Font.system(size: 12, weight: .medium)
+}
+
+/// Small tracked capitals under a display title.
+struct Eyebrow: View {
+    var text: String
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(FallowType.eyebrow)
+            .tracking(2.4)
+            .foregroundStyle(Theme.mute)
+            .multilineTextAlignment(.center)
+    }
 }
 
 struct FallowWordmark: View {

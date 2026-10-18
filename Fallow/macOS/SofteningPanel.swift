@@ -1,12 +1,14 @@
 import AppKit
+import CoreImage
 
 /// A click-through veil. It blurs whatever is behind FALLOW and does not resize other apps.
 final class SofteningPanel: NSPanel {
     private let root = NSView()
     private let effect = NSVisualEffectView()
     private let tint = NSView()
-    private let wash = NSView()
-    private var washTarget = -1.0
+    private let landscape = NSView()
+    private var landscapeTarget = -1.0
+    private var hiding = false
 
     init(screen: NSScreen) {
         super.init(
@@ -42,50 +44,60 @@ final class SofteningPanel: NSPanel {
         tint.autoresizingMask = [.width, .height]
         effect.addSubview(tint)
 
-        let gradient = CAGradientLayer()
-        gradient.startPoint = CGPoint(x: 0, y: 0.5)
-        gradient.endPoint = CGPoint(x: 1, y: 0.5)
-        let tone = NSColor(calibratedRed: 0.93, green: 0.89, blue: 0.82, alpha: 1)
-        gradient.colors = [
-            tone.withAlphaComponent(0.96).cgColor,
-            tone.withAlphaComponent(0.72).cgColor,
-            tone.withAlphaComponent(0.34).cgColor,
-            tone.withAlphaComponent(0).cgColor
-        ]
-        gradient.locations = [0, 0.28, 0.62, 1]
-        wash.wantsLayer = true
-        wash.layer = gradient
-        wash.alphaValue = 0
+        landscape.wantsLayer = true
+        landscape.layer?.contents = Self.frostedLandscape()
+        landscape.layer?.contentsGravity = .resizeAspectFill
+        landscape.layer?.masksToBounds = true
+        landscape.frame = root.bounds
+        landscape.autoresizingMask = [.width, .height]
+        landscape.alphaValue = 0
+        let frost = NSView(frame: landscape.bounds)
+        frost.wantsLayer = true
+        frost.layer?.backgroundColor = NSColor(calibratedRed: 0.96, green: 0.94, blue: 0.9, alpha: 0.34).cgColor
+        frost.autoresizingMask = [.width, .height]
+        landscape.addSubview(frost)
+
         root.addSubview(effect)
-        root.addSubview(wash)
+        root.addSubview(landscape)
 
         contentView = root
         alphaValue = 0
-        layoutWash()
     }
 
     func follow(_ screen: NSScreen) {
         setFrame(screen.frame, display: true)
-        layoutWash()
     }
 
-    /// A warm field on the left, fading out before the middle, behind the page copy.
-    func setLeftWash(amount: Double) {
-        layoutWash()
+    /// A frosted landscape over the blurred desk. Below 1, the desk shows faintly through it.
+    func setLandscape(amount: Double) {
         let target = min(1, max(0, amount))
-        guard abs(target - washTarget) > 0.02 else { return }
-        washTarget = target
+        let step = abs(target - landscapeTarget)
+        guard step > 0.005 else { return }
+        landscapeTarget = target
+        // Small steps come from the hold itself, frame by frame; only phase changes ease.
+        guard step > 0.12 else {
+            landscape.alphaValue = target
+            return
+        }
         NSAnimationContext.runAnimationGroup { context in
-            context.duration = target > wash.alphaValue ? 0.85 : 0.5
+            context.duration = target > landscape.alphaValue ? 1.6 : 0.9
             context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            wash.animator().alphaValue = target
+            landscape.animator().alphaValue = target
         }
     }
 
-    private func layoutWash() {
-        let bounds = contentView?.bounds ?? .zero
-        wash.frame = NSRect(x: 0, y: 0, width: bounds.width * 0.64, height: bounds.height)
-        wash.layer?.frame = wash.bounds
+    /// Blurred once up front; the image is small, so stretching it to the screen only softens it further.
+    private static func frostedLandscape() -> CGImage? {
+        guard let url = Bundle.main.url(forResource: "RestLandscape", withExtension: "jpg"),
+              let source = CIImage(contentsOf: url) else { return nil }
+        let frosted = source.clampedToExtent()
+            .applyingGaussianBlur(sigma: 9)
+            .applyingFilter("CIColorControls", parameters: [
+                kCIInputSaturationKey: 0.8,
+                kCIInputBrightnessKey: 0.06
+            ])
+            .cropped(to: source.extent)
+        return CIContext().createCGImage(frosted, from: source.extent)
     }
 
     /// `amount` is already the curved recession, 0 through 1.
@@ -93,14 +105,31 @@ final class SofteningPanel: NSPanel {
     func setRecession(amount: Double, blur: Double, contrast: Double) {
         let shaped = min(1, max(0, amount))
         if shaped <= 0.012 {
-            alphaValue = 0
-            orderOut(nil)
+            guard isVisible, !hiding else { return }
+            hiding = true
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.4
+                animator().alphaValue = 0
+            } completionHandler: { [weak self] in
+                guard let self, self.hiding else { return }
+                self.hiding = false
+                self.orderOut(nil)
+            }
             return
         }
-        if !isVisible {
-            orderFrontRegardless()
+        if hiding {
+            hiding = false
+            animator().alphaValue = 1
         }
-        alphaValue = 1
+        if !isVisible {
+            alphaValue = 0
+            orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.6
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                animator().alphaValue = 1
+            }
+        }
         let blurMix = min(1, max(0, blur) / 40)
         effect.alphaValue = shaped * (0.22 + 0.78 * blurMix)
         tint.alphaValue = shaped * min(1, max(0, contrast))
