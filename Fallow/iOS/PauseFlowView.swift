@@ -19,7 +19,7 @@ struct PauseFlowView: View {
                 ReleaseView(store: store).transition(.opacity)
             case .resting:
                 RestingView(store: store).transition(.fallowText)
-            case .returning, .reflect, .beforeAfter:
+            case .returning, .reflect, .beforeAfter, .stillStuck, .reframe, .reframeCompare:
                 ReturnView(store: store).transition(.fallowText)
             }
         }
@@ -175,7 +175,7 @@ private struct RefineStep: View {
                     .foregroundStyle(Theme.ink)
                     .padding(.top, geo.size.height * 0.08)
 
-                Text("A guess. Change it if it doesn’t fit.")
+                Text(store.interpretation.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess)
                     .font(FallowType.caption)
                     .foregroundStyle(Theme.ash)
                     .padding(.top, 8)
@@ -184,23 +184,46 @@ private struct RefineStep: View {
                     ForEach(CreativeState.allCases) { state in
                         ChoiceRow(
                             title: state.title,
-                            subtitle: state.subtitle,
-                            note: state == store.suggestedState ? "Suggested" : nil,
-                            selected: store.creativeState == state
+                            subtitle: state.meaning,
+                            note: state == store.interpretation.suggestedState ? "Suggested" : nil,
+                            selected: store.highlightedState == state
                         ) { store.choose(state) }
                     }
                 }
                 .padding(.top, geo.size.height * 0.07)
+
+                stoppingToggle
+                    .padding(.top, 14)
 
                 Spacer(minLength: 12)
             }
             .padding(.horizontal, 24)
         }
     }
+
+    /// A modifier on tone, so it sits apart from the four answers and does not advance.
+    private var stoppingToggle: some View {
+        let on = store.difficultyDisengaging
+        return Button { store.toggleDifficultyDisengaging() } label: {
+            HStack(spacing: 8) {
+                Image(systemName: on ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(on ? Haze.sand : Theme.ash)
+                    .contentTransition(.symbolEffect(.replace))
+                Text(DemoCopy.hardToStop)
+                    .foregroundStyle(Theme.mute)
+            }
+            .font(FallowType.quietButton)
+            .frame(minHeight: 44)
+            .padding(.horizontal, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableStyle())
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
 }
 
 /// One answer in a short list. Tapping it is the answer; there is no separate Continue.
-private struct ChoiceRow: View {
+struct ChoiceRow: View {
     var title: String
     var subtitle: String? = nil
     var note: String? = nil
@@ -262,8 +285,8 @@ private struct DistanceStep: View {
             Spacer(minLength: 0)
 
             VStack(spacing: 8) {
-                ForEach(DistanceKind.allCases) { kind in
-                    ChoiceRow(title: kind.title, selected: store.distance == kind) {
+                ForEach(FallowDistance.allCases) { kind in
+                    ChoiceRow(title: kind.title, selected: store.session?.distance == kind) {
                         store.choose(kind)
                     }
                 }

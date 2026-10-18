@@ -17,12 +17,10 @@ enum BreakCue {
 @MainActor
 @Observable
 final class SessionModel {
-    var phase: SessionPhase = .dormant
-    var thought: String = ""
+    var phase: OrbPhase = .dormant
+    /// The Mac's session record. The orb phase above is only how it is being shown.
+    var current = FallowSession(originDevice: .mac, phase: .dormant)
     var thoughtIsCaptured = false
-    var stuck: StuckKind?
-    var distance: DistanceKind?
-    var reflection: String = ""
     /// Raw recession, 0 through 1. The veil shapes this; it is not pre-curved.
     var softness: Double = 0
     var showsLens = false
@@ -43,6 +41,22 @@ final class SessionModel {
     private var returnTask: Task<Void, Never>?
     private var releaseTask: Task<Void, Never>?
 
+    var thought: String {
+        get { current.unresolvedThought }
+        set { current.unresolvedThought = newValue }
+    }
+
+    var creativeState: CreativeState? { current.creativeState }
+    var distance: FallowDistance? { current.distance }
+
+    var reflection: String {
+        get { current.returnedThought ?? "" }
+        set { current.returnedThought = newValue.isEmpty ? nil : newValue }
+    }
+
+    /// What the rest offers, or nil when FALLOW should stay quiet.
+    var restLine: String? { current.intervention?.line }
+
     var holdAmount: Double {
         if case .holding(let progress) = phase { return progress }
         if case .threshold = phase { return softness }
@@ -53,8 +67,10 @@ final class SessionModel {
         switch phase {
         case .dormant:
             breakCue?(.open)
+            current = FallowSession(projectName: DemoCopy.project.uppercased(), originDevice: .mac)
             phase = .capture
         case .resting where !showsLens:
+            current.requestReturn()
             phase = .returnDoorway
         default:
             break
@@ -71,16 +87,17 @@ final class SessionModel {
             thought = DemoCopy.unresolved
         }
         thoughtIsCaptured = true
+        current.capture(thought)
         phase = .classifyStuck
     }
 
-    func chooseStuck(_ kind: StuckKind) {
-        stuck = kind
+    func chooseState(_ state: CreativeState) {
+        current.choose(state)
         phase = .chooseDistance
     }
 
-    func chooseDistance(_ kind: DistanceKind) {
-        distance = kind
+    func chooseDistance(_ kind: FallowDistance) {
+        current.choose(kind)
         softness = 0
         phase = .threshold
     }
@@ -94,6 +111,7 @@ final class SessionModel {
             return
         }
         pressing = true
+        current.beginRelease()
         breakCue?(.into)
         releaseTask?.cancel()
         let duration = max(0.2, holdDuration)
@@ -123,6 +141,7 @@ final class SessionModel {
             finishHold()
         } else {
             breakCue?(.cancel)
+            current.cancelRelease()
             let from = progress
             phase = .threshold
             releaseTask?.cancel()
@@ -148,11 +167,13 @@ final class SessionModel {
         if reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             reflection = DemoCopy.reflection
         }
+        current.recordShift(reflection)
         phase = .beforeAfter
     }
 
     func goBackIn() {
         guard phase == .beforeAfter else { return }
+        current.beginReentry()
         phase = .reentering
         breakCue?(.out)
         returnTask?.cancel()
@@ -165,12 +186,13 @@ final class SessionModel {
                 try? await Task.sleep(nanoseconds: 16_000_000)
             }
             showsLens = false
+            current.complete()
             phase = .dormant
             softness = 0
         }
     }
 
-    func showPreview(_ phase: SessionPhase) {
+    func showPreview(_ phase: OrbPhase) {
         cancelMotion()
         switch phase {
         case .dormant:
@@ -237,11 +259,8 @@ final class SessionModel {
         breakCue?(.stop)
         cancelMotion()
         showsLens = false
-        thought = ""
         thoughtIsCaptured = false
-        reflection = ""
-        stuck = nil
-        distance = nil
+        current = FallowSession(originDevice: .mac, phase: .dormant)
         let from = softness
         phase = .dormant
         guard from > 0.01 else {
@@ -289,6 +308,7 @@ final class SessionModel {
         releaseTask?.cancel()
         releaseTask = nil
         settleID += 1
+        current.markReleased()
         phase = .resting
         softness = 1
         showsLens = true

@@ -72,14 +72,14 @@ struct CompanionView: View {
         case .classifyStuck:
             choices(
                 prompt: DemoCopy.stuckPrompt,
-                items: StuckKind.allCases.map { ($0.title, $0 == session.stuck) },
-                select: { session.chooseStuck(StuckKind.allCases[$0]) }
+                items: CreativeState.allCases.map { ($0.title, $0 == session.creativeState) },
+                select: { session.chooseState(CreativeState.allCases[$0]) }
             )
         case .chooseDistance:
             choices(
                 prompt: DemoCopy.distancePrompt,
-                items: DistanceKind.allCases.map { ($0.title, $0 == session.distance) },
-                select: { session.chooseDistance(DistanceKind.allCases[$0]) }
+                items: FallowDistance.allCases.map { ($0.title, $0 == session.distance) },
+                select: { session.chooseDistance(FallowDistance.allCases[$0]) }
             )
         case .threshold, .holding:
             threshold
@@ -256,7 +256,7 @@ struct CompanionView: View {
                 .alignmentGuide(.top) { d in d[.bottom] + 40 }
             }
             .overlay(alignment: .bottom) {
-                Text(session.showsLens ? DemoCopy.lens : DemoCopy.returnWhenReady)
+                Text(session.showsLens ? (session.restLine ?? DemoCopy.returnWhenReady) : DemoCopy.returnWhenReady)
                     .id(session.showsLens)
                     .transition(.opacity)
                     .font(.system(size: 15))

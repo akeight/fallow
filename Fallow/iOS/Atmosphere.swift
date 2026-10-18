@@ -5,7 +5,7 @@ import UIKit
 /// product surface to open space and back. Nature only appears once something is let go.
 struct Atmosphere: View {
     var openness: Double
-    var restScene: DistanceKind
+    var restScene: FallowDistance
     var drifting: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -75,12 +75,12 @@ struct Atmosphere: View {
         .accessibilityHidden(true)
     }
 
-    static func sceneName(for distance: DistanceKind) -> String {
+    static func sceneName(for distance: FallowDistance) -> String {
         switch distance {
         case .breath: "SceneWall"
         case .someDistance: "SceneValley"
         case .sleepOnIt: "SceneWater"
-        case .unknown: "SceneMeadow"
+        case .openEnded: "SceneMeadow"
         }
     }
 }

@@ -19,11 +19,21 @@ enum PhoneStep: Equatable {
     case returning
     case reflect
     case beforeAfter
+    case stillStuck
+    case reframe
+    case reframeCompare
 }
 
 enum ReleaseLine: Equatable {
     case releasing
     case restingNow
+}
+
+/// Which field a voice capture fills.
+enum RecordingTarget: Equatable {
+    case thought
+    case shift
+    case reframe
 }
 
 /// Where the orb sits for the current screen, as a fraction of the content height.
@@ -38,13 +48,11 @@ struct OrbPlacement: Equatable {
 final class PhoneStore {
     var tab: PhoneTab = .home
     var step: PhoneStep = .capture
-    var active: FallowSession? = .demo
+    /// The one thread being worked with, from capture through return. Screens read and write it.
+    var session: FallowSession? = .demo
     var past: [FallowSession] = FallowSession.demoPast
-    var draft = ""
-    var creativeState: CreativeState = .lostPerspective
-    var suggestedState: CreativeState = .lostPerspective
-    var distance: DistanceKind?
-    var reflection = ""
+    /// The classifier's guess, kept apart from the session until the person chooses.
+    var interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
     var releaseLine: ReleaseLine = .releasing
     var handedToMac = false
     var showsNudge = true
@@ -67,7 +75,7 @@ final class PhoneStore {
     @ObservationIgnored private var flowTask: Task<Void, Never>?
     @ObservationIgnored private var simulatedVoice: Task<Void, Never>?
     @ObservationIgnored private var demoIndex = 0
-    @ObservationIgnored private var recordingReflection = false
+    @ObservationIgnored private var recordingTarget: RecordingTarget = .thought
 
     init() {
         orbConfig.idleSize = 100
@@ -86,6 +94,38 @@ final class PhoneStore {
         syncOrb()
     }
 
+    // MARK: Session fields
+
+    /// A session that has been released and is resting or being returned to. Home shows it.
+    var active: FallowSession? {
+        guard let session, session.isAway else { return nil }
+        return session
+    }
+
+    var draft: String {
+        get { session?.unresolvedThought ?? "" }
+        set { session?.unresolvedThought = newValue }
+    }
+
+    var reflection: String {
+        get { session?.returnedThought ?? "" }
+        set { session?.returnedThought = newValue }
+    }
+
+    var reframe: String {
+        get { session?.reframedThought ?? "" }
+        set { session?.reframedThought = newValue }
+    }
+
+    /// The highlighted choice: the person's pick, or the guess until they make one.
+    var highlightedState: CreativeState? {
+        session?.creativeState ?? interpretation.suggestedState
+    }
+
+    var difficultyDisengaging: Bool {
+        session?.difficultyDisengaging ?? false
+    }
+
     // MARK: Derived
 
     var openness: Double {
@@ -98,8 +138,8 @@ final class PhoneStore {
         return orb.holdAmount
     }
 
-    var restScene: DistanceKind {
-        active?.distance ?? distance ?? .someDistance
+    var restScene: FallowDistance {
+        session?.distance ?? .someDistance
     }
 
     var showsTabBar: Bool {
@@ -123,7 +163,7 @@ final class PhoneStore {
             return .afterRelease
         case .resting:
             return .resting
-        case .returning, .reflect, .beforeAfter:
+        case .returning, .reflect, .beforeAfter, .stillStuck, .reframe, .reframeCompare:
             return .draining
         default:
             return .off
@@ -158,8 +198,9 @@ final class PhoneStore {
             case .release: return OrbPlacement(y: 0.46, scale: 1)
             case .releasing, .resting: return OrbPlacement(y: 0.5, scale: 0.78)
             case .returning: return OrbPlacement(y: 0.33, scale: 0.9)
-            case .reflect: return OrbPlacement(y: 0.12, scale: 0.5)
-            case .beforeAfter: return OrbPlacement(y: 0.11, scale: 0.45)
+            case .reflect, .reframe: return OrbPlacement(y: 0.12, scale: 0.5)
+            case .beforeAfter, .reframeCompare: return OrbPlacement(y: 0.11, scale: 0.45)
+            case .stillStuck: return OrbPlacement(y: 0.38, scale: 0.78)
             }
         }
     }
@@ -185,9 +226,8 @@ final class PhoneStore {
             leaveLonger()
             return
         }
-        draft = ""
-        reflection = ""
-        distance = nil
+        session = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+        interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
         handedToMac = false
         transition(0.6) {
             self.tab = .pause
@@ -197,9 +237,15 @@ final class PhoneStore {
         syncOrb()
     }
 
+    /// Leaving setup discards the unreleased session. Leaving a return keeps the thought resting.
     func cancelFlow() {
         cancelRecording()
         flowTask?.cancel()
+        if session?.isAway == true {
+            session?.leaveLonger()
+        } else {
+            session = nil
+        }
         transition(0.7) {
             self.tab = .home
             self.baseOpenness = 0
@@ -214,7 +260,8 @@ final class PhoneStore {
         case .refine: .transcript
         case .distance: .refine
         case .release: .distance
-        case .reflect: .returning
+        case .reflect, .stillStuck: .returning
+        case .reframe: .stillStuck
         default: nil
         }
         guard let previous else {
@@ -226,12 +273,12 @@ final class PhoneStore {
 
     func cycleDemo() {
         demoIndex = (demoIndex + 1) % 3
-        active = switch demoIndex {
+        session = switch demoIndex {
         case 0: .demo
         case 1: nil
         default: .demoFromPhone
         }
-        showsNudge = active != nil
+        showsNudge = session != nil
         selectionTick += 1
         transition(0.6) { self.tab = .home }
         syncOrb()
@@ -243,9 +290,9 @@ final class PhoneStore {
         isRecording ? stopRecording() : startRecording()
     }
 
-    func startRecording(forReflection: Bool = false) {
+    func startRecording(_ target: RecordingTarget = .thought) {
         guard !isRecording else { return }
-        recordingReflection = forReflection
+        recordingTarget = target
         transition(0.5) { self.isRecording = true }
         syncOrb()
         Task {
@@ -263,14 +310,18 @@ final class PhoneStore {
         orb.voiceLevel = 0
         let heard = voice.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         transition(0.5) { self.isRecording = false }
-        if recordingReflection {
+        switch recordingTarget {
+        case .shift:
             reflection = heard.isEmpty ? (reflection.isEmpty ? DemoCopy.phoneReflection : reflection) : heard
             syncOrb()
-            return
+        case .reframe:
+            reframe = heard.isEmpty ? (reframe.isEmpty ? DemoCopy.phoneReframe : reframe) : heard
+            syncOrb()
+        case .thought:
+            draft = heard.isEmpty ? DemoCopy.phoneUnresolved : heard
+            focusTyping = false
+            go(.transcript)
         }
-        draft = heard.isEmpty ? DemoCopy.phoneUnresolved : heard
-        focusTyping = false
-        go(.transcript)
     }
 
     func typeInstead() {
@@ -286,17 +337,16 @@ final class PhoneStore {
     }
 
     func continueFromTranscript() {
-        if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            draft = DemoCopy.phoneUnresolved
-        }
+        let thought = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        session?.capture(thought.isEmpty ? DemoCopy.phoneUnresolved : thought)
+        interpretation = FallowInterpretation.demo(for: draft)
+        session?.setDifficultyDisengaging(interpretation.difficultyDisengaging)
         focusTyping = false
-        suggestedState = CreativeState.suggested(for: draft)
-        creativeState = suggestedState
         go(.refine)
     }
 
     func choose(_ state: CreativeState) {
-        creativeState = state
+        session?.choose(state)
         selectionTick += 1
         flowTask?.cancel()
         flowTask = Task {
@@ -306,8 +356,13 @@ final class PhoneStore {
         }
     }
 
-    func choose(_ kind: DistanceKind) {
-        distance = kind
+    func toggleDifficultyDisengaging() {
+        session?.setDifficultyDisengaging(!difficultyDisengaging)
+        selectionTick += 1
+    }
+
+    func choose(_ distance: FallowDistance) {
+        session?.choose(distance)
         selectionTick += 1
         flowTask?.cancel()
         flowTask = Task {
@@ -322,12 +377,14 @@ final class PhoneStore {
     func orbDown() {
         guard tab == .pause, step == .release else { return }
         holdStartTick += 1
+        session?.beginRelease()
         orb.pressHold()
     }
 
     func orbUp(moved: Bool) {
         if tab == .pause, step == .release {
             orb.releaseHold()
+            if case .threshold = orb.phase { session?.cancelRelease() }
             return
         }
         guard !moved else { return }
@@ -358,15 +415,7 @@ final class PhoneStore {
     func holdCompleted() {
         guard tab == .pause, step == .release else { return }
         releasedTick += 1
-        let thought = draft.isEmpty ? DemoCopy.phoneUnresolved : draft
-        active = FallowSession(
-            projectName: "FRAGMENTS",
-            unresolvedThought: thought,
-            creativeState: creativeState,
-            distance: distance ?? .someDistance,
-            status: .resting,
-            origin: .phone
-        )
+        session?.markReleased()
         showsNudge = false
         baseOpenness = 0.7
         releaseLine = .releasing
@@ -385,8 +434,10 @@ final class PhoneStore {
 
     // MARK: Resting and return
 
+    /// Back to rest without restarting anything. Used from Home, Still Stuck, and the reframe.
     func leaveLonger() {
         cancelRecording()
+        session?.leaveLonger()
         showsNudge = false
         transition(0.8) {
             self.tab = .pause
@@ -407,7 +458,7 @@ final class PhoneStore {
     func returnToIt() {
         cancelRecording()
         handedToMac = false
-        reflection = ""
+        session?.requestReturn()
         transition(0.9) {
             self.tab = .pause
             self.step = .returning
@@ -416,11 +467,10 @@ final class PhoneStore {
         syncOrb()
     }
 
+    /// Return where the work is. The Mac picks the session up from here.
     func returnOnMac() {
-        guard var session = active else { return }
+        guard let session else { return }
         transition(0.8) { self.handedToMac = true }
-        session.status = .returning
-        session.date = Date()
         flowTask?.cancel()
         flowTask = Task {
             try? await Task.sleep(nanoseconds: 2_200_000_000)
@@ -429,23 +479,36 @@ final class PhoneStore {
         }
     }
 
-    func beginReflection() {
+    func somethingShifted() {
         go(.reflect)
     }
 
     func confirmReflection() {
         cancelRecording()
-        if reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            reflection = DemoCopy.phoneReflection
-        }
+        let text = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
+        session?.recordShift(text.isEmpty ? DemoCopy.phoneReflection : text)
         go(.beforeAfter)
     }
 
-    func finishReturn() {
-        guard var session = active else { return }
-        session.returnedWith = reflection
-        session.status = .returning
-        session.date = Date()
+    func stillStuck() {
+        session?.markStillStuck()
+        go(.stillStuck)
+    }
+
+    func sayWhatsUnresolved() {
+        go(.reframe)
+    }
+
+    func confirmReframe() {
+        cancelRecording()
+        let text = reframe.trimmingCharacters(in: .whitespacesAndNewlines)
+        session?.recordReframe(text.isEmpty ? DemoCopy.phoneReframe : text)
+        go(.reframeCompare)
+    }
+
+    func goBackIn() {
+        guard var session else { return }
+        session.complete()
         archive(session)
     }
 
@@ -453,7 +516,7 @@ final class PhoneStore {
 
     private func archive(_ session: FallowSession) {
         past.insert(session, at: 0)
-        active = nil
+        self.session = nil
         transition(1) {
             self.tab = .home
             self.baseOpenness = 0
@@ -505,27 +568,59 @@ final class PhoneStore {
     #if DEBUG
     /// Opens a screen directly, for previews and screenshots: `-fallowScreen release-mid`.
     func open(debugScreen name: String) {
-        draft = DemoCopy.phoneUnresolved
-        suggestedState = .looping
-        creativeState = .looping
+        var setup = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+        setup.capture(DemoCopy.phoneUnresolved)
+        interpretation = .demo(for: DemoCopy.phoneUnresolved)
+        var chosen = setup
+        chosen.choose(.looping)
+        var ready = chosen
+        ready.choose(.someDistance)
+        var returning = FallowSession.demoFromPhone
+        returning.requestReturn()
+        var stuck = returning
+        stuck.markStillStuck()
+
+        func resting(_ state: CreativeState, _ distance: FallowDistance, disengaging: Bool = false) -> FallowSession {
+            var rest = setup
+            rest.choose(state)
+            rest.setDifficultyDisengaging(disengaging)
+            rest.choose(distance)
+            rest.markReleased()
+            return rest
+        }
+
         switch name {
-        case "home-empty": active = nil
-        case "home-phone": active = .demoFromPhone
+        case "home-empty": session = nil
+        case "home-phone": session = .demoFromPhone
         case "past": tab = .past
-        case "capture": tab = .pause; step = .capture; active = nil
-        case "listening": tab = .pause; step = .capture; active = nil; isRecording = true; orb.voiceLevel = 0.6
-        case "transcript": tab = .pause; step = .transcript; active = nil
-        case "refine": tab = .pause; step = .refine; active = nil
-        case "distance": tab = .pause; step = .distance; active = nil; distance = .someDistance; baseOpenness = 0.15
+        case "capture": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone)
+        case "listening":
+            tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); isRecording = true; orb.voiceLevel = 0.6
+        case "transcript": tab = .pause; step = .transcript; session = setup
+        case "refine": tab = .pause; step = .refine; session = setup
+        case "refine-unsure":
+            setup.capture(DemoCopy.unresolved)
+            interpretation = .demo(for: DemoCopy.unresolved)
+            tab = .pause; step = .refine; session = setup
+        case "distance": tab = .pause; step = .distance; session = chosen; baseOpenness = 0.15
         case "release", "release-mid", "release-late", "release-auto":
-            tab = .pause; step = .release; active = nil; distance = .someDistance; baseOpenness = 0.15
-        case "releasing": tab = .pause; step = .releasing; active = .demoFromPhone; baseOpenness = 1
-        case "resting": tab = .pause; step = .resting; baseOpenness = 1
-        case "return-mac": tab = .pause; step = .returning; baseOpenness = 0.12
-        case "return-phone": tab = .pause; step = .returning; active = .demoFromPhone; baseOpenness = 0.12
-        case "reflect": tab = .pause; step = .reflect; active = .demoFromPhone; baseOpenness = 0.12
+            tab = .pause; step = .release; session = ready; baseOpenness = 0.15
+        case "releasing": tab = .pause; step = .releasing; session = .demoFromPhone; baseOpenness = 1
+        case "resting": tab = .pause; step = .resting; session = .demo; baseOpenness = 1
+        case "resting-empty": tab = .pause; step = .resting; session = resting(.runningOnEmpty, .breath); baseOpenness = 1
+        case "resting-disengaging":
+            tab = .pause; step = .resting; session = resting(.lostPerspective, .someDistance, disengaging: true); baseOpenness = 1
+        case "return-mac": tab = .pause; step = .returning; session = .demo; baseOpenness = 0.12
+        case "return-phone": tab = .pause; step = .returning; session = returning; baseOpenness = 0.12
+        case "reflect": tab = .pause; step = .reflect; session = returning; baseOpenness = 0.12
         case "before-after":
-            tab = .pause; step = .beforeAfter; active = .demoFromPhone; reflection = DemoCopy.phoneReflection; baseOpenness = 0.12
+            returning.recordShift(DemoCopy.phoneReflection)
+            tab = .pause; step = .beforeAfter; session = returning; baseOpenness = 0.12
+        case "still-stuck": tab = .pause; step = .stillStuck; session = stuck; baseOpenness = 0.12
+        case "reframe": tab = .pause; step = .reframe; session = stuck; baseOpenness = 0.12
+        case "reframe-compare":
+            stuck.recordReframe(DemoCopy.phoneReframe)
+            tab = .pause; step = .reframeCompare; session = stuck; baseOpenness = 0.12
         default: break
         }
         if name == "listening" { orb.showPreview(.capture); return }
@@ -543,7 +638,7 @@ final class PhoneStore {
 
     /// Points the shared orb at the pose for the current screen. Hold drives itself.
     private func syncOrb() {
-        let phase: SessionPhase
+        let phase: OrbPhase
         switch tab {
         case .home:
             phase = active == nil ? .dormant : .resting
@@ -555,9 +650,9 @@ final class PhoneStore {
             case .transcript, .refine: phase = .dormant
             case .distance, .release: phase = .threshold
             case .releasing, .resting: phase = .resting
-            case .returning: phase = .returnDoorway
-            case .reflect: phase = isRecording ? .capture : .reflecting
-            case .beforeAfter: phase = .beforeAfter
+            case .returning, .stillStuck: phase = .returnDoorway
+            case .reflect, .reframe: phase = isRecording ? .capture : .reflecting
+            case .beforeAfter, .reframeCompare: phase = .beforeAfter
             }
         }
         if orb.phase == phase { return }

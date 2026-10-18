@@ -25,7 +25,7 @@ enum OrbPreview: String, CaseIterable, Identifiable {
         }
     }
 
-    var phase: SessionPhase {
+    var phase: OrbPhase {
         switch self {
         case .dormant: .dormant
         case .capture: .capture

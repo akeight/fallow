@@ -78,7 +78,7 @@ struct OrbDraw {
 
 @MainActor
 enum OrbMotion {
-    static func rawProgress(phase: SessionPhase, softness: Double) -> Double {
+    static func rawProgress(phase: OrbPhase, softness: Double) -> Double {
         switch phase {
         case .holding(let progress):
             progress
@@ -130,7 +130,7 @@ enum OrbMotion {
     }
 
     static func resolve(
-        phase: SessionPhase,
+        phase: OrbPhase,
         softness: Double,
         config: OrbTuningConfig,
         time: TimeInterval,
@@ -391,7 +391,7 @@ enum OrbMotion {
         )
     }
 
-    static func canvasExtent(phase: SessionPhase, config: OrbTuningConfig) -> Double {
+    static func canvasExtent(phase: OrbPhase, config: OrbTuningConfig) -> Double {
         switch phase {
         case .dormant:
             max(200, config.idleSize * 2.05)

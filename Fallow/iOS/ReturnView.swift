@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Attention reforming around the thought. The room gathers inward and the surfaces return.
+/// The return does not assume the break worked: something shifted, or it is still here.
 struct ReturnView: View {
     @Bindable var store: PhoneStore
 
@@ -8,9 +9,39 @@ struct ReturnView: View {
         ZStack {
             switch store.step {
             case .reflect:
-                reflect.transition(.fallowText)
+                recapture(
+                    prompt: DemoCopy.different,
+                    text: $store.reflection,
+                    target: .shift,
+                    confirm: store.confirmReflection
+                )
+                .transition(.fallowText)
             case .beforeAfter:
-                beforeAfter.transition(.fallowText)
+                compare(
+                    before: DemoCopy.beforeLabel,
+                    after: DemoCopy.afterLabel,
+                    afterText: store.reflection,
+                    leaveLonger: false
+                )
+                .transition(.fallowText)
+            case .stillStuck:
+                stillStuck.transition(.fallowText)
+            case .reframe:
+                recapture(
+                    prompt: DemoCopy.unresolvedNow,
+                    text: $store.reframe,
+                    target: .reframe,
+                    confirm: store.confirmReframe
+                )
+                .transition(.fallowText)
+            case .reframeCompare:
+                compare(
+                    before: DemoCopy.originalLabel,
+                    after: DemoCopy.nowLabel,
+                    afterText: store.reframe,
+                    leaveLonger: true
+                )
+                .transition(.fallowText)
             default:
                 welcome.transition(.fallowText)
             }
@@ -20,7 +51,7 @@ struct ReturnView: View {
     // MARK: Welcome back
 
     private var welcome: some View {
-        let session = store.active ?? .demo
+        let session = store.session ?? .demo
         return GeometryReader { geo in
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
@@ -37,18 +68,19 @@ struct ReturnView: View {
 
                     Spacer(minLength: 0)
 
-                    ZStack {
-                        if session.origin == .mac {
+                    VStack(spacing: 6) {
+                        if session.originDevice == .mac {
                             if !store.handedToMac {
                                 PrimaryButton(title: DemoCopy.returnOnMac) { store.returnOnMac() }
                                     .transition(.fallowText)
                             }
                         } else {
-                            PrimaryButton(title: "Continue") { store.beginReflection() }
+                            PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
+                            QuietButton(title: DemoCopy.stillStuck) { store.stillStuck() }
                         }
                     }
                     .frame(minHeight: 52)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, session.originDevice == .mac ? 24 : 10)
                 }
 
                 // The prompt and the thought sit on the lower third, under the orb.
@@ -73,15 +105,48 @@ struct ReturnView: View {
     }
 
     private func welcomeLine(for session: FallowSession) -> String {
-        guard session.origin == .mac else { return DemoCopy.different }
-        return store.handedToMac
-            ? "\(session.projectName) is open on your Mac."
-            : "\(session.projectName) is waiting for you."
+        guard session.originDevice == .mac else { return DemoCopy.hadSpace }
+        let project = session.projectName ?? "Your work"
+        return store.handedToMac ? "\(project) is open on your Mac." : "\(project) is waiting for you."
     }
 
-    // MARK: Phone-originated reflection
+    // MARK: Still stuck
 
-    private var reflect: some View {
+    private var stillStuck: some View {
+        VStack(spacing: 0) {
+            HStack {
+                CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                Spacer()
+            }
+            .padding(.top, 4)
+
+            Text(DemoCopy.stillCarrying)
+                .font(FallowType.display(28))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+                .padding(.top, 14)
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 8) {
+                ChoiceRow(title: DemoCopy.leaveLonger, selected: false) { store.leaveLonger() }
+                ChoiceRow(title: DemoCopy.sayUnresolved, selected: false) { store.sayWhatsUnresolved() }
+                ChoiceRow(title: DemoCopy.goBackAnyway, selected: false) { store.goBackIn() }
+            }
+            .padding(.bottom, 28)
+        }
+        .padding(.horizontal, 24)
+    }
+
+    // MARK: One-step recapture
+
+    /// Used for "what feels different" and for the reframe. One question, nothing else re-asked.
+    private func recapture(
+        prompt: String,
+        text: Binding<String>,
+        target: RecordingTarget,
+        confirm: @escaping () -> Void
+    ) -> some View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 HStack {
@@ -90,15 +155,15 @@ struct ReturnView: View {
                 }
                 .padding(.top, 4)
 
-                Text(DemoCopy.different)
+                Text(prompt)
                     .font(FallowType.display(28))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
-                    .padding(.top, geo.size.height * 0.11)
+                    .padding(.top, geo.size.height * 0.15)
 
                 VStack(alignment: .leading, spacing: 12) {
                     ZStack(alignment: .topLeading) {
-                        if store.reflection.isEmpty {
+                        if text.wrappedValue.isEmpty {
                             Text(store.isRecording ? "Listening…" : "Say it, or write it.")
                                 .font(FallowType.process)
                                 .foregroundStyle(Theme.ash)
@@ -106,7 +171,7 @@ struct ReturnView: View {
                                 .padding(.leading, 5)
                                 .allowsHitTesting(false)
                         }
-                        TextEditor(text: $store.reflection)
+                        TextEditor(text: text)
                             .font(FallowType.process)
                             .foregroundStyle(Theme.ink)
                             .lineSpacing(5)
@@ -117,7 +182,7 @@ struct ReturnView: View {
                     HStack {
                         Spacer()
                         Button {
-                            store.isRecording ? store.stopRecording() : store.startRecording(forReflection: true)
+                            store.isRecording ? store.stopRecording() : store.startRecording(target)
                         } label: {
                             Image(systemName: store.isRecording ? "stop.fill" : "mic")
                                 .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
@@ -136,7 +201,7 @@ struct ReturnView: View {
 
                 Spacer(minLength: 16)
 
-                PrimaryButton(title: "Continue") { store.confirmReflection() }
+                PrimaryButton(title: "Continue", action: confirm)
                     .padding(.bottom, 20)
             }
             .padding(.horizontal, 28)
@@ -145,12 +210,13 @@ struct ReturnView: View {
 
     // MARK: Before and after
 
-    private var beforeAfter: some View {
-        let session = store.active ?? .demoFromPhone
+    /// The shift is kept, whether the problem resolved or only changed shape.
+    private func compare(before: String, after: String, afterText: String, leaveLonger: Bool) -> some View {
+        let session = store.session ?? .demoFromPhone
         return GeometryReader { geo in
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: DemoCopy.beforeLabel)
+                    Eyebrow(text: before)
                     ThoughtText(text: session.unresolvedThought, color: Theme.ash)
                 }
 
@@ -160,20 +226,19 @@ struct ReturnView: View {
                     .padding(.vertical, 26)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: DemoCopy.afterLabel)
-                    ThoughtText(text: store.reflection)
+                    Eyebrow(text: after)
+                    ThoughtText(text: afterText)
                 }
 
                 Spacer(minLength: 16)
 
-                Text("Kept in Past, with the story of how it changed.")
-                    .font(FallowType.caption)
-                    .foregroundStyle(Theme.ash)
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 10)
-
-                PrimaryButton(title: "Done") { store.finishReturn() }
-                    .padding(.bottom, 20)
+                VStack(spacing: 6) {
+                    PrimaryButton(title: DemoCopy.goBack) { store.goBackIn() }
+                    if leaveLonger {
+                        QuietButton(title: DemoCopy.leaveLittleLonger) { store.leaveLonger() }
+                    }
+                }
+                .padding(.bottom, leaveLonger ? 10 : 20)
             }
             .padding(.top, geo.size.height * 0.24)
             .padding(.horizontal, 32)

@@ -6,7 +6,7 @@ struct RestingView: View {
     var store: PhoneStore
 
     var body: some View {
-        let session = store.active
+        let session = store.session
         GeometryReader { geo in
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
@@ -22,8 +22,8 @@ struct RestingView: View {
                         Text(DemoCopy.itsHere)
                             .font(FallowType.display(34))
                             .foregroundStyle(Theme.ink)
-                        Eyebrow(text: DemoCopy.letItBe)
-                            .frame(maxWidth: 200)
+                        Eyebrow(text: FallowBehaviorResolver.reassurance(difficultyDisengaging: store.difficultyDisengaging) ?? DemoCopy.letItBe)
+                            .frame(maxWidth: 220)
                     }
                     .padding(.top, geo.size.height * 0.14)
 
@@ -31,7 +31,8 @@ struct RestingView: View {
                 }
 
                 VStack(spacing: 14) {
-                    if let line = session?.creativeState.restLine {
+                    // Silence is a valid intervention: then only the place is named.
+                    if let line = session?.intervention?.line {
                         Text(line)
                             .font(FallowType.secondary)
                             .foregroundStyle(Color.white.opacity(0.9))

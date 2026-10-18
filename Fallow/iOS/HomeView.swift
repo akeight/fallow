@@ -26,7 +26,7 @@ struct HomeView: View {
 
     private func active(_ session: FallowSession) -> some View {
         VStack(spacing: 0) {
-            Text("\(session.projectName) is resting.")
+            Text("\(session.projectName ?? "Your thought") is resting.")
                 .font(FallowType.display(30))
                 .foregroundStyle(Theme.ink)
                 .multilineTextAlignment(.center)
@@ -39,7 +39,7 @@ struct HomeView: View {
                 .padding(.top, 10)
                 .padding(.horizontal, 8)
 
-            Text(session.distance.title)
+            Text(session.distance?.title ?? "")
                 .font(FallowType.caption)
                 .foregroundStyle(Theme.ash)
                 .padding(.top, 12)
