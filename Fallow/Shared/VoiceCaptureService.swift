@@ -51,6 +51,9 @@ final class VoiceCaptureService {
     @ObservationIgnored private var request: SFSpeechAudioBufferRecognitionRequest?
     @ObservationIgnored private var task: SFSpeechRecognitionTask?
     @ObservationIgnored private var finalText: String?
+    /// Words from earlier stretches of speech. Recognition can start a fresh transcription after a pause.
+    @ObservationIgnored private var heardBefore = ""
+    @ObservationIgnored private var segment = ""
     @ObservationIgnored private var recognitionEnded = false
     @ObservationIgnored private var finalWaiter: CheckedContinuation<Void, Never>?
     @ObservationIgnored private var onDevice = false
@@ -83,6 +86,8 @@ final class VoiceCaptureService {
     func start() async {
         guard !isBusy else { return }
         partialTranscript = ""
+        heardBefore = ""
+        segment = ""
         finalText = nil
         recognitionEnded = false
         recognizerFailed = false
@@ -152,6 +157,8 @@ final class VoiceCaptureService {
         task?.cancel()
         teardown()
         partialTranscript = ""
+        heardBefore = ""
+        segment = ""
         state = .idle
     }
 
@@ -216,11 +223,26 @@ final class VoiceCaptureService {
 
     private func receive(text: String, isFinal: Bool) {
         guard isBusy else { return }
-        partialTranscript = text
+        // An empty result, including an empty final one after Stop, never erases what was heard.
+        if !text.isEmpty {
+            if Self.startsOver(text, after: segment) {
+                heardBefore = [heardBefore, segment].filter { !$0.isEmpty }.joined(separator: " ")
+            }
+            segment = text
+            partialTranscript = [heardBefore, segment].filter { !$0.isEmpty }.joined(separator: " ")
+        }
         if isFinal {
-            finalText = text
+            finalText = partialTranscript
             recognitionDidEnd()
         }
+    }
+
+    /// A partial result normally revises the end of the current transcription. One that no longer
+    /// begins with the same word, and is shorter, is a new stretch of speech after a pause.
+    private static func startsOver(_ text: String, after segment: String) -> Bool {
+        guard !segment.isEmpty, text.count < segment.count else { return false }
+        let first = { (value: String) in value.split(separator: " ").first.map { $0.lowercased() } }
+        return first(text) != first(segment)
     }
 
     private func recognitionDidEnd(unavailable: Bool = false) {
