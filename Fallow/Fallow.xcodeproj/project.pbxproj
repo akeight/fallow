@@ -1,0 +1,512 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B10000000000000000000001 /* SessionPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* SessionPhase.swift */; };
+		B10000000000000000000002 /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
+		B10000000000000000000003 /* DemoCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* DemoCopy.swift */; };
+		B10000000000000000000004 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* Theme.swift */; };
+		B10000000000000000000005 /* OrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* OrbView.swift */; };
+		B10000000000000000000006 /* CompanionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000006 /* CompanionView.swift */; };
+		B10000000000000000000007 /* SofteningPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000007 /* SofteningPanel.swift */; };
+		B10000000000000000000008 /* CompanionPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000008 /* CompanionPanel.swift */; };
+		B10000000000000000000009 /* CompanionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000009 /* CompanionController.swift */; };
+		B1000000000000000000000A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000A /* AppDelegate.swift */; };
+		B1000000000000000000000B /* FallowMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000B /* FallowMacApp.swift */; };
+		B10000000000000000000011 /* OrbTuningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* OrbTuningConfig.swift */; };
+		B10000000000000000000012 /* OrbMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* OrbMotion.swift */; };
+		B10000000000000000000013 /* OrbTunerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000013 /* OrbTunerView.swift */; };
+		B10000000000000000000014 /* AuraTransition.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* AuraTransition.wav */; };
+		B10000000000000000000015 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
+		B10000000000000000000017 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
+		B10000000000000000000016 /* BreakSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000016 /* BreakSounds.swift */; };
+		B1000000000000000000000C /* SessionPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* SessionPhase.swift */; };
+		B1000000000000000000000D /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
+		B1000000000000000000000E /* DemoCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* DemoCopy.swift */; };
+		B1000000000000000000000F /* FallowIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000C /* FallowIOSApp.swift */; };
+		B10000000000000000000018 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* Theme.swift */; };
+		B10000000000000000000019 /* OrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* OrbView.swift */; };
+		B1000000000000000000001A /* OrbTuningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* OrbTuningConfig.swift */; };
+		B1000000000000000000001B /* OrbMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* OrbMotion.swift */; };
+		B1000000000000000000001C /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
+		B1000000000000000000001D /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
+		B1000000000000000000001E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* RootView.swift */; };
+		B1000000000000000000001F /* RestingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001A /* RestingView.swift */; };
+		B10000000000000000000020 /* NudgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001B /* NudgeView.swift */; };
+		B10000000000000000000021 /* ReturnHandoffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001C /* ReturnHandoffView.swift */; };
+		B10000000000000000000022 /* QuietOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001D /* QuietOrb.swift */; };
+		B10000000000000000000023 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
+		B10000000000000000000024 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
+		B10000000000000000000025 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
+		B10000000000000000000026 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F10000000000000000000001 /* SessionPhase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionPhase.swift; sourceTree = "<group>"; };
+		F10000000000000000000002 /* SessionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionModel.swift; sourceTree = "<group>"; };
+		F10000000000000000000003 /* DemoCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoCopy.swift; sourceTree = "<group>"; };
+		F10000000000000000000004 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		F10000000000000000000005 /* OrbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbView.swift; sourceTree = "<group>"; };
+		F10000000000000000000006 /* CompanionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionView.swift; sourceTree = "<group>"; };
+		F10000000000000000000007 /* SofteningPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SofteningPanel.swift; sourceTree = "<group>"; };
+		F10000000000000000000008 /* CompanionPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPanel.swift; sourceTree = "<group>"; };
+		F10000000000000000000009 /* CompanionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionController.swift; sourceTree = "<group>"; };
+		F1000000000000000000000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		F1000000000000000000000B /* FallowMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowMacApp.swift; sourceTree = "<group>"; };
+		F10000000000000000000011 /* OrbTuningConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbTuningConfig.swift; sourceTree = "<group>"; };
+		F10000000000000000000012 /* OrbMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbMotion.swift; sourceTree = "<group>"; };
+		F10000000000000000000013 /* OrbTunerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbTunerView.swift; sourceTree = "<group>"; };
+		F10000000000000000000014 /* AuraTransition.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraTransition.wav; sourceTree = "<group>"; };
+		F10000000000000000000015 /* MagicalAura.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = MagicalAura.wav; sourceTree = "<group>"; };
+		F10000000000000000000017 /* AuraWoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraWoosh.wav; sourceTree = "<group>"; };
+		F10000000000000000000016 /* BreakSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakSounds.swift; sourceTree = "<group>"; };
+		F1000000000000000000000C /* FallowIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowIOSApp.swift; sourceTree = "<group>"; };
+		F10000000000000000000018 /* FallowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSession.swift; sourceTree = "<group>"; };
+		F10000000000000000000019 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F1000000000000000000001A /* RestingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestingView.swift; sourceTree = "<group>"; };
+		F1000000000000000000001B /* NudgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NudgeView.swift; sourceTree = "<group>"; };
+		F1000000000000000000001C /* ReturnHandoffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnHandoffView.swift; sourceTree = "<group>"; };
+		F1000000000000000000001D /* QuietOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuietOrb.swift; sourceTree = "<group>"; };
+		F1000000000000000000001E /* FallowFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowFont.swift; sourceTree = "<group>"; };
+		F1000000000000000000001F /* CultVP-Branding.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CultVP-Branding.otf"; sourceTree = "<group>"; };
+		F1000000000000000000000D /* FALLOW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FALLOW.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1000000000000000000000E /* FALLOW Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FALLOW Companion.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A10000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000000000000000000002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		G10000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				G10000000000000000000002 /* Shared */,
+				G10000000000000000000003 /* macOS */,
+				G10000000000000000000004 /* iOS */,
+				G10000000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		G10000000000000000000002 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000001 /* SessionPhase.swift */,
+				F10000000000000000000002 /* SessionModel.swift */,
+				F10000000000000000000003 /* DemoCopy.swift */,
+				F10000000000000000000018 /* FallowSession.swift */,
+				F1000000000000000000001E /* FallowFont.swift */,
+				G10000000000000000000007 /* Fonts */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000003 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000004 /* Theme.swift */,
+				F10000000000000000000005 /* OrbView.swift */,
+				F10000000000000000000011 /* OrbTuningConfig.swift */,
+				F10000000000000000000012 /* OrbMotion.swift */,
+				F10000000000000000000013 /* OrbTunerView.swift */,
+				F10000000000000000000006 /* CompanionView.swift */,
+				F10000000000000000000007 /* SofteningPanel.swift */,
+				F10000000000000000000008 /* CompanionPanel.swift */,
+				F10000000000000000000009 /* CompanionController.swift */,
+				F1000000000000000000000A /* AppDelegate.swift */,
+				F1000000000000000000000B /* FallowMacApp.swift */,
+				F10000000000000000000016 /* BreakSounds.swift */,
+				G10000000000000000000006 /* Resources */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000007 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000001F /* CultVP-Branding.otf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000006 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000014 /* AuraTransition.wav */,
+				F10000000000000000000015 /* MagicalAura.wav */,
+				F10000000000000000000017 /* AuraWoosh.wav */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000004 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000000C /* FallowIOSApp.swift */,
+				F10000000000000000000019 /* RootView.swift */,
+				F1000000000000000000001A /* RestingView.swift */,
+				F1000000000000000000001B /* NudgeView.swift */,
+				F1000000000000000000001C /* ReturnHandoffView.swift */,
+				F1000000000000000000001D /* QuietOrb.swift */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000000D /* FALLOW.app */,
+				F1000000000000000000000E /* FALLOW Companion.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T10000000000000000000001 /* FallowMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C10000000000000000000003 /* Build configuration list for PBXNativeTarget "FallowMac" */;
+			buildPhases = (
+				S10000000000000000000001 /* Sources */,
+				A10000000000000000000001 /* Frameworks */,
+				R10000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FallowMac;
+			productName = FALLOW;
+			productReference = F1000000000000000000000D /* FALLOW.app */;
+			productType = "com.apple.product-type.application";
+		};
+		T10000000000000000000002 /* FallowIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C10000000000000000000004 /* Build configuration list for PBXNativeTarget "FallowIOS" */;
+			buildPhases = (
+				S10000000000000000000002 /* Sources */,
+				A10000000000000000000002 /* Frameworks */,
+				R10000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FallowIOS;
+			productName = "FALLOW Companion";
+			productReference = F1000000000000000000000E /* FALLOW Companion.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		P10000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					T10000000000000000000001 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					T10000000000000000000002 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+				};
+			};
+			buildConfigurationList = C10000000000000000000001 /* Build configuration list for PBXProject "Fallow" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = G10000000000000000000001;
+			productRefGroup = G10000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				T10000000000000000000001 /* FallowMac */,
+				T10000000000000000000002 /* FallowIOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		R10000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000025 /* CultVP-Branding.otf in Resources */,
+				B10000000000000000000014 /* AuraTransition.wav in Resources */,
+				B10000000000000000000015 /* MagicalAura.wav in Resources */,
+				B10000000000000000000017 /* AuraWoosh.wav in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		R10000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000026 /* CultVP-Branding.otf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		S10000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10000000000000000000001 /* SessionPhase.swift in Sources */,
+				B10000000000000000000002 /* SessionModel.swift in Sources */,
+				B10000000000000000000003 /* DemoCopy.swift in Sources */,
+				B1000000000000000000001D /* FallowSession.swift in Sources */,
+				B10000000000000000000023 /* FallowFont.swift in Sources */,
+				B10000000000000000000004 /* Theme.swift in Sources */,
+				B10000000000000000000005 /* OrbView.swift in Sources */,
+				B10000000000000000000011 /* OrbTuningConfig.swift in Sources */,
+				B10000000000000000000012 /* OrbMotion.swift in Sources */,
+				B10000000000000000000013 /* OrbTunerView.swift in Sources */,
+				B10000000000000000000006 /* CompanionView.swift in Sources */,
+				B10000000000000000000007 /* SofteningPanel.swift in Sources */,
+				B10000000000000000000008 /* CompanionPanel.swift in Sources */,
+				B10000000000000000000009 /* CompanionController.swift in Sources */,
+				B1000000000000000000000A /* AppDelegate.swift in Sources */,
+				B1000000000000000000000B /* FallowMacApp.swift in Sources */,
+				B10000000000000000000016 /* BreakSounds.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		S10000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1000000000000000000000C /* SessionPhase.swift in Sources */,
+				B1000000000000000000000D /* SessionModel.swift in Sources */,
+				B1000000000000000000000E /* DemoCopy.swift in Sources */,
+				B1000000000000000000001C /* FallowSession.swift in Sources */,
+				B10000000000000000000024 /* FallowFont.swift in Sources */,
+				B10000000000000000000018 /* Theme.swift in Sources */,
+				B10000000000000000000019 /* OrbView.swift in Sources */,
+				B1000000000000000000001A /* OrbTuningConfig.swift in Sources */,
+				B1000000000000000000001B /* OrbMotion.swift in Sources */,
+				B1000000000000000000000F /* FallowIOSApp.swift in Sources */,
+				B1000000000000000000001E /* RootView.swift in Sources */,
+				B1000000000000000000001F /* RestingView.swift in Sources */,
+				B10000000000000000000020 /* NudgeView.swift in Sources */,
+				B10000000000000000000021 /* ReturnHandoffView.swift in Sources */,
+				B10000000000000000000022 /* QuietOrb.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D10000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		D10000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		D10000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.macos;
+				PRODUCT_NAME = FALLOW;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D10000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CODE_SIGNING_REQUIRED = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.macos;
+				PRODUCT_NAME = FALLOW;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		D10000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CODE_SIGNING_REQUIRED = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
+				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.ios;
+				PRODUCT_NAME = "FALLOW Companion";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		D10000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CODE_SIGNING_REQUIRED = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
+				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.ios;
+				PRODUCT_NAME = "FALLOW Companion";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C10000000000000000000001 /* Build configuration list for PBXProject "Fallow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000001 /* Debug */,
+				D10000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C10000000000000000000003 /* Build configuration list for PBXNativeTarget "FallowMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000003 /* Debug */,
+				D10000000000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C10000000000000000000004 /* Build configuration list for PBXNativeTarget "FallowIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000005 /* Debug */,
+				D10000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = P10000000000000000000001 /* Project object */;
+}
