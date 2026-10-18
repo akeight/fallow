@@ -30,23 +30,25 @@ struct ReleaseView: View {
                         .opacity(chrome)
                         .blur(radius: 4 * (1 - chrome))
 
-                    Spacer(minLength: 0)
-
                     if !releasing {
                         thought(hold: hold)
-                            .padding(.bottom, 24)
+                            .padding(.top, 34)
                             .transition(.opacity)
-
-                        Text(DemoCopy.hold)
-                            .font(FallowType.eyebrow)
-                            .tracking(2.4)
-                            .textCase(.uppercase)
-                            .foregroundStyle(Theme.mute)
-                            .opacity(chrome)
-                            .padding(.bottom, 34)
                     }
+
+                    Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 28)
+
+                if !releasing {
+                    Text(DemoCopy.hold)
+                        .font(FallowType.eyebrow)
+                        .tracking(2.4)
+                        .textCase(.uppercase)
+                        .foregroundStyle(Theme.mute)
+                        .opacity(chrome)
+                        .position(x: geo.size.width / 2, y: geo.size.height * store.orbPlacement.y + 118)
+                }
 
                 if releasing {
                     releaseLine

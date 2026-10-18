@@ -112,7 +112,7 @@ private struct TranscriptStep: View {
                 .padding(.top, 4)
 
                 Eyebrow(text: store.focusTyping ? "What are you carrying?" : "You’re carrying")
-                    .padding(.top, geo.size.height * 0.12)
+                    .padding(.top, geo.size.height * 0.26)
 
                 ZStack(alignment: .topLeading) {
                     if store.draft.isEmpty {
@@ -130,7 +130,7 @@ private struct TranscriptStep: View {
                         .scrollContentBackground(.hidden)
                         .focused($focused)
                 }
-                .frame(minHeight: 120, maxHeight: 170)
+                .frame(height: 130)
                 .padding(14)
                 .glass(radius: 20)
                 .padding(.top, 14)
@@ -201,9 +201,9 @@ private struct RefineStep: View {
         return Button { store.choose(state) } label: {
             HStack(spacing: 14) {
                 Circle()
-                    .fill(selected ? OrbPalette.ember.color : Theme.rim.opacity(0.6))
+                    .fill(selected ? Petal.deep : Theme.rim.opacity(0.6))
                     .frame(width: 8, height: 8)
-                    .shadow(color: OrbPalette.warm.color.opacity(selected ? 0.9 : 0), radius: 6)
+                    .shadow(color: Petal.fill.opacity(selected ? 0.9 : 0), radius: 6)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(state.title)
                         .font(.system(size: 16, weight: selected ? .semibold : .regular))
@@ -270,9 +270,9 @@ private struct DistanceStep: View {
                     if selected {
                         Capsule()
                             .fill(.ultraThinMaterial)
-                            .overlay(Capsule().fill(Theme.light.opacity(0.7)))
+                            .overlay(Capsule().fill(Petal.soft.opacity(0.85)))
                             .overlay(Capsule().strokeBorder(Color.white.opacity(0.9), lineWidth: 1))
-                            .shadow(color: OrbPalette.warm.color.opacity(0.35), radius: 14)
+                            .shadow(color: Petal.deep.opacity(0.2), radius: 14)
                             .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     }
                 }

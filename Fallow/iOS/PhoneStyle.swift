@@ -1,5 +1,13 @@
 import SwiftUI
 
+/// The action color: a muted petal mauve from the dusk haze and the orb's cool shadow.
+/// Distinct from the ink, and cooler than the warm surfaces around it.
+enum Petal {
+    static let fill = Color(hex: 0xCDBAC5)
+    static let soft = Color(hex: 0xEADFE5)
+    static let deep = Color(hex: 0x9C8292)
+}
+
 /// A small give under the finger. Nothing bounces.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -20,7 +28,9 @@ struct PrimaryButton: View {
                 .font(FallowType.button)
                 .foregroundStyle(Theme.ink)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .glass(radius: 26, lit: true)
+                .background(Capsule().fill(Petal.fill))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.45), lineWidth: 1))
+                .shadow(color: Petal.deep.opacity(0.25), radius: 12, y: 5)
                 .contentShape(Capsule())
         }
         .buttonStyle(PressableStyle())
@@ -76,10 +86,10 @@ struct GlassSurface: ViewModifier {
             .background {
                 shape
                     .fill(.ultraThinMaterial)
-                    .overlay(shape.fill((lit ? Theme.light : Theme.paper).opacity(lit ? 0.75 : 0.5)))
+                    .overlay(shape.fill((lit ? Petal.soft : Theme.paper).opacity(lit ? 0.85 : 0.5)))
             }
-            .overlay(shape.strokeBorder(Color.white.opacity(lit ? 0.95 : 0.6), lineWidth: 1))
-            .shadow(color: Color(hex: 0x5C4A32).opacity(lit ? 0.14 : 0.07), radius: lit ? 16 : 10, y: 5)
+            .overlay(shape.strokeBorder(Color.white.opacity(lit ? 0.9 : 0.6), lineWidth: 1))
+            .shadow(color: (lit ? Petal.deep : Color(hex: 0x5C4A32)).opacity(lit ? 0.16 : 0.07), radius: lit ? 16 : 10, y: 5)
     }
 }
 

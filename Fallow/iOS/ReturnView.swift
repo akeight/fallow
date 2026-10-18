@@ -21,55 +21,59 @@ struct ReturnView: View {
 
     private var welcome: some View {
         let session = store.active ?? .demo
-        return VStack(spacing: 0) {
-            HStack {
-                CornerButton(systemName: "chevron.left", label: "Back to Home") { store.cancelFlow() }
-                Spacer()
-            }
-            .padding(.top, 4)
-
-            Text(DemoCopy.welcomeBack)
-                .font(FallowType.display(34))
-                .foregroundStyle(Theme.ink)
-                .padding(.top, 10)
-
-            Spacer(minLength: 0)
-
-            VStack(alignment: .leading, spacing: 10) {
-                Eyebrow(text: "You left with")
-                ThoughtText(text: session.unresolvedThought)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20)
-            .glass(radius: 20)
-
-            VStack(spacing: 10) {
-                if session.origin == .mac {
-                    if store.handedToMac {
-                        Text("\(session.projectName) is open on your Mac.")
-                            .font(FallowType.secondary)
-                            .foregroundStyle(Theme.mute)
-                            .frame(minHeight: 52)
-                            .transition(.fallowText)
-                    } else {
-                        PrimaryButton(title: DemoCopy.returnOnMac) { store.returnOnMac() }
-                            .transition(.fallowText)
-                        Text("\(session.projectName) is waiting for you.")
-                            .font(FallowType.caption)
-                            .foregroundStyle(Theme.ash)
+        return GeometryReader { geo in
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    HStack {
+                        CornerButton(systemName: "chevron.left", label: "Back to Home") { store.cancelFlow() }
+                        Spacer()
                     }
-                } else {
-                    Text(DemoCopy.different)
+                    .padding(.top, 4)
+
+                    Text(DemoCopy.welcomeBack)
+                        .font(FallowType.display(34))
+                        .foregroundStyle(Theme.ink)
+                        .padding(.top, 10)
+
+                    Spacer(minLength: 0)
+
+                    ZStack {
+                        if session.origin == .mac {
+                            if store.handedToMac {
+                                Text("\(session.projectName) is open on your Mac.")
+                                    .font(FallowType.secondary)
+                                    .foregroundStyle(Theme.mute)
+                                    .transition(.fallowText)
+                            } else {
+                                PrimaryButton(title: DemoCopy.returnOnMac) { store.returnOnMac() }
+                                    .transition(.fallowText)
+                            }
+                        } else {
+                            PrimaryButton(title: "Continue") { store.beginReflection() }
+                        }
+                    }
+                    .frame(minHeight: 52)
+                    .padding(.bottom, 24)
+                }
+
+                // The prompt and the thought sit on the lower third, under the orb.
+                VStack(spacing: 14) {
+                    Text(session.origin == .mac ? "\(session.projectName) is waiting for you." : DemoCopy.different)
                         .font(FallowType.secondary)
                         .foregroundStyle(Theme.mute)
-                        .padding(.bottom, 4)
-                    PrimaryButton(title: "Continue") { store.beginReflection() }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: "You left with")
+                        ThoughtText(text: session.unresolvedThought)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .glass(radius: 20)
                 }
+                .padding(.top, geo.size.height * 0.52)
             }
-            .padding(.top, 22)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 28)
         }
-        .padding(.horizontal, 28)
     }
 
     // MARK: Phone-originated reflection

@@ -152,7 +152,7 @@ final class PhoneStore {
         case .pause:
             switch step {
             case .capture: return OrbPlacement(y: 0.44, scale: 1.15)
-            case .transcript: return OrbPlacement(y: 0.12, scale: 0.5)
+            case .transcript: return OrbPlacement(y: 0.21, scale: 0.5)
             case .refine: return OrbPlacement(y: 0.09, scale: 0.42)
             case .distance: return OrbPlacement(y: 0.38, scale: 0.78)
             case .release: return OrbPlacement(y: 0.46, scale: 1)
