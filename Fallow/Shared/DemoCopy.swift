@@ -20,6 +20,7 @@ enum DemoCopy {
     static let nothingResting = "Nothing is resting."
     static let giveThought = "Give a thought somewhere to rest."
     static let hadSpace = "Your idea has had some space."
+    static let restingNowNotice = "Your thought is resting now."
     static let returnToIt = "Return to it"
     static let leaveLonger = "Leave it longer"
     static let feelsLike = "This feels like…"

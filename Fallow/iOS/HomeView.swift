@@ -35,6 +35,9 @@ struct HomeView: View {
                 ForEach(DemoController.Scenario.phone) { scenario in
                     Button(scenario.phoneTitle) { store.demo.run(scenario) }
                 }
+                Button("Rest Notification") { store.demo.triggerRestNotification() }
+                Button("Gentle Nudge") { store.demo.triggerGentleNudge() }
+                Button("Notification Permission") { store.demo.requestNotificationPermission() }
             }
         #else
         mark
