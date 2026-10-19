@@ -4,7 +4,6 @@ import Foundation
 /// the Mac and the iPhone read the same fields, so they cannot disagree.
 /// Keep `unresolvedThought` identical to the line spoken on the Mac.
 enum DemoSessionFactory {
-    static let projectName: String? = "FRAGMENTS"
     static let unresolvedThought = DemoCopy.unresolved
     static let rawTranscript: String? = nil
     static let creativeState: CreativeState = .lostPerspective
@@ -15,11 +14,10 @@ enum DemoSessionFactory {
     private static let id = UUID(uuidString: "F4110000-0000-4000-8000-000000000001")!
 
     /// Released on the Mac a little while ago, and resting.
-    static var fragments: FallowSession {
+    static var macRestingDemo: FallowSession {
         let now = Date()
         var session = FallowSession(
             id: id,
-            projectName: projectName,
             unresolvedThought: unresolvedThought,
             rawTranscript: rawTranscript,
             captureMethod: rawTranscript == nil ? .text : .voice,

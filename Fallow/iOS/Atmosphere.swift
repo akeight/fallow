@@ -13,6 +13,9 @@ struct Atmosphere: View {
     var gardenTop: Double = 1
     /// Darkens everything below the rest scene for light type. 0 is off, 1 is fully deep.
     var depth: Double = 0
+    /// Lets the garden through more fully toward the edges and corners, in the screen's own shape.
+    /// The center is left as it is. 0 is off.
+    var vignette: Double = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -30,6 +33,23 @@ struct Atmosphere: View {
                     .mask(LinearGradient(colors: [.black.opacity(gardenTop), .black], startPoint: .top, endPoint: .bottom))
                     .animation(.easeInOut(duration: reduceMotion ? 0.3 : 1.2), value: garden)
                     .animation(.easeInOut(duration: reduceMotion ? 0.3 : 1.2), value: gardenTop)
+
+                // Not lifted like the center, and a touch richer, so the edges sit a little deeper.
+                SceneImage(name: "HomeGarden", size: size)
+                    .saturation(1.2)
+                    .brightness(-0.06)
+                    .opacity(vignette * (1 - ramp(openness, 0.15, 0.4)))
+                    .mask(EllipticalGradient(
+                        gradient: Gradient(stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .black.opacity(0.55), location: 0.55),
+                            .init(color: .black, location: 1)
+                        ]),
+                        center: UnitPoint(x: 0.5, y: 0.46),
+                        startRadiusFraction: 0.26,
+                        endRadiusFraction: 0.74
+                    ))
+                    .animation(.easeInOut(duration: reduceMotion ? 0.3 : 1.2), value: vignette)
 
                 RadialGradient(
                     colors: [Theme.light.opacity(0.85), Theme.canvas.opacity(0)],

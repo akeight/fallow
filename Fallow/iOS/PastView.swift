@@ -48,10 +48,6 @@ private struct PastCard: View {
                 Text(Self.day(session.lastTouched))
                     .font(FallowType.caption)
                     .foregroundStyle(Theme.mute)
-                Text(session.projectName ?? "")
-                    .font(FallowType.eyebrow)
-                    .tracking(2)
-                    .foregroundStyle(Theme.mute)
                 Spacer(minLength: 0)
             }
 

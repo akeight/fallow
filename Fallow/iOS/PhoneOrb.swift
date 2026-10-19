@@ -10,9 +10,12 @@ struct PhoneOrb: View {
         ZStack {
             OrbView(session: store.orb, config: store.orbConfig)
                 .allowsHitTesting(false)
-                .scaleEffect(pressed && !holding ? 0.97 : 1)
-                .brightness(pressed && !holding ? 0.03 : 0)
+                .scaleEffect(pressed && !holding && !isReturn ? 0.97 : 1)
+                .brightness(pressed && !holding && !isReturn ? 0.03 : 0)
                 .animation(.easeOut(duration: 0.25), value: pressed)
+                // Holding to return gathers the orb a little before its light takes over.
+                .scaleEffect(1 + 0.12 * store.returnHold)
+                .brightness(0.08 * store.returnHold)
 
             Circle()
                 .fill(Color.white.opacity(0.001))
@@ -38,6 +41,8 @@ struct PhoneOrb: View {
         .accessibilityAction {
             if isRelease {
                 store.releaseWithoutHold()
+            } else if isReturn {
+                store.completeReturnHold()
             } else {
                 store.tapOrb()
             }
@@ -46,6 +51,10 @@ struct PhoneOrb: View {
 
     private var isRelease: Bool {
         store.tab == .pause && store.step == .release
+    }
+
+    private var isReturn: Bool {
+        store.tab == .pause && store.step == .beforeAfter
     }
 
     private var holding: Bool {
@@ -58,6 +67,7 @@ struct PhoneOrb: View {
         case (.pause, .release): "Let it rest"
         case (.pause, .capture): store.isRecording ? "Stop listening" : "Speak your thought"
         case (.pause, .resting): "Return to it"
+        case (.pause, .beforeAfter): "Return"
         default: "FALLOW"
         }
     }

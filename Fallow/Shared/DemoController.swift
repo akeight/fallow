@@ -40,10 +40,18 @@ final class DemoController {
     }
 
     private let sync: DemoFallowSyncService
+    #if os(iOS)
+    private let notifications: FallowNotificationService?
 
+    init(sync: DemoFallowSyncService, notifications: FallowNotificationService? = nil) {
+        self.sync = sync
+        self.notifications = notifications
+    }
+    #else
     init(sync: DemoFallowSyncService) {
         self.sync = sync
     }
+    #endif
 
     func run(_ scenario: Scenario) {
         switch scenario {
@@ -68,11 +76,11 @@ final class DemoController {
     }
 
     func setMacReleased() {
-        sync.stage(DemoSessionFactory.fragments)
+        sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
     func setPhoneResting() {
-        sync.stage(DemoSessionFactory.fragments)
+        sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
     func setPhoneReturnRequested() {
@@ -90,9 +98,37 @@ final class DemoController {
     }
 
     private var returnRequested: FallowSession {
-        var session = DemoSessionFactory.fragments
+        var session = DemoSessionFactory.macRestingDemo
         session.requestReturn()
         return session
     }
+
+    #if os(iOS)
+    /// "Your thought is resting now." for the demo session, after `Timing.restDelay`. Lock the phone to see it land.
+    func triggerRestNotification() {
+        notify(.restStarted, after: FallowNotificationService.Timing.restDelay)
+    }
+
+    /// "Your idea has had some space." for the demo session, after `Timing.nudgeDelay`.
+    func triggerGentleNudge() {
+        notify(.gentleNudge, after: FallowNotificationService.Timing.nudgeDelay)
+    }
+
+    /// Shows the system prompt if this install has never been asked. Reset it by deleting the app.
+    func requestNotificationPermission() {
+        guard let notifications else { return }
+        Task { await notifications.requestAuthorizationIfNeeded() }
+    }
+
+    /// Notifications name a resting session, so one is staged first when nothing is resting.
+    private func notify(_ kind: FallowNotificationService.Kind, after delay: TimeInterval) {
+        guard let notifications else { return }
+        if sync.activeSession?.phase != .resting {
+            sync.stage(DemoSessionFactory.macRestingDemo)
+        }
+        guard let session = sync.activeSession else { return }
+        Task { await notifications.schedule(kind, for: session, after: delay) }
+    }
+    #endif
 }
 #endif

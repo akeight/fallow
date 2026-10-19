@@ -3,6 +3,10 @@ import SwiftUI
 struct OrbView: View {
     var session: SessionModel
     var config: OrbTuningConfig
+    /// Plays the attentive pose without a pointer, 0 through 1. Nil leaves it to hover.
+    var attention: Double? = nil
+    /// Keeps the shell's size and outline fixed across poses, so only the light, arc and ripples change.
+    var holdsShape = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var colorScheme
@@ -23,18 +27,19 @@ struct OrbView: View {
                 now: now,
                 reduced: reduceMotion
             )
-            let target = OrbMotion.resolve(
+            let resolved = OrbMotion.resolve(
                 phase: session.phase,
                 softness: session.softness,
                 config: config,
                 time: now,
-                hover: hover,
-                hoverLocation: hover > 0 ? hoverPoint : nil,
+                hover: attention ?? hover,
+                hoverLocation: attention == nil && hover > 0 ? hoverPoint : nil,
                 reduceMotion: reduceMotion,
                 settleStart: settleStart,
                 returnStart: returnStart,
                 laggedEase: lagged
             )
+            let target = holdsShape ? fixedShape(resolved) : resolved
             let holding: Bool = if case .holding = session.phase { true } else { false }
             let draw = withVoice(pose.follow(target, now: now, tau: holding ? 0.28 : 1.05, reduced: reduceMotion))
             OrbCanvas(draw: draw, liftsForDarkDesktop: colorScheme == .dark)
@@ -81,6 +86,17 @@ struct OrbView: View {
         }
         }
         .accessibilityLabel("FALLOW")
+    }
+
+    private func fixedShape(_ resolved: OrbDraw) -> OrbDraw {
+        var draw = resolved
+        draw.diameter = config.idleSize * config.attentiveScale
+        draw.stretchX = config.horizontalStretch
+        draw.stretchY = config.verticalStretch
+        draw.asymmetry = config.asymmetry * 0.65
+        draw.deformation = config.deformationAmount * 0.4
+        draw.bias = .zero
+        return draw
     }
 
     private func withVoice(_ draw: OrbDraw) -> OrbDraw {
