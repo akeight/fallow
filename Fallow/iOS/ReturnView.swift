@@ -50,10 +50,57 @@ struct ReturnView: View {
 
     // MARK: Welcome back
 
+    @ViewBuilder
     private var welcome: some View {
         let session = store.session ?? DemoSessionFactory.fragments
-        let fromMac = session.originDevice == .mac
-        return GeometryReader { geo in
+        if session.originDevice == .mac {
+            handoff(session)
+        } else {
+            welcomeBack(session)
+        }
+    }
+
+    /// A thought released on the Mac is reflected on there, so the phone only hands it back.
+    /// Laid out like Home's resting state: heading above the orb, the thought beneath it.
+    private func handoff(_ session: FallowSession) -> some View {
+        GeometryReader { geo in
+            let orbY = geo.size.height * HomeView.activeOrbY
+            ZStack(alignment: .top) {
+                HStack {
+                    CornerButton(systemName: "chevron.left", label: "Back to Home", color: Theme.muteOnDense) { store.cancelFlow() }
+                    Spacer()
+                }
+                .padding(.top, 4)
+
+                // Bottom-aligned so the heading ends where Home's does, whether it takes one line or two.
+                Text(DemoCopy.macReady)
+                    .font(FallowType.display(30))
+                    .foregroundStyle(Theme.ink)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: orbY - 100, alignment: .bottom)
+
+                VStack(spacing: 14) {
+                    Text(session.waitingLine)
+                        .font(FallowType.secondary)
+                        .foregroundStyle(Theme.muteOnDense)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: "You left with", color: Theme.muteOnDense)
+                        ThoughtText(text: session.unresolvedThought, color: Theme.ink)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .glass(radius: 20)
+                }
+                .padding(.top, orbY + 76)
+            }
+            .padding(.horizontal, 28)
+        }
+    }
+
+    private func welcomeBack(_ session: FallowSession) -> some View {
+        GeometryReader { geo in
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     HStack {
@@ -62,8 +109,7 @@ struct ReturnView: View {
                     }
                     .padding(.top, 4)
 
-                    // A thought released on the Mac is reflected on there, so the phone only hands it back.
-                    Text(fromMac ? DemoCopy.macReady : DemoCopy.welcomeBack)
+                    Text(DemoCopy.welcomeBack)
                         .font(FallowType.display(34))
                         .foregroundStyle(Theme.ink)
                         .multilineTextAlignment(.center)
@@ -72,18 +118,16 @@ struct ReturnView: View {
                     Spacer(minLength: 0)
 
                     VStack(spacing: 6) {
-                        if !fromMac {
-                            PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
-                            QuietButton(title: DemoCopy.stillStuck, color: Theme.muteOnDense) { store.stillStuck() }
-                        }
+                        PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
+                        QuietButton(title: DemoCopy.stillStuck, color: Theme.muteOnDense) { store.stillStuck() }
                     }
                     .frame(minHeight: 52)
-                    .padding(.bottom, fromMac ? 24 : 10)
+                    .padding(.bottom, 10)
                 }
 
                 // The prompt and the thought sit on the lower third, under the orb.
                 VStack(spacing: 14) {
-                    Text(welcomeLine(for: session))
+                    Text(DemoCopy.hadSpace)
                         .font(FallowType.secondary)
                         .foregroundStyle(Theme.muteOnDense)
                         .contentTransition(.opacity)
@@ -100,10 +144,6 @@ struct ReturnView: View {
             }
             .padding(.horizontal, 28)
         }
-    }
-
-    private func welcomeLine(for session: FallowSession) -> String {
-        session.originDevice == .mac ? session.waitingLine : DemoCopy.hadSpace
     }
 
     // MARK: Still stuck

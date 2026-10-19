@@ -33,7 +33,7 @@ struct HomeView: View {
             .onLongPressGesture(minimumDuration: 0.8) { showsDemo = true }
             .confirmationDialog("Demo", isPresented: $showsDemo) {
                 ForEach(DemoController.Scenario.phone) { scenario in
-                    Button(scenario.title) { store.demo.run(scenario) }
+                    Button(scenario.phoneTitle) { store.demo.run(scenario) }
                 }
             }
         #else
