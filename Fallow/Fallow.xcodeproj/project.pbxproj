@@ -18,34 +18,30 @@
 		B10000000000000000000009 /* CompanionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000009 /* CompanionController.swift */; };
 		B1000000000000000000000A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000A /* AppDelegate.swift */; };
 		B1000000000000000000000B /* FallowMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000B /* FallowMacApp.swift */; };
+		B1000000000000000000000C /* OrbPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* OrbPhase.swift */; };
+		B1000000000000000000000D /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
+		B1000000000000000000000E /* DemoCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* DemoCopy.swift */; };
+		B1000000000000000000000F /* FallowIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000C /* FallowIOSApp.swift */; };
 		B10000000000000000000011 /* OrbTuningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* OrbTuningConfig.swift */; };
 		B10000000000000000000012 /* OrbMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* OrbMotion.swift */; };
 		B10000000000000000000013 /* OrbTunerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000013 /* OrbTunerView.swift */; };
 		B10000000000000000000014 /* AuraTransition.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* AuraTransition.wav */; };
 		B10000000000000000000015 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
-		B10000000000000000000017 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
-		B10000000000000000000027 /* RestLandscape.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000020 /* RestLandscape.jpg */; };
 		B10000000000000000000016 /* BreakSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000016 /* BreakSounds.swift */; };
-		B1000000000000000000000C /* OrbPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* OrbPhase.swift */; };
-		B1000000000000000000000D /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
-		B1000000000000000000000E /* DemoCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* DemoCopy.swift */; };
-		B1000000000000000000000F /* FallowIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000000C /* FallowIOSApp.swift */; };
+		B10000000000000000000017 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
 		B10000000000000000000018 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000004 /* Theme.swift */; };
 		B10000000000000000000019 /* OrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000005 /* OrbView.swift */; };
 		B1000000000000000000001A /* OrbTuningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000011 /* OrbTuningConfig.swift */; };
 		B1000000000000000000001B /* OrbMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000012 /* OrbMotion.swift */; };
 		B1000000000000000000001C /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
 		B1000000000000000000001D /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
-		B10000000000000000000060 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
-		B10000000000000000000062 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
-		B10000000000000000000063 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
-		B10000000000000000000061 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
 		B1000000000000000000001E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* RootView.swift */; };
 		B1000000000000000000001F /* RestingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001A /* RestingView.swift */; };
 		B10000000000000000000023 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
 		B10000000000000000000024 /* FallowFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001E /* FallowFont.swift */; };
 		B10000000000000000000025 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
 		B10000000000000000000026 /* CultVP-Branding.otf in Resources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001F /* CultVP-Branding.otf */; };
+		B10000000000000000000027 /* RestLandscape.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000020 /* RestLandscape.jpg */; };
 		B10000000000000000000030 /* PhoneStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000030 /* PhoneStore.swift */; };
 		B10000000000000000000031 /* Leaves.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000031 /* Leaves.swift */; };
 		B10000000000000000000032 /* Atmosphere.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000032 /* Atmosphere.swift */; };
@@ -58,7 +54,6 @@
 		B10000000000000000000039 /* ReturnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000039 /* ReturnView.swift */; };
 		B1000000000000000000003A /* PastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003A /* PastView.swift */; };
 		B1000000000000000000003B /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
-		B10000000000000000000064 /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
 		B10000000000000000000050 /* SceneWall.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000050 /* SceneWall.jpg */; };
 		B10000000000000000000051 /* SceneThreshold.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000051 /* SceneThreshold.jpg */; };
 		B10000000000000000000052 /* SceneValley.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000052 /* SceneValley.jpg */; };
@@ -66,6 +61,11 @@
 		B10000000000000000000054 /* SceneWater.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000054 /* SceneWater.jpg */; };
 		B10000000000000000000055 /* Leaf1.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000055 /* Leaf1.png */; };
 		B10000000000000000000056 /* Leaf2.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000056 /* Leaf2.png */; };
+		B10000000000000000000060 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
+		B10000000000000000000061 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
+		B10000000000000000000062 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
+		B10000000000000000000063 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
+		B10000000000000000000064 /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -80,24 +80,22 @@
 		F10000000000000000000009 /* CompanionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionController.swift; sourceTree = "<group>"; };
 		F1000000000000000000000A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F1000000000000000000000B /* FallowMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowMacApp.swift; sourceTree = "<group>"; };
+		F1000000000000000000000C /* FallowIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowIOSApp.swift; sourceTree = "<group>"; };
+		F1000000000000000000000D /* FALLOW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FALLOW.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F1000000000000000000000E /* FALLOW Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FALLOW Companion.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F10000000000000000000011 /* OrbTuningConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbTuningConfig.swift; sourceTree = "<group>"; };
 		F10000000000000000000012 /* OrbMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbMotion.swift; sourceTree = "<group>"; };
 		F10000000000000000000013 /* OrbTunerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrbTunerView.swift; sourceTree = "<group>"; };
 		F10000000000000000000014 /* AuraTransition.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraTransition.wav; sourceTree = "<group>"; };
 		F10000000000000000000015 /* MagicalAura.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = MagicalAura.wav; sourceTree = "<group>"; };
-		F10000000000000000000017 /* AuraWoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraWoosh.wav; sourceTree = "<group>"; };
-		F10000000000000000000020 /* RestLandscape.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = RestLandscape.jpg; sourceTree = "<group>"; };
 		F10000000000000000000016 /* BreakSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakSounds.swift; sourceTree = "<group>"; };
-		F1000000000000000000000C /* FallowIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowIOSApp.swift; sourceTree = "<group>"; };
+		F10000000000000000000017 /* AuraWoosh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = AuraWoosh.wav; sourceTree = "<group>"; };
 		F10000000000000000000018 /* FallowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSession.swift; sourceTree = "<group>"; };
-		F10000000000000000000060 /* FallowBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowBehavior.swift; sourceTree = "<group>"; };
-		F10000000000000000000062 /* ThoughtDistiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtDistiller.swift; sourceTree = "<group>"; };
 		F10000000000000000000019 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F1000000000000000000001A /* RestingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestingView.swift; sourceTree = "<group>"; };
 		F1000000000000000000001E /* FallowFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowFont.swift; sourceTree = "<group>"; };
 		F1000000000000000000001F /* CultVP-Branding.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "CultVP-Branding.otf"; sourceTree = "<group>"; };
-		F1000000000000000000000D /* FALLOW.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FALLOW.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F1000000000000000000000E /* FALLOW Companion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FALLOW Companion.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		F10000000000000000000020 /* RestLandscape.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = RestLandscape.jpg; sourceTree = "<group>"; };
 		F10000000000000000000030 /* PhoneStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneStore.swift; sourceTree = "<group>"; };
 		F10000000000000000000031 /* Leaves.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaves.swift; sourceTree = "<group>"; };
 		F10000000000000000000032 /* Atmosphere.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Atmosphere.swift; sourceTree = "<group>"; };
@@ -117,6 +115,8 @@
 		F10000000000000000000054 /* SceneWater.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneWater.jpg; sourceTree = "<group>"; };
 		F10000000000000000000055 /* Leaf1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf1.png; sourceTree = "<group>"; };
 		F10000000000000000000056 /* Leaf2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf2.png; sourceTree = "<group>"; };
+		F10000000000000000000060 /* FallowBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowBehavior.swift; sourceTree = "<group>"; };
+		F10000000000000000000062 /* ThoughtDistiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtDistiller.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -183,25 +183,6 @@
 			path = macOS;
 			sourceTree = "<group>";
 		};
-		G10000000000000000000007 /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-				F1000000000000000000001F /* CultVP-Branding.otf */,
-			);
-			path = Fonts;
-			sourceTree = "<group>";
-		};
-		G10000000000000000000006 /* Resources */ = {
-			isa = PBXGroup;
-			children = (
-				F10000000000000000000014 /* AuraTransition.wav */,
-				F10000000000000000000015 /* MagicalAura.wav */,
-				F10000000000000000000017 /* AuraWoosh.wav */,
-				F10000000000000000000020 /* RestLandscape.jpg */,
-			);
-			path = Resources;
-			sourceTree = "<group>";
-		};
 		G10000000000000000000004 /* iOS */ = {
 			isa = PBXGroup;
 			children = (
@@ -231,6 +212,25 @@
 				F1000000000000000000000E /* FALLOW Companion.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000006 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F10000000000000000000014 /* AuraTransition.wav */,
+				F10000000000000000000015 /* MagicalAura.wav */,
+				F10000000000000000000017 /* AuraWoosh.wav */,
+				F10000000000000000000020 /* RestLandscape.jpg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000007 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				F1000000000000000000001F /* CultVP-Branding.otf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		G10000000000000000000008 /* Resources */ = {
@@ -453,11 +453,13 @@
 		D10000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = U87NQ69U35;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -484,11 +486,13 @@
 		D10000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = U87NQ69U35;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -515,15 +519,16 @@
 		D10000000000000000000005 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U87NQ69U35;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
-				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
+				INFOPLIST_KEY_UIAppFonts = "CultVP-Branding.otf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -535,6 +540,7 @@
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.ios;
 				PRODUCT_NAME = "FALLOW Companion";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -546,15 +552,16 @@
 		D10000000000000000000006 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
 				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U87NQ69U35;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
-				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
+				INFOPLIST_KEY_UIAppFonts = "CultVP-Branding.otf";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -566,6 +573,7 @@
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.ios;
 				PRODUCT_NAME = "FALLOW Companion";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = NO;
