@@ -337,11 +337,10 @@ extension FallowSession {
         let day: TimeInterval = 86_400
         return [
             FallowSession(
-                projectName: "PORTFOLIO",
                 unresolvedThought: "Everything feels over-designed.",
                 creativeState: .tooMuchInput,
                 distance: .sleepOnIt,
-                intervention: .silence,
+                intervention: FallowBehaviorResolver.resolve(state: .tooMuchInput, distance: .sleepOnIt, difficultyDisengaging: false),
                 originDevice: .mac,
                 phase: .complete,
                 startedAt: Date().addingTimeInterval(-day * 1.4),
@@ -350,11 +349,10 @@ extension FallowSession {
                 returnedThought: "Maybe the problem is that I’m showing too much."
             ),
             FallowSession(
-                projectName: "FALLOW",
                 unresolvedThought: "I can’t tell whether the hierarchy works.",
                 creativeState: .lostPerspective,
                 distance: .someDistance,
-                intervention: .perceptualPrompt("Look farther away. Notice what your eye goes to first."),
+                intervention: FallowBehaviorResolver.resolve(state: .lostPerspective, distance: .someDistance, difficultyDisengaging: false),
                 originDevice: .iPhone,
                 phase: .complete,
                 startedAt: Date().addingTimeInterval(-day * 2.1),

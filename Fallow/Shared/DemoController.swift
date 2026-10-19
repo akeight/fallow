@@ -68,11 +68,11 @@ final class DemoController {
     }
 
     func setMacReleased() {
-        sync.stage(DemoSessionFactory.fragments)
+        sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
     func setPhoneResting() {
-        sync.stage(DemoSessionFactory.fragments)
+        sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
     func setPhoneReturnRequested() {
@@ -90,7 +90,7 @@ final class DemoController {
     }
 
     private var returnRequested: FallowSession {
-        var session = DemoSessionFactory.fragments
+        var session = DemoSessionFactory.macRestingDemo
         session.requestReturn()
         return session
     }

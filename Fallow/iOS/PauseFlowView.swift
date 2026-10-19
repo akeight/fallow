@@ -19,7 +19,7 @@ struct PauseFlowView: View {
                 ReleaseView(store: store).transition(.opacity)
             case .resting:
                 RestingView(store: store).transition(.fallowText)
-            case .returning, .reflect, .beforeAfter, .stillStuck, .reframe, .reframeCompare:
+            case .returning, .reflect, .beforeAfter:
                 ReturnView(store: store).transition(.fallowText)
             }
         }
@@ -65,7 +65,7 @@ private struct CaptureStep: View {
                     #endif
                 }
             }
-            .padding(.bottom, store.isRecording ? 40 : 96)
+            .padding(.bottom, store.keyboardVisible ? 12 : store.isRecording ? 40 : 96)
         }
         .padding(.horizontal, 28)
     }
@@ -115,7 +115,7 @@ private struct TranscriptStep: View {
                 .padding(.top, 4)
 
                 Eyebrow(text: spoken ? DemoCopy.carryingVoice : (store.focusTyping ? "What are you carrying?" : "You’re carrying"), color: Theme.muteOnDeep)
-                    .padding(.top, geo.size.height * 0.26)
+                    .padding(.top, geo.size.height * (store.keyboardVisible ? 0.15 : 0.26))
 
                 Group {
                     if spoken && !editing {
@@ -159,7 +159,7 @@ private struct TranscriptStep: View {
                     }
                     .buttonStyle(PressableStyle())
                 }
-                .padding(.bottom, 20)
+                .padding(.bottom, store.keyboardVisible ? 8 : 20)
             }
             .padding(.horizontal, 28)
         }

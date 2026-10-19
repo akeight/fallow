@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Attention reforming around the thought. The room gathers inward and the surfaces return.
-/// The return does not assume the break worked: something shifted, or it is still here.
+/// It ends the way the rest began: by holding the orb.
 struct ReturnView: View {
     @Bindable var store: PhoneStore
 
@@ -17,31 +17,8 @@ struct ReturnView: View {
                 )
                 .transition(.fallowText)
             case .beforeAfter:
-                compare(
-                    before: DemoCopy.beforeLabel,
-                    after: DemoCopy.afterLabel,
-                    afterText: store.reflection,
-                    leaveLonger: false
-                )
-                .transition(.fallowText)
-            case .stillStuck:
-                stillStuck.transition(.fallowText)
-            case .reframe:
-                recapture(
-                    prompt: DemoCopy.unresolvedNow,
-                    text: $store.reframe,
-                    target: .reframe,
-                    confirm: store.confirmReframe
-                )
-                .transition(.fallowText)
-            case .reframeCompare:
-                compare(
-                    before: DemoCopy.originalLabel,
-                    after: DemoCopy.nowLabel,
-                    afterText: store.reframe,
-                    leaveLonger: true
-                )
-                .transition(.fallowText)
+                BeforeAfter(store: store)
+                    .transition(.fallowText)
             default:
                 welcome.transition(.fallowText)
             }
@@ -52,7 +29,7 @@ struct ReturnView: View {
 
     @ViewBuilder
     private var welcome: some View {
-        let session = store.session ?? DemoSessionFactory.fragments
+        let session = store.session ?? DemoSessionFactory.macRestingDemo
         if session.originDevice == .mac {
             handoff(session)
         } else {
@@ -117,10 +94,7 @@ struct ReturnView: View {
 
                     Spacer(minLength: 0)
 
-                    VStack(spacing: 6) {
-                        PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
-                        QuietButton(title: DemoCopy.stillStuck, color: Theme.muteOnDense) { store.stillStuck() }
-                    }
+                    PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
                     .frame(minHeight: 52)
                     .padding(.bottom, 10)
                 }
@@ -146,37 +120,9 @@ struct ReturnView: View {
         }
     }
 
-    // MARK: Still stuck
-
-    private var stillStuck: some View {
-        VStack(spacing: 0) {
-            HStack {
-                CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDense) { store.back() }
-                Spacer()
-            }
-            .padding(.top, 4)
-
-            Text(DemoCopy.stillCarrying)
-                .font(FallowType.display(28))
-                .foregroundStyle(Theme.ink)
-                .multilineTextAlignment(.center)
-                .padding(.top, 14)
-
-            Spacer(minLength: 0)
-
-            VStack(spacing: 8) {
-                ChoiceRow(title: DemoCopy.leaveLonger, selected: false) { store.leaveLonger() }
-                ChoiceRow(title: DemoCopy.sayUnresolved, selected: false) { store.sayWhatsUnresolved() }
-                ChoiceRow(title: DemoCopy.goBackAnyway, selected: false) { store.goBackIn() }
-            }
-            .padding(.bottom, 28)
-        }
-        .padding(.horizontal, 24)
-    }
-
     // MARK: One-step recapture
 
-    /// Used for "what feels different" and for the reframe. One question, nothing else re-asked.
+    /// "What feels different now": one question, nothing else re-asked.
     private func recapture(
         prompt: String,
         text: Binding<String>,
@@ -212,40 +158,141 @@ struct ReturnView: View {
         }
     }
 
-    // MARK: Before and after
+}
 
-    /// The shift is kept, whether the problem resolved or only changed shape.
-    private func compare(before: String, after: String, afterText: String, leaveLonger: Bool) -> some View {
+// MARK: Before and after
+
+/// The shift is kept. The orb sits near the middle and is what you hold to return;
+/// long thoughts are clamped so the screen stays calm, with the whole text one tap away.
+private struct BeforeAfter: View {
+    var store: PhoneStore
+
+    @State private var beforeClamped = false
+    @State private var afterClamped = false
+    @State private var showsFull = false
+
+    var body: some View {
         let session = store.session ?? .demoFromPhone
-        return GeometryReader { geo in
-            VStack(alignment: .leading, spacing: 0) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: before, color: Theme.muteOnDense)
-                    ThoughtText(text: session.unresolvedThought, color: Theme.muteOnDense)
-                }
+        GeometryReader { geo in
+            let orbY = geo.size.height * store.orbPlacement.y
+            VStack(spacing: 0) {
+                Text(DemoCopy.holdToReturn)
+                    .font(FallowType.eyebrow)
+                    .tracking(2.4)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.muteOnDense)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .opacity(1 - store.returnHold)
+                    .accessibilityHidden(true)
+                    .padding(.top, orbY + 110)
 
-                Rectangle()
-                    .fill(Theme.rim)
-                    .frame(height: 1)
-                    .padding(.vertical, 26)
+                VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: DemoCopy.beforeLabel, color: Theme.muteOnDense)
+                        ClampedThought(text: session.unresolvedThought, color: Theme.muteOnDense, lines: 3, clamped: $beforeClamped)
+                    }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: after, color: Theme.muteOnDense)
-                    ThoughtText(text: afterText, color: Theme.ink)
-                }
+                    Rectangle()
+                        .fill(Theme.rim)
+                        .frame(height: 1)
+                        .padding(.vertical, 22)
 
-                Spacer(minLength: 16)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: DemoCopy.afterLabel, color: Theme.muteOnDense)
+                        ClampedThought(text: store.reflection, color: Theme.ink, lines: 4, clamped: $afterClamped)
+                    }
 
-                VStack(spacing: 6) {
-                    PrimaryButton(title: DemoCopy.goBack) { store.goBackIn() }
-                    if leaveLonger {
-                        QuietButton(title: DemoCopy.leaveLittleLonger, color: Theme.muteOnDense) { store.leaveLonger() }
+                    if beforeClamped || afterClamped {
+                        QuietButton(title: DemoCopy.viewFull, color: Theme.muteOnDense) { showsFull = true }
+                            .padding(.top, 6)
+                            .offset(x: -10)
                     }
                 }
-                .padding(.bottom, leaveLonger ? 10 : 20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 52)
+                .padding(.horizontal, 4)
+
+                Spacer(minLength: 12)
+
+                QuietButton(title: DemoCopy.leaveLittleLonger, color: Theme.muteOnDense) { store.leaveLonger() }
+                    .padding(.bottom, 10)
             }
-            .padding(.top, geo.size.height * 0.24)
-            .padding(.horizontal, 32)
+            .padding(.horizontal, 28)
+            .opacity(store.isBloomingHome ? 0 : 1)
+            .animation(.easeOut(duration: 0.5), value: store.isBloomingHome)
         }
+        .sheet(isPresented: $showsFull) {
+            FullThoughtsSheet(before: session.unresolvedThought, after: store.reflection)
+        }
+    }
+}
+
+/// A thought cut to a few lines. Reports whether anything was cut, so "View full" only appears when needed.
+private struct ClampedThought: View {
+    var text: String
+    var color: Color
+    var lines: Int
+    @Binding var clamped: Bool
+
+    @State private var shown: CGFloat = 0
+    @State private var whole: CGFloat = 0
+
+    var body: some View {
+        ThoughtText(text: text, color: color)
+            .lineLimit(lines)
+            .truncationMode(.tail)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0; update() }
+            .background(alignment: .top) {
+                ThoughtText(text: text, color: color)
+                    .hidden()
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { whole = $0; update() }
+            }
+    }
+
+    private func update() {
+        clamped = whole > shown + 1
+    }
+}
+
+/// Both thoughts in full. Read-only and selectable.
+private struct FullThoughtsSheet: View {
+    var before: String
+    var after: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Spacer()
+                QuietButton(title: "Done") { dismiss() }
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: DemoCopy.beforeLabel)
+                        ThoughtText(text: before, color: Theme.mute)
+                            .textSelection(.enabled)
+                    }
+                    Rectangle()
+                        .fill(Theme.rim)
+                        .frame(height: 1)
+                        .padding(.vertical, 22)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Eyebrow(text: DemoCopy.afterLabel)
+                        ThoughtText(text: after, color: Theme.ink)
+                            .textSelection(.enabled)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 4)
+                .padding(.bottom, 24)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 20)
+        .background(Theme.canvas)
+        .environment(\.colorScheme, .light)
+        .presentationDetents([.medium, .large])
     }
 }

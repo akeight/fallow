@@ -423,19 +423,29 @@ struct CompanionView: View {
                 .alignmentGuide(.top) { d in d[.bottom] + 44 }
             }
             .overlay(alignment: .bottom) {
-                Text(session.showsLens ? (session.restLine ?? DemoCopy.returnWhenReady) : DemoCopy.returnWhenReady)
-                    .id(session.showsLens)
-                    .transition(.fallowText)
-                    .font(.system(size: 17, weight: .regular))
-                    .tracking(0.3)
-                    .foregroundStyle(Theme.ink)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-                    .frame(width: 340)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .alignmentGuide(.bottom) { d in d[.top] - 44 }
+                VStack(spacing: 28) {
+                    // The same line the iPhone shows for this session, for the whole rest. Silence says nothing.
+                    if let line = session.restLine {
+                        Text(line)
+                            .font(.system(size: 17, weight: .regular))
+                            .tracking(0.3)
+                            .foregroundStyle(Theme.ink)
+                            .multilineTextAlignment(.center)
+                            .lineSpacing(4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text(DemoCopy.returnWhenReady)
+                        .font(FallowType.secondary)
+                        .foregroundStyle(Theme.mute)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .opacity(session.showsLens ? 0 : 1)
+                        .accessibilityHidden(session.showsLens)
+                }
+                .frame(width: 340)
+                .alignmentGuide(.bottom) { d in d[.top] - 44 }
             }
-            .animation(.easeInOut(duration: 0.6), value: session.showsLens)
+            .animation(.easeInOut(duration: 1.6), value: session.showsLens)
     }
 
     private static let returnWidth: CGFloat = 420
@@ -610,10 +620,35 @@ private struct OrbInput: ViewModifier {
         case .dormant:
             content
         case .resting:
-            content.onTapGesture { session.tapOrb() }
+            content
+                .onTapGesture { session.tapOrb() }
+                .modifier(PointingCursor(enabled: !session.showsLens))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel("Return to your thought")
         default:
             content
         }
+    }
+}
+
+/// The hand cursor says the orb can be clicked. Popped on exit, disable, or disappear so it never sticks.
+private struct PointingCursor: ViewModifier {
+    var enabled: Bool
+    @State private var hovering = false
+    @State private var pushed = false
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { hovering = $0; update() }
+            .onChange(of: enabled) { _, _ in update() }
+            .onDisappear { hovering = false; update() }
+    }
+
+    private func update() {
+        let wants = hovering && enabled
+        guard wants != pushed else { return }
+        wants ? NSCursor.pointingHand.push() : NSCursor.pop()
+        pushed = wants
     }
 }
 

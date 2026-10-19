@@ -67,6 +67,18 @@ struct HomeView: View {
                     Spacer(minLength: 18)
 
                     VStack(spacing: 6) {
+                        // The rest's own guidance, wherever it was released. Silence says nothing.
+                        if let line = session.intervention?.line {
+                            Text(line)
+                                .font(FallowType.secondary)
+                                .tracking(0.3)
+                                .foregroundStyle(Theme.ink)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(3)
+                                .frame(maxWidth: 290)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.bottom, 10)
+                        }
                         if store.showsNudge {
                             Text(DemoCopy.hadSpace)
                                 .font(FallowType.secondary)
