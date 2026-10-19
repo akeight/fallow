@@ -7,6 +7,12 @@ struct Atmosphere: View {
     var openness: Double
     var restScene: FallowDistance
     var drifting: Bool
+    /// Opacity of the garden behind Home, Past, Pause and the return. 0 hides it.
+    var garden: Double = 0
+    /// Share of `garden` left at the top edge. Below 1 the garden fades up from the bottom.
+    var gardenTop: Double = 1
+    /// Darkens everything below the rest scene for light type. 0 is off, 1 is fully deep.
+    var depth: Double = 0
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -16,13 +22,22 @@ struct Atmosphere: View {
             ZStack {
                 Theme.canvas
 
+                // Lifted when faint so `Theme.muteOnScene` keeps 4.5:1 over its darkest areas.
+                // Holds through distance and release (openness 0.15), then gives way to the scene.
+                SceneImage(name: "HomeGarden", size: size)
+                    .brightness(0.24 * (1 - depth))
+                    .opacity(garden * (1 - ramp(openness, 0.15, 0.4)))
+                    .mask(LinearGradient(colors: [.black.opacity(gardenTop), .black], startPoint: .top, endPoint: .bottom))
+                    .animation(.easeInOut(duration: reduceMotion ? 0.3 : 1.2), value: garden)
+                    .animation(.easeInOut(duration: reduceMotion ? 0.3 : 1.2), value: gardenTop)
+
                 RadialGradient(
                     colors: [Theme.light.opacity(0.85), Theme.canvas.opacity(0)],
                     center: UnitPoint(x: 0.5, y: 0.4),
                     startRadius: 0,
                     endRadius: size.height * 0.62
                 )
-                .opacity(0.5 + 0.5 * ramp(openness, 0, 0.3))
+                .opacity((0.5 + 0.5 * ramp(openness, 0, 0.3)) * (1 - depth))
 
                 LinearGradient(
                     colors: [Color(hex: 0xF3D9B4), Color(hex: 0xE2B78A), Color(hex: 0xB98E68)],
@@ -41,6 +56,14 @@ struct Atmosphere: View {
                     .brightness(0.08)
                     .opacity(0.85 * ramp(openness, 0.3, 0.55))
 
+                // Deepest at the bottom, a little lighter behind the titles.
+                LinearGradient(
+                    colors: [Color(hex: 0x241B13).opacity(0.48), Color(hex: 0x241B13).opacity(0.55)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .opacity(depth * (1 - ramp(openness, 0.15, 0.4)))
+
                 RestLayer(
                     name: Self.sceneName(for: restScene),
                     size: size,
@@ -48,6 +71,10 @@ struct Atmosphere: View {
                     drifting: drifting
                 )
                 .opacity(ramp(openness, 0.6, 0.9))
+
+                // A thin frost over the open scene; the text adds its own haze.
+                Theme.canvas
+                    .opacity(0.2 * ramp(openness, 0.6, 0.9))
 
                 Grain()
                     .opacity(0.05 * (1 - ramp(openness, 0.2, 0.6)))
@@ -59,14 +86,6 @@ struct Atmosphere: View {
                     endPoint: UnitPoint(x: 0.5, y: 0.36)
                 )
                 .opacity(ramp(openness, 0.45, 0.8))
-
-                // Warm floor so light captions read over foliage.
-                LinearGradient(
-                    colors: [Color(hex: 0x2A1D12).opacity(0), Color(hex: 0x2A1D12).opacity(0.5)],
-                    startPoint: UnitPoint(x: 0.5, y: 0.62),
-                    endPoint: .bottom
-                )
-                .opacity(ramp(openness, 0.6, 0.9))
             }
             .frame(width: size.width, height: size.height)
             .clipped()
@@ -135,7 +154,7 @@ private struct RestLayer: View {
                     x: live ? 5 * sin(t / 17) : 0,
                     y: live ? 3 * cos(t / 23) : 0
                 )
-                .blur(radius: 24 - 21 * settle, opaque: true)
+                .blur(radius: 24 - 19.5 * settle, opaque: true)
         }
         .frame(width: size.width, height: size.height)
         .clipped()

@@ -61,11 +61,18 @@
 		B10000000000000000000054 /* SceneWater.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000054 /* SceneWater.jpg */; };
 		B10000000000000000000055 /* Leaf1.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000055 /* Leaf1.png */; };
 		B10000000000000000000056 /* Leaf2.png in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000056 /* Leaf2.png */; };
+		B10000000000000000000057 /* HomeGarden.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000057 /* HomeGarden.jpg */; };
 		B10000000000000000000060 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
 		B10000000000000000000061 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
 		B10000000000000000000062 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
 		B10000000000000000000063 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
 		B10000000000000000000064 /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
+		B10000000000000000000070 /* FallowSyncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000070 /* FallowSyncing.swift */; };
+		B10000000000000000000071 /* FallowSyncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000070 /* FallowSyncing.swift */; };
+		B10000000000000000000072 /* DemoSessionFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000071 /* DemoSessionFactory.swift */; };
+		B10000000000000000000073 /* DemoSessionFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000071 /* DemoSessionFactory.swift */; };
+		B10000000000000000000074 /* DemoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000072 /* DemoController.swift */; };
+		B10000000000000000000075 /* DemoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000072 /* DemoController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -115,8 +122,12 @@
 		F10000000000000000000054 /* SceneWater.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneWater.jpg; sourceTree = "<group>"; };
 		F10000000000000000000055 /* Leaf1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf1.png; sourceTree = "<group>"; };
 		F10000000000000000000056 /* Leaf2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Leaf2.png; sourceTree = "<group>"; };
+		F10000000000000000000057 /* HomeGarden.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = HomeGarden.jpg; sourceTree = "<group>"; };
 		F10000000000000000000060 /* FallowBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowBehavior.swift; sourceTree = "<group>"; };
 		F10000000000000000000062 /* ThoughtDistiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtDistiller.swift; sourceTree = "<group>"; };
+		F10000000000000000000070 /* FallowSyncing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSyncing.swift; sourceTree = "<group>"; };
+		F10000000000000000000071 /* DemoSessionFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSessionFactory.swift; sourceTree = "<group>"; };
+		F10000000000000000000072 /* DemoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +165,9 @@
 				F10000000000000000000002 /* SessionModel.swift */,
 				F10000000000000000000003 /* DemoCopy.swift */,
 				F10000000000000000000018 /* FallowSession.swift */,
+				F10000000000000000000070 /* FallowSyncing.swift */,
+				F10000000000000000000071 /* DemoSessionFactory.swift */,
+				F10000000000000000000072 /* DemoController.swift */,
 				F10000000000000000000060 /* FallowBehavior.swift */,
 				F10000000000000000000062 /* ThoughtDistiller.swift */,
 				F1000000000000000000003B /* VoiceCaptureService.swift */,
@@ -243,6 +257,7 @@
 				F10000000000000000000054 /* SceneWater.jpg */,
 				F10000000000000000000055 /* Leaf1.png */,
 				F10000000000000000000056 /* Leaf2.png */,
+				F10000000000000000000057 /* HomeGarden.jpg */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -345,6 +360,7 @@
 				B10000000000000000000054 /* SceneWater.jpg in Resources */,
 				B10000000000000000000055 /* Leaf1.png in Resources */,
 				B10000000000000000000056 /* Leaf2.png in Resources */,
+				B10000000000000000000057 /* HomeGarden.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,6 +375,9 @@
 				B10000000000000000000002 /* SessionModel.swift in Sources */,
 				B10000000000000000000003 /* DemoCopy.swift in Sources */,
 				B1000000000000000000001D /* FallowSession.swift in Sources */,
+				B10000000000000000000070 /* FallowSyncing.swift in Sources */,
+				B10000000000000000000072 /* DemoSessionFactory.swift in Sources */,
+				B10000000000000000000074 /* DemoController.swift in Sources */,
 				B10000000000000000000060 /* FallowBehavior.swift in Sources */,
 				B10000000000000000000062 /* ThoughtDistiller.swift in Sources */,
 				B10000000000000000000064 /* VoiceCaptureService.swift in Sources */,
@@ -386,6 +405,9 @@
 				B1000000000000000000000D /* SessionModel.swift in Sources */,
 				B1000000000000000000000E /* DemoCopy.swift in Sources */,
 				B1000000000000000000001C /* FallowSession.swift in Sources */,
+				B10000000000000000000071 /* FallowSyncing.swift in Sources */,
+				B10000000000000000000073 /* DemoSessionFactory.swift in Sources */,
+				B10000000000000000000075 /* DemoController.swift in Sources */,
 				B10000000000000000000061 /* FallowBehavior.swift in Sources */,
 				B10000000000000000000063 /* ThoughtDistiller.swift in Sources */,
 				B10000000000000000000024 /* FallowFont.swift in Sources */,

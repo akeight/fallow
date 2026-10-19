@@ -51,48 +51,46 @@ struct ReturnView: View {
     // MARK: Welcome back
 
     private var welcome: some View {
-        let session = store.session ?? .demo
+        let session = store.session ?? DemoSessionFactory.fragments
+        let fromMac = session.originDevice == .mac
         return GeometryReader { geo in
             ZStack(alignment: .top) {
                 VStack(spacing: 0) {
                     HStack {
-                        CornerButton(systemName: "chevron.left", label: "Back to Home") { store.cancelFlow() }
+                        CornerButton(systemName: "chevron.left", label: "Back to Home", color: Theme.muteOnDense) { store.cancelFlow() }
                         Spacer()
                     }
                     .padding(.top, 4)
 
-                    Text(DemoCopy.welcomeBack)
+                    // A thought released on the Mac is reflected on there, so the phone only hands it back.
+                    Text(fromMac ? DemoCopy.macReady : DemoCopy.welcomeBack)
                         .font(FallowType.display(34))
                         .foregroundStyle(Theme.ink)
+                        .multilineTextAlignment(.center)
                         .padding(.top, 10)
 
                     Spacer(minLength: 0)
 
                     VStack(spacing: 6) {
-                        if session.originDevice == .mac {
-                            if !store.handedToMac {
-                                PrimaryButton(title: DemoCopy.returnOnMac) { store.returnOnMac() }
-                                    .transition(.fallowText)
-                            }
-                        } else {
+                        if !fromMac {
                             PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
-                            QuietButton(title: DemoCopy.stillStuck) { store.stillStuck() }
+                            QuietButton(title: DemoCopy.stillStuck, color: Theme.muteOnDense) { store.stillStuck() }
                         }
                     }
                     .frame(minHeight: 52)
-                    .padding(.bottom, session.originDevice == .mac ? 24 : 10)
+                    .padding(.bottom, fromMac ? 24 : 10)
                 }
 
                 // The prompt and the thought sit on the lower third, under the orb.
                 VStack(spacing: 14) {
                     Text(welcomeLine(for: session))
                         .font(FallowType.secondary)
-                        .foregroundStyle(Theme.mute)
+                        .foregroundStyle(Theme.muteOnDense)
                         .contentTransition(.opacity)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Eyebrow(text: "You left with")
-                        ThoughtText(text: session.unresolvedThought)
+                        Eyebrow(text: "You left with", color: Theme.muteOnDense)
+                        ThoughtText(text: session.unresolvedThought, color: Theme.ink)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
@@ -105,9 +103,7 @@ struct ReturnView: View {
     }
 
     private func welcomeLine(for session: FallowSession) -> String {
-        guard session.originDevice == .mac else { return DemoCopy.hadSpace }
-        let project = session.projectName ?? "Your work"
-        return store.handedToMac ? "\(project) is open on your Mac." : "\(project) is waiting for you."
+        session.originDevice == .mac ? session.waitingLine : DemoCopy.hadSpace
     }
 
     // MARK: Still stuck
@@ -115,7 +111,7 @@ struct ReturnView: View {
     private var stillStuck: some View {
         VStack(spacing: 0) {
             HStack {
-                CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDense) { store.back() }
                 Spacer()
             }
             .padding(.top, 4)
@@ -150,7 +146,7 @@ struct ReturnView: View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 HStack {
-                    CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                    CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDense) { store.back() }
                     Spacer()
                 }
                 .padding(.top, 4)
@@ -161,51 +157,16 @@ struct ReturnView: View {
                     .multilineTextAlignment(.center)
                     .padding(.top, geo.size.height * 0.15)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    ZStack(alignment: .topLeading) {
-                        if text.wrappedValue.isEmpty {
-                            Text(store.isRecording ? DemoCopy.listening : (store.voiceError?.message ?? "Say it, or write it."))
-                                .font(FallowType.process)
-                                .foregroundStyle(Theme.ash)
-                                .padding(.top, 8)
-                                .padding(.leading, 5)
-                                .allowsHitTesting(false)
-                        }
-                        TextEditor(text: text)
-                            .font(FallowType.process)
-                            .foregroundStyle(Theme.ink)
-                            .lineSpacing(5)
-                            .scrollContentBackground(.hidden)
-                    }
-                    .frame(minHeight: 110, maxHeight: 160)
-
-                    HStack {
-                        Spacer()
-                        Button {
-                            store.isRecording ? store.stopRecording() : store.startRecording(target)
-                        } label: {
-                            Image(systemName: store.isRecording ? "stop.fill" : "mic")
-                                .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
-                                .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
-                                .frame(width: 38, height: 38)
-                                .background(Circle().fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7)))
-                                .contentTransition(.symbolEffect(.replace))
-                        }
-                        .buttonStyle(PressableStyle())
-                        .accessibilityLabel(store.isRecording ? "Stop listening" : "Speak it")
-                        .accessibilityValue(store.isRecording ? "Recording" : "")
-                    }
-                }
-                .padding(14)
-                .glass(radius: 20, lit: store.isRecording)
-                .padding(.top, 20)
+                ThoughtComposer(
+                    text: text,
+                    placeholder: store.voiceError?.message ?? "Say it, or write it.",
+                    isRecording: store.isRecording,
+                    onMic: { store.isRecording ? store.stopRecording() : store.startRecording(target) },
+                    onSubmit: confirm
+                )
+                .padding(.top, 24)
 
                 Spacer(minLength: 16)
-
-                PrimaryButton(title: "Continue", action: confirm)
-                    .disabled(text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .opacity(text.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
-                    .padding(.bottom, 20)
             }
             .padding(.horizontal, 28)
         }
@@ -219,8 +180,8 @@ struct ReturnView: View {
         return GeometryReader { geo in
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: before)
-                    ThoughtText(text: session.unresolvedThought, color: Theme.ash)
+                    Eyebrow(text: before, color: Theme.muteOnDense)
+                    ThoughtText(text: session.unresolvedThought, color: Theme.muteOnDense)
                 }
 
                 Rectangle()
@@ -229,8 +190,8 @@ struct ReturnView: View {
                     .padding(.vertical, 26)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Eyebrow(text: after)
-                    ThoughtText(text: afterText)
+                    Eyebrow(text: after, color: Theme.muteOnDense)
+                    ThoughtText(text: afterText, color: Theme.ink)
                 }
 
                 Spacer(minLength: 16)
@@ -238,7 +199,7 @@ struct ReturnView: View {
                 VStack(spacing: 6) {
                     PrimaryButton(title: DemoCopy.goBack) { store.goBackIn() }
                     if leaveLonger {
-                        QuietButton(title: DemoCopy.leaveLittleLonger) { store.leaveLonger() }
+                        QuietButton(title: DemoCopy.leaveLittleLonger, color: Theme.muteOnDense) { store.leaveLonger() }
                     }
                 }
                 .padding(.bottom, leaveLonger ? 10 : 20)
