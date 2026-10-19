@@ -7,14 +7,15 @@ struct ReleaseView: View {
 
     var body: some View {
         let hold = store.holdProgress
-        let releasing = store.step == .releasing
+        // Still true while this screen fades out into rest, so the hold copy does not return.
+        let releasing = store.step != .release
         let chrome = releasing ? 0 : 1 - ramp(hold, 0.08, 0.55)
 
         GeometryReader { geo in
             ZStack {
                 VStack(spacing: 0) {
                     HStack {
-                        CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                        CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
                         Spacer()
                     }
                     .padding(.top, 4)
@@ -23,7 +24,7 @@ struct ReleaseView: View {
 
                     Text(DemoCopy.takeBreath)
                         .font(FallowType.display(30))
-                        .foregroundStyle(Theme.ink)
+                        .foregroundStyle(Theme.inkOnDeep)
                         .multilineTextAlignment(.center)
                         .lineSpacing(2)
                         .padding(.top, 6)
@@ -45,14 +46,15 @@ struct ReleaseView: View {
                         .font(FallowType.eyebrow)
                         .tracking(2.4)
                         .textCase(.uppercase)
-                        .foregroundStyle(Theme.mute)
+                        .foregroundStyle(Theme.muteOnDeep)
                         .opacity(chrome)
                         .position(x: geo.size.width / 2, y: geo.size.height * store.orbPlacement.y + 118)
                 }
 
                 if releasing {
                     releaseLine
-                        .position(x: geo.size.width / 2, y: geo.size.height * 0.2)
+                        .padding(.top, RestingView.titleTop(height: geo.size.height))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
             }
         }
@@ -61,7 +63,7 @@ struct ReleaseView: View {
     /// 100% → 70% → 35% → nearly gone, softening and drifting back as it leaves attention.
     private func thought(hold: Double) -> some View {
         let fade = interpolate(hold, [(0, 1), (0.33, 0.7), (0.66, 0.35), (1, 0.03)])
-        return ThoughtText(text: store.draft, alignment: .center)
+        return ThoughtText(text: store.draft, color: Theme.inkOnDeep, alignment: .center)
             .opacity(fade)
             .blur(radius: 5 * ramp(hold, 0.2, 1))
             .scaleEffect(1 - 0.06 * hold)
@@ -84,6 +86,7 @@ struct ReleaseView: View {
         }
         .foregroundStyle(Theme.ink)
         .multilineTextAlignment(.center)
+        .restHaze()
         .padding(.horizontal, 36)
     }
 

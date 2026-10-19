@@ -102,6 +102,19 @@ struct FallowSession: Equatable, Codable, Identifiable {
     var lastTouched: Date {
         completedAt ?? returnedAt ?? releasedAt ?? startedAt
     }
+
+    /// What the session is called in a sentence. A project name is never required.
+    var subject: String {
+        projectName ?? "Your thought"
+    }
+
+    var restingLine: String {
+        "\(subject) is resting."
+    }
+
+    var waitingLine: String {
+        "\(subject) is waiting where you left it."
+    }
 }
 
 // MARK: - Transitions
@@ -302,21 +315,7 @@ enum FallowDistance: String, CaseIterable, Identifiable, Equatable, Codable {
 // MARK: - Demo data
 
 extension FallowSession {
-    static let demo = FallowSession(
-        projectName: "FRAGMENTS",
-        unresolvedThought: DemoCopy.unresolved,
-        creativeState: .lostPerspective,
-        difficultyDisengaging: false,
-        distance: .someDistance,
-        intervention: .perceptualPrompt("Look farther away."),
-        originDevice: .mac,
-        phase: .resting,
-        startedAt: Date().addingTimeInterval(-3_600),
-        releasedAt: Date().addingTimeInterval(-3_300)
-    )
-
     static let demoFromPhone = FallowSession(
-        projectName: "FRAGMENTS",
         unresolvedThought: DemoCopy.phoneUnresolved,
         creativeState: .looping,
         distance: .someDistance,

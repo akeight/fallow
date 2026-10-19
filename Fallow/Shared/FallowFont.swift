@@ -33,12 +33,13 @@ enum FallowType {
 /// Small tracked capitals under a display title.
 struct Eyebrow: View {
     var text: String
+    var color: Color = Theme.mute
 
     var body: some View {
         Text(text.uppercased())
             .font(FallowType.eyebrow)
             .tracking(2.4)
-            .foregroundStyle(Theme.mute)
+            .foregroundStyle(color)
             .multilineTextAlignment(.center)
     }
 }

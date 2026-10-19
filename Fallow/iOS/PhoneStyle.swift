@@ -25,6 +25,17 @@ extension View {
     }
 }
 
+extension Theme {
+    /// Secondary text over the garden on Home and Past, which thickens to 0.5 toward the bottom.
+    static let muteOnScene = Color(hex: 0x37352F)
+    /// Secondary text in the return, where the garden thickens to 0.6 toward the bottom.
+    static let muteOnDense = Color(hex: 0x2E2C28)
+    /// Primary and secondary text over the deepened garden in Pause and the return.
+    /// Both keep 4.5:1 over the brightest bokeh under `Atmosphere`'s scrim.
+    static let inkOnDeep = Color(hex: 0xF4F1EA)
+    static let muteOnDeep = Color(hex: 0xE3DCCF)
+}
+
 /// A small give under the finger. Nothing bounces.
 struct PressableStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -52,6 +63,7 @@ struct PrimaryButton: View {
     }
 }
 
+/// A secondary text link, underlined so it reads as tappable.
 struct QuietButton: View {
     var title: String
     var color: Color = Theme.mute
@@ -61,6 +73,7 @@ struct QuietButton: View {
         Button(action: action) {
             Text(title)
                 .font(FallowType.quietButton)
+                .underline()
                 .foregroundStyle(color)
                 .frame(minWidth: 44, minHeight: 44)
                 .padding(.horizontal, 8)
@@ -90,29 +103,43 @@ struct CornerButton: View {
     }
 }
 
-/// Softened attention: frosted, warm, with a hairline. Used before and after Fallow only.
+/// Inputs and cards. System Liquid Glass where available, following the color scheme;
+/// `lit` warms it while listening or selected.
 struct GlassSurface: ViewModifier {
     var radius: CGFloat = 20
     var lit = false
 
+    @Environment(\.colorScheme) private var scheme
+
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        if lit {
-            content.hazeSurface(shape, strength: 0.8)
+        if #available(iOS 26, *) {
+            content.glassEffect(lit ? .regular.tint(Haze.dawn.opacity(0.3)) : .regular, in: shape)
         } else {
+            let dark = scheme == .dark
             content
                 .background {
                     shape
                         .fill(.ultraThinMaterial)
-                        .overlay(shape.fill(Color.white.opacity(0.5)))
+                        .overlay(shape.fill(lit ? Haze.dawn.opacity(dark ? 0.2 : 0.5) : Color.white.opacity(dark ? 0.06 : 0.5)))
                 }
-                .overlay(shape.strokeBorder(Color.white.opacity(0.85), lineWidth: 1))
-                .shadow(color: Color(hex: 0x5C4A32).opacity(0.1), radius: 10, y: 4)
+                .overlay(shape.strokeBorder(Color.white.opacity(dark ? 0.18 : 0.85), lineWidth: 1))
         }
     }
 }
 
 extension View {
+    /// A feathered patch of light behind text on the open scene, so dark type keeps 4.5:1.
+    func restHaze() -> some View {
+        background {
+            Capsule()
+                .fill(Theme.canvas.opacity(0.45))
+                .padding(.horizontal, -28)
+                .padding(.vertical, -20)
+                .blur(radius: 24)
+        }
+    }
+
     func glass(radius: CGFloat = 20, lit: Bool = false) -> some View {
         modifier(GlassSurface(radius: radius, lit: lit))
     }

@@ -1,69 +1,82 @@
 import SwiftUI
 
-/// Home, Pause, Past. Three places, kept quiet. The center is the orb itself.
+/// Home, Pause, Past. Three places, kept quiet. The orb rests on whichever one is open.
 struct FallowTabBar: View {
     var tab: PhoneTab
+    /// Over the deepened garden the glass goes dark and the type goes light.
+    var deep = false
     var select: (PhoneTab) -> Void
 
     @Namespace private var marker
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let tabs: [PhoneTab] = [.home, .pause, .past]
+    private static let iconSize: CGFloat = 30
 
     var body: some View {
         HStack(spacing: 0) {
-            side(.home, title: "Home", symbol: "circle.dotted")
-            pause
-            side(.past, title: "Past", symbol: "text.alignleft")
+            item(.home, title: "Home", symbol: "house")
+            item(.pause, title: "Pause", symbol: "leaf")
+            item(.past, title: "Past", symbol: "clock.arrow.circlepath")
+        }
+        .overlay(alignment: .topLeading) {
+            GeometryReader { geo in
+                let slot = geo.size.width / CGFloat(Self.tabs.count)
+                let index = CGFloat(Self.tabs.firstIndex(of: tab) ?? 0)
+                MiniOrb(diameter: Self.iconSize, glow: 1)
+                    .position(x: slot * (index + 0.5), y: Self.iconSize / 2)
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
         }
         .padding(.horizontal, 10)
         .frame(height: 62)
-        .glass(radius: 31)
+        .barSurface()
+        .environment(\.colorScheme, deep ? .dark : .light)
         .padding(.horizontal, 44)
-        .animation(.smooth(duration: 0.45), value: tab)
+        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .spring(duration: 0.85, bounce: 0), value: tab)
     }
 
-    private func side(_ item: PhoneTab, title: String, symbol: String) -> some View {
+    private func item(_ item: PhoneTab, title: String, symbol: String) -> some View {
         let isActive = tab == item
         return Button { select(item) } label: {
-            VStack(spacing: 4) {
+            VStack(spacing: 3) {
                 Image(systemName: symbol)
-                    .font(.system(size: 16, weight: .regular))
+                    .font(.system(size: 17, weight: .regular))
+                    .frame(width: Self.iconSize, height: Self.iconSize)
+                    .opacity(isActive ? 0 : 1)
+                    .scaleEffect(isActive ? 0.8 : 1)
                 Text(title)
                     .font(.system(size: 11, weight: .medium))
                 ZStack {
                     if isActive {
                         Capsule()
-                            .fill(Theme.ink.opacity(0.55))
+                            .fill((deep ? Theme.inkOnDeep : Theme.ink).opacity(0.55))
                             .frame(width: 14, height: 2)
                             .matchedGeometryEffect(id: "marker", in: marker)
                     }
                 }
                 .frame(height: 2)
             }
-            .foregroundStyle(isActive ? Theme.ink : Theme.ash)
-            .frame(maxWidth: .infinity, minHeight: 52)
+            .foregroundStyle(deep ? (isActive ? Theme.inkOnDeep : Theme.muteOnDeep) : (isActive ? Theme.ink : Theme.muteOnScene))
+            .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(title)
+        .accessibilityHint(item == .pause ? "Give a thought somewhere to rest" : "")
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
+}
 
-    private var pause: some View {
-        let isActive = tab == .pause
-        return Button { select(.pause) } label: {
-            VStack(spacing: 3) {
-                MiniOrb(diameter: 34, glow: isActive ? 1 : 0.45)
-                    .scaleEffect(isActive ? 1.06 : 1)
-                Text("Pause")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(isActive ? Theme.ink : Theme.ash)
-            }
-            .offset(y: -6)
-            .frame(maxWidth: .infinity, minHeight: 56)
-            .contentShape(Rectangle())
+private extension View {
+    /// System Liquid Glass where available; the frosted surface elsewhere.
+    @ViewBuilder
+    func barSurface() -> some View {
+        if #available(iOS 26, *) {
+            glassEffect(.regular, in: Capsule())
+        } else {
+            glass(radius: 31)
         }
-        .buttonStyle(PressableStyle())
-        .accessibilityLabel("Pause")
-        .accessibilityHint("Give a thought somewhere to rest")
-        .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }

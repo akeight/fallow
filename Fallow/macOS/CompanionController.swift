@@ -24,12 +24,19 @@ final class CompanionController {
     private var leaveShown = false
     #if DEBUG
     private var tuner: NSPanel?
-    #endif
+    private var demo: DemoController?
 
+    init(session: SessionModel, config: OrbTuningConfig, demo: DemoController? = nil) {
+        self.session = session
+        self.config = config
+        self.demo = demo
+    }
+    #else
     init(session: SessionModel, config: OrbTuningConfig) {
         self.session = session
         self.config = config
     }
+    #endif
 
     func start() {
         guard let screen = NSScreen.main else { return }
@@ -39,14 +46,18 @@ final class CompanionController {
         let visible = screen.visibleFrame
         anchor = CGPoint(x: visible.maxX - 20, y: visible.minY + 20)
 
-        let host = NSHostingView(rootView: CompanionView(
+        var view = CompanionView(
             session: session,
             config: config,
             layout: layout,
             syncChrome: { [weak self] in self?.syncChrome() },
             syncVeil: { [weak self] in self?.syncVeil() },
             openTuner: { [weak self] in self?.showTuner() }
-        ))
+        )
+        #if DEBUG
+        view.runDemo = { [weak self] scenario in self?.demo?.run(scenario) }
+        #endif
+        let host = NSHostingView(rootView: view)
         host.sizingOptions = []
         host.wantsLayer = true
         host.layer?.backgroundColor = NSColor.clear.cgColor
@@ -226,6 +237,12 @@ final class CompanionController {
 
     private func watchEscape() {
         escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            #if DEBUG
+            if let self, let scenario = Self.demoShortcut(event) {
+                self.demo?.run(scenario)
+                return nil
+            }
+            #endif
             guard event.keyCode == 53, let self else { return event }
             #if DEBUG
             if let tuner = self.tuner, tuner.isKeyWindow { return event }
@@ -235,6 +252,21 @@ final class CompanionController {
             return nil
         }
     }
+
+    #if DEBUG
+    /// Control-Option-Command with 0 through 3 stages the presentation on this Mac.
+    private static func demoShortcut(_ event: NSEvent) -> DemoController.Scenario? {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard modifiers == [.control, .option, .command] else { return nil }
+        switch event.charactersIgnoringModifiers {
+        case "0": return .reset
+        case "1": return .macReleased
+        case "2": return .macReturning
+        case "3": return .complete
+        default: return nil
+        }
+    }
+    #endif
 
     func showTuner() {
         #if DEBUG

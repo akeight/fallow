@@ -5,51 +5,48 @@ import SwiftUI
 struct RestingView: View {
     var store: PhoneStore
 
+    /// Where the title's top edge sits. Releasing shares it so the words land in the same place.
+    static func titleTop(height: CGFloat) -> CGFloat {
+        48 + height * 0.2
+    }
+
     var body: some View {
         let session = store.session
         GeometryReader { geo in
-            ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    HStack {
-                        CornerButton(systemName: "chevron.down", label: "Close", color: Theme.mute.opacity(0.7)) {
-                            store.closeRest()
-                        }
-                        Spacer()
+                ZStack(alignment: .top) {
+                HStack {
+                    CornerButton(systemName: "chevron.down", label: "Close", color: Theme.muteOnScene) {
+                        store.closeRest()
                     }
-                    .padding(.top, 4)
-
-                    VStack(spacing: 12) {
-                        Text(DemoCopy.itsHere)
-                            .font(FallowType.display(34))
-                            .foregroundStyle(Theme.ink)
-                        Eyebrow(text: FallowBehaviorResolver.reassurance(difficultyDisengaging: store.difficultyDisengaging) ?? DemoCopy.letItBe)
-                            .frame(maxWidth: 220)
-                    }
-                    .padding(.top, geo.size.height * 0.14)
-
-                    Spacer(minLength: 0)
+                    Spacer()
                 }
+                .padding(.top, 4)
 
-                VStack(spacing: 14) {
-                    // Silence is a valid intervention: then only the place is named.
-                    if let line = session?.intervention?.line {
-                        Text(line)
-                            .font(FallowType.secondary)
-                            .foregroundStyle(Color.white.opacity(0.9))
-                            .multilineTextAlignment(.center)
-                            .lineSpacing(3)
-                            .frame(maxWidth: 270)
-                    }
-                    HStack(spacing: 8) {
-                        Text("Resting here")
-                        Text("·").accessibilityHidden(true)
-                        Text(store.restScene.title)
-                    }
-                    .font(FallowType.caption)
-                    .foregroundStyle(Color.white.opacity(0.75))
+                VStack(spacing: 12) {
+                    Text(DemoCopy.itsHere)
+                        .font(FallowType.display(34))
+                        .foregroundStyle(Theme.ink)
+                    Eyebrow(
+                        text: FallowBehaviorResolver.reassurance(difficultyDisengaging: store.difficultyDisengaging) ?? DemoCopy.letItBe,
+                        color: Theme.muteOnScene
+                    )
+                    .frame(maxWidth: 220)
                 }
-                .shadow(color: Color(hex: 0x2A1D12).opacity(0.45), radius: 8)
-                .position(x: geo.size.width / 2 - 28, y: geo.size.height * 0.72)
+                .restHaze()
+                .padding(.top, Self.titleTop(height: geo.size.height))
+
+                // Silence is a valid intervention: then nothing is said here.
+                if let line = session?.intervention?.line {
+                    Text(line)
+                        .font(.system(size: 17, weight: .regular))
+                        .tracking(0.3)
+                        .foregroundStyle(Theme.ink)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: 290)
+                        .restHaze()
+                        .position(x: geo.size.width / 2 - 28, y: geo.size.height * 0.72)
+                }
             }
             .padding(.horizontal, 28)
         }

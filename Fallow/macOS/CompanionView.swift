@@ -8,6 +8,9 @@ struct CompanionView: View {
     var syncChrome: () -> Void
     var syncVeil: () -> Void
     var openTuner: () -> Void
+    #if DEBUG
+    var runDemo: (DemoController.Scenario) -> Void = { _ in }
+    #endif
     @State private var sounds = BreakSounds()
     @State private var voice = VoiceCaptureService()
     @State private var gathering = false
@@ -43,6 +46,11 @@ struct CompanionView: View {
         .contextMenu {
             #if DEBUG
             Button("Tune orb") { openTuner() }
+            Menu("Demo") {
+                ForEach(DemoController.Scenario.mac) { scenario in
+                    Button(scenario.title) { runDemo(scenario) }
+                }
+            }
             #endif
             Button("Quit FALLOW") { NSApp.terminate(nil) }
         }
@@ -428,7 +436,7 @@ struct CompanionView: View {
             .overlay(alignment: .top) {
                 VStack(spacing: 14) {
                     FallowWordmark(size: 34)
-                    Eyebrow(text: DemoCopy.restingHere)
+                    Eyebrow(text: session.current.restingLine)
                 }
                 .fixedSize()
                 .alignmentGuide(.top) { d in d[.bottom] + 40 }
@@ -476,15 +484,10 @@ struct CompanionView: View {
                     .foregroundStyle(Theme.mute)
                     .padding(.top, 2)
                     .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("“\(session.thought)”")
-                        .font(FallowType.macProcess)
-                        .foregroundStyle(Theme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text(leftWith)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.ash)
-                }
+                Text("“\(session.thought)”")
+                    .font(FallowType.macProcess)
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
             .padding(18)
@@ -540,11 +543,6 @@ struct CompanionView: View {
 
     private var reflectionIsEmpty: Bool {
         session.reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    private var leftWith: String {
-        guard let distance = session.distance else { return DemoCopy.project }
-        return "\(DemoCopy.project) · \(distance.title)"
     }
 
     private var beforeAfter: some View {

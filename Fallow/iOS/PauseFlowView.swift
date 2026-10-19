@@ -28,21 +28,15 @@ struct PauseFlowView: View {
 }
 
 private struct CaptureStep: View {
-    var store: PhoneStore
+    @Bindable var store: PhoneStore
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack {
-                CornerButton(systemName: "xmark", label: "Cancel") { store.cancelFlow() }
-                Spacer()
-            }
-            .padding(.top, 4)
-
             Text(DemoCopy.carrying)
                 .font(FallowType.display(32))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Theme.inkOnDeep)
                 .multilineTextAlignment(.center)
-                .padding(.top, 18)
+                .padding(.top, 66)
 
             Spacer(minLength: 0)
 
@@ -50,16 +44,23 @@ private struct CaptureStep: View {
                 status
                     .frame(minHeight: 66, alignment: .bottom)
 
-                field
+                ThoughtComposer(
+                    text: $store.draft,
+                    placeholder: store.voiceError == nil ? "Speak it, and let it out" : DemoCopy.tryAgain,
+                    isRecording: store.isRecording,
+                    isGathering: store.isGathering,
+                    deep: true,
+                    onMic: store.toggleRecording,
+                    onSubmit: store.submitTyped
+                )
 
                 VStack(spacing: 0) {
-                    QuietButton(title: store.isRecording ? "Cancel" : "Type instead") {
-                        store.isRecording ? store.cancelListening() : store.typeInstead()
+                    if store.isRecording {
+                        QuietButton(title: "Cancel", color: Theme.muteOnDeep) { store.cancelListening() }
                     }
-                    .disabled(store.isGathering)
                     #if DEBUG
-                    if !store.isRecording && !store.isGathering {
-                        QuietButton(title: "Use the demo note", color: Theme.ash) { store.useDemoNote() }
+                    if !store.isRecording && !store.isGathering && store.draft.isEmpty {
+                        QuietButton(title: "Use the demo note", color: Theme.muteOnDeep) { store.useDemoNote() }
                     }
                     #endif
                 }
@@ -75,7 +76,7 @@ private struct CaptureStep: View {
         if store.isRecording {
             Text(store.voice.recentTranscript.isEmpty ? " " : store.voice.recentTranscript)
                 .font(FallowType.process)
-                .foregroundStyle(Theme.mute)
+                .foregroundStyle(Theme.muteOnDeep)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
                 .truncationMode(.head)
@@ -86,46 +87,93 @@ private struct CaptureStep: View {
         } else if let error = store.voiceError {
             Text(error.message)
                 .font(FallowType.secondary)
-                .foregroundStyle(Theme.mute)
+                .foregroundStyle(Theme.muteOnDeep)
                 .multilineTextAlignment(.center)
                 .transition(.fallowText)
         }
     }
 
-    private var label: String {
-        if store.isRecording { return DemoCopy.listening }
-        if store.isGathering { return DemoCopy.gathering }
-        if store.voiceError != nil { return DemoCopy.tryAgain }
-        return "Speak it, and let it out"
+}
+
+/// One place to put a thought: type into it, or speak it. The arrow appears once there is something to send.
+struct ThoughtComposer: View {
+    @Binding var text: String
+    var placeholder: String
+    var isRecording: Bool
+    var isGathering = false
+    /// Light type and dark glass over the deepened garden.
+    var deep = false
+    var onMic: () -> Void
+    var onSubmit: () -> Void
+
+    @FocusState private var focused: Bool
+
+    private var ink: Color { deep ? Theme.inkOnDeep : Theme.ink }
+    private var secondary: Color { deep ? Theme.muteOnDeep : Theme.muteOnDense }
+    private var busy: Bool { isRecording || isGathering }
+    private var canSend: Bool {
+        !busy && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private var field: some View {
-        Button { store.toggleRecording() } label: {
-            HStack(spacing: 12) {
-                Text(label)
-                    .font(FallowType.secondary)
-                    .foregroundStyle(store.isRecording ? Theme.ink : Theme.mute)
-                    .contentTransition(.opacity)
-                Spacer(minLength: 0)
-                ZStack {
-                    Circle()
-                        .fill(store.isRecording ? Theme.ink.opacity(0.85) : Haze.dawn.opacity(0.7))
-                    Image(systemName: store.isRecording ? "stop.fill" : "mic")
-                        .font(.system(size: store.isRecording ? 12 : 16, weight: .medium))
-                        .foregroundStyle(store.isRecording ? Theme.canvas : Theme.ink)
-                        .contentTransition(.symbolEffect(.replace))
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 6) {
+            Group {
+                if busy {
+                    Text(isRecording ? DemoCopy.listening : DemoCopy.gathering)
+                        .foregroundStyle(ink)
+                        .transition(.opacity)
+                } else {
+                    TextField("", text: $text, prompt: Text(placeholder).foregroundStyle(secondary), axis: .vertical)
+                        .lineLimit(1...5)
+                        .foregroundStyle(ink)
+                        .tint(ink)
+                        .focused($focused)
+                        .accessibilityLabel(placeholder)
                 }
-                .frame(width: 38, height: 38)
             }
-            .padding(.leading, 20)
-            .padding(.trailing, 7)
-            .frame(height: 52)
-            .glass(radius: 26, lit: store.isRecording)
+            .font(FallowType.secondary)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            circleButton(
+                symbol: isRecording ? "stop.fill" : "mic",
+                filled: isRecording,
+                label: isRecording ? "Stop listening" : "Speak it"
+            ) {
+                focused = false
+                onMic()
+            }
+            .disabled(isGathering)
+            .accessibilityValue(isRecording ? "Recording" : "")
+
+            if canSend {
+                circleButton(symbol: "arrow.up", filled: true, label: "Send") {
+                    focused = false
+                    onSubmit()
+                }
+                .transition(.scale(scale: 0.6).combined(with: .opacity))
+            }
+        }
+        .padding(.leading, 20)
+        .padding(.trailing, 7)
+        .padding(.vertical, 7)
+        .frame(minHeight: 52)
+        .glass(radius: 26, lit: isRecording)
+        .animation(.easeInOut(duration: 0.25), value: canSend)
+        .animation(.easeInOut(duration: 0.25), value: busy)
+    }
+
+    private func circleButton(symbol: String, filled: Bool, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: filled ? 13 : 16, weight: .semibold))
+                .foregroundStyle(filled && !deep ? Theme.canvas : Theme.ink)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(filled ? ink.opacity(0.85) : Haze.dawn.opacity(0.7)))
         }
         .buttonStyle(PressableStyle())
-        .disabled(store.isGathering)
-        .accessibilityLabel(store.isRecording ? "Stop listening" : "Speak your thought")
-        .accessibilityValue(store.isRecording ? "Recording" : "")
+        .accessibilityLabel(label)
     }
 }
 
@@ -143,12 +191,12 @@ private struct TranscriptStep: View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 HStack {
-                    CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                    CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
                     Spacer()
                 }
                 .padding(.top, 4)
 
-                Eyebrow(text: spoken ? DemoCopy.carryingVoice : (store.focusTyping ? "What are you carrying?" : "You’re carrying"))
+                Eyebrow(text: spoken ? DemoCopy.carryingVoice : (store.focusTyping ? "What are you carrying?" : "You’re carrying"), color: Theme.muteOnDeep)
                     .padding(.top, geo.size.height * 0.26)
 
                 Group {
@@ -163,13 +211,13 @@ private struct TranscriptStep: View {
                 if spoken {
                     HStack(spacing: 4) {
                         if !editing {
-                            QuietButton(title: DemoCopy.edit) {
+                            QuietButton(title: DemoCopy.edit, color: Theme.muteOnDeep) {
                                 editing = true
                                 focused = true
                             }
                         }
                         if store.session?.hasFullNote == true {
-                            QuietButton(title: DemoCopy.viewFullNote, color: Theme.ash) { showsNote = true }
+                            QuietButton(title: DemoCopy.viewFullNote, color: Theme.muteOnDeep) { showsNote = true }
                         }
                     }
                     .padding(.top, 6)
@@ -182,9 +230,12 @@ private struct TranscriptStep: View {
                         .disabled(isEmpty)
                         .opacity(isEmpty ? 0.5 : 1)
                     Button { store.rerecord() } label: {
-                        Label("Say it again", systemImage: "mic")
+                        HStack(spacing: 6) {
+                            Image(systemName: "mic")
+                            Text("Say it again").underline()
+                        }
                             .font(FallowType.quietButton)
-                            .foregroundStyle(Theme.mute)
+                            .foregroundStyle(Theme.muteOnDeep)
                             .frame(minHeight: 44)
                             .padding(.horizontal, 8)
                     }
@@ -207,7 +258,7 @@ private struct TranscriptStep: View {
     }
 
     private var carried: some View {
-        ThoughtText(text: store.draft)
+        ThoughtText(text: store.draft, color: Theme.inkOnDeep)
             .frame(maxWidth: .infinity, minHeight: 102, alignment: .topLeading)
             .padding(20)
             .glass(radius: 20)
@@ -218,14 +269,14 @@ private struct TranscriptStep: View {
             if store.draft.isEmpty {
                 Text("Write it the way it sounds in your head.")
                     .font(FallowType.process)
-                    .foregroundStyle(Theme.ash)
+                    .foregroundStyle(Theme.muteOnDeep)
                     .padding(.top, 8)
                     .padding(.leading, 5)
                     .allowsHitTesting(false)
             }
             TextEditor(text: $store.draft)
                 .font(FallowType.process)
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Theme.inkOnDeep)
                 .lineSpacing(5)
                 .scrollContentBackground(.hidden)
                 .focused($focused)
@@ -261,6 +312,7 @@ private struct FullNoteSheet: View {
         .padding(.horizontal, 28)
         .padding(.top, 20)
         .background(Theme.canvas)
+        .environment(\.colorScheme, .light)
         .presentationDetents([.medium, .large])
     }
 }
@@ -272,19 +324,19 @@ private struct RefineStep: View {
         GeometryReader { geo in
             VStack(spacing: 0) {
                 HStack {
-                    CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                    CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
                     Spacer()
                 }
                 .padding(.top, 4)
 
                 Text(DemoCopy.feelsLike)
                     .font(FallowType.display(30))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(Theme.inkOnDeep)
                     .padding(.top, geo.size.height * 0.08)
 
                 Text(store.interpretation.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess)
                     .font(FallowType.caption)
-                    .foregroundStyle(Theme.ash)
+                    .foregroundStyle(Theme.muteOnDeep)
                     .padding(.top, 8)
 
                 VStack(spacing: 8) {
@@ -314,7 +366,11 @@ struct ChoiceRow: View {
     var selected: Bool
     var action: () -> Void
 
+    /// Dark glass over the deepened garden, light glass in the return.
+    @Environment(\.colorScheme) private var scheme
+
     var body: some View {
+        let deep = scheme == .dark
         Button(action: action) {
             HStack(spacing: 14) {
                 Circle()
@@ -324,18 +380,18 @@ struct ChoiceRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(size: 16, weight: selected ? .semibold : .regular))
-                        .foregroundStyle(Theme.ink)
+                        .foregroundStyle(deep ? Theme.inkOnDeep : Theme.ink)
                     if let subtitle {
                         Text(subtitle)
                             .font(FallowType.caption)
-                            .foregroundStyle(Theme.mute)
+                            .foregroundStyle(deep ? Theme.muteOnDeep : Theme.muteOnDense)
                     }
                 }
                 Spacer(minLength: 0)
                 if let note {
                     Text(note)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Theme.ash)
+                        .foregroundStyle(deep ? Theme.muteOnDeep : Theme.muteOnDense)
                 }
             }
             .padding(.horizontal, 16)
@@ -354,14 +410,14 @@ private struct DistanceStep: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                CornerButton(systemName: "chevron.left", label: "Back") { store.back() }
+                CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
                 Spacer()
             }
             .padding(.top, 4)
 
             Text(DemoCopy.distancePrompt)
                 .font(FallowType.display(28))
-                .foregroundStyle(Theme.ink)
+                .foregroundStyle(Theme.inkOnDeep)
                 .multilineTextAlignment(.center)
                 .padding(.top, 14)
                 .padding(.horizontal, 16)

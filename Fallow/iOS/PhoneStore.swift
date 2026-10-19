@@ -49,12 +49,13 @@ final class PhoneStore {
     var tab: PhoneTab = .home
     var step: PhoneStep = .capture
     /// The one thread being worked with, from capture through return. Screens read and write it.
-    var session: FallowSession? = .demo
+    var session: FallowSession? = nil {
+        didSet { persist() }
+    }
     var past: [FallowSession] = FallowSession.demoPast
     /// The classifier's guess, kept apart from the session until the person chooses.
     var interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
     var releaseLine: ReleaseLine = .releasing
-    var handedToMac = false
     var showsNudge = true
     var isRecording = false
     /// Between Stop and the carried thought appearing.
@@ -76,12 +77,18 @@ final class PhoneStore {
     let leaves = LeafEmitter()
     let voice = VoiceCaptureService()
     let distiller: any ThoughtDistilling = HeuristicDistiller()
+    let sync = DemoFallowSyncService()
+    #if DEBUG
+    let demo: DemoController
+    #endif
 
     @ObservationIgnored private var flowTask: Task<Void, Never>?
-    @ObservationIgnored private var demoIndex = 0
     @ObservationIgnored private var recordingTarget: RecordingTarget = .thought
 
     init() {
+        #if DEBUG
+        demo = DemoController(sync: sync)
+        #endif
         orbConfig.idleSize = 100
         orbConfig.holdStartSize = 150
         orbConfig.holdEndSize = 225
@@ -96,7 +103,11 @@ final class PhoneStore {
         orb.holdDuration = 2.8
         voice.onLevel = { [orb] level in orb.voiceLevel = level }
         voice.onEndedEarly = { [weak self] in self?.stopRecording() }
+        sync.onRemoteChange = { [weak self] session in self?.receive(session) }
         syncOrb()
+        Task {
+            if let active = await sync.loadActiveSession() { receive(active) }
+        }
     }
 
     // MARK: Session fields
@@ -138,6 +149,33 @@ final class PhoneStore {
         return max(baseOpenness, 0.15 + 0.55 * orb.holdAmount)
     }
 
+    /// Pause, up to the release, sits on the deepened garden with light type.
+    var isDeep: Bool {
+        guard tab == .pause else { return false }
+        switch step {
+        case .capture, .transcript, .refine, .distance, .release, .releasing: return true
+        default: return false
+        }
+    }
+
+    /// The return keeps dark type over a garden that is denser at the bottom.
+    var isReturning: Bool {
+        tab == .pause && !isDeep && step != .resting
+    }
+
+    /// Opacity at the bottom edge. Each surface fades lighter toward the top.
+    var gardenOpacity: Double {
+        if isDeep { return 1 }
+        if isReturning { return 0.6 }
+        return tab == .pause ? 0 : 0.5
+    }
+
+    /// Share of `gardenOpacity` left at the top edge.
+    var gardenTop: Double {
+        if isDeep { return 1 }
+        return isReturning ? 0.4 / 0.6 : 0.3 / 0.5
+    }
+
     var holdProgress: Double {
         guard tab == .pause, step == .release else { return 0 }
         return orb.holdAmount
@@ -152,11 +190,6 @@ final class PhoneStore {
         case .home, .past: true
         case .pause: step == .capture && !isRecording && !isGathering
         }
-    }
-
-    /// The bar recedes once a thought is being worked with.
-    var tabBarEmphasis: Double {
-        tab == .pause ? 0.5 : 1
     }
 
     var leafMode: LeafMode {
@@ -191,7 +224,7 @@ final class PhoneStore {
     var orbPlacement: OrbPlacement {
         switch tab {
         case .home:
-            return active == nil ? OrbPlacement(y: 0.42, scale: 1) : OrbPlacement(y: 0.57, scale: 0.7)
+            return active == nil ? OrbPlacement(y: 0.42, scale: 1) : OrbPlacement(y: HomeView.activeOrbY, scale: 0.78)
         case .past:
             return OrbPlacement(y: 0.42, scale: 0.6, visible: false)
         case .pause:
@@ -231,9 +264,8 @@ final class PhoneStore {
             leaveLonger()
             return
         }
-        session = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+        session = FallowSession(originDevice: .iPhone)
         interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
-        handedToMac = false
         transition(0.6) {
             self.tab = .pause
             self.step = .capture
@@ -276,17 +308,35 @@ final class PhoneStore {
         go(previous)
     }
 
-    func cycleDemo() {
-        demoIndex = (demoIndex + 1) % 3
-        session = switch demoIndex {
-        case 0: .demo
-        case 1: nil
-        default: .demoFromPhone
+    /// Applies a session that changed on another device. A thought released on the Mac opens
+    /// straight onto Home; a return request opens the handoff. Setup is never replayed.
+    func receive(_ incoming: FallowSession?) {
+        cancelRecording()
+        flowTask?.cancel()
+        switch incoming?.phase {
+        case .resting:
+            session = incoming
+            showsNudge = false
+            selectionTick += 1
+            transition(0.8) {
+                self.tab = .home
+                self.baseOpenness = 0
+            }
+            syncOrb()
+        case .returnRequested:
+            session = incoming
+            showReturn()
+        case .complete:
+            guard let incoming else { return }
+            archive(incoming)
+        default:
+            session = nil
+            transition(0.7) {
+                self.tab = .home
+                self.baseOpenness = 0
+            }
+            syncOrb()
         }
-        showsNudge = session != nil
-        selectionTick += 1
-        transition(0.6) { self.tab = .home }
-        syncOrb()
     }
 
     // MARK: Capture
@@ -365,13 +415,14 @@ final class PhoneStore {
         announce("Stopped")
     }
 
-    func typeInstead() {
+    /// Typed straight into the capture field. The words are already the thought, so there is nothing to review.
+    func submitTyped() {
+        guard !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         cancelRecording()
         voiceError = nil
         session?.rawTranscript = nil
         session?.captureMethod = .text
-        focusTyping = true
-        go(.transcript)
+        continueFromTranscript()
     }
 
     func rerecord() {
@@ -506,28 +557,20 @@ final class PhoneStore {
         syncOrb()
     }
 
+    /// A thought released on the Mac is handed back there; one from the phone returns here.
     func returnToIt() {
         cancelRecording()
-        handedToMac = false
         session?.requestReturn()
+        showReturn()
+    }
+
+    private func showReturn() {
         transition(0.9) {
             self.tab = .pause
             self.step = .returning
         }
         transition(reduceMotion ? 1 : 2.6) { self.baseOpenness = 0.12 }
         syncOrb()
-    }
-
-    /// Return where the work is. The Mac picks the session up from here.
-    func returnOnMac() {
-        guard let session else { return }
-        transition(0.8) { self.handedToMac = true }
-        flowTask?.cancel()
-        flowTask = Task {
-            try? await Task.sleep(nanoseconds: 2_200_000_000)
-            guard !Task.isCancelled else { return }
-            archive(session)
-        }
     }
 
     func somethingShifted() {
@@ -610,10 +653,21 @@ final class PhoneStore {
         AccessibilityNotification.Announcement(message).post()
     }
 
+    private func persist() {
+        let current = session
+        Task {
+            if let current {
+                await sync.save(current)
+            } else {
+                await sync.clear()
+            }
+        }
+    }
+
     #if DEBUG
     /// Opens a screen directly, for previews and screenshots: `-fallowScreen release-mid`.
     func open(debugScreen name: String) {
-        var setup = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+        var setup = FallowSession(originDevice: .iPhone)
         setup.captureText(DemoCopy.phoneUnresolved)
         interpretation = .demo(for: DemoCopy.phoneUnresolved)
         var chosen = setup
@@ -644,7 +698,7 @@ final class PhoneStore {
         case "gathering": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); isGathering = true
         case "voice-error": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); voiceError = .microphoneDenied
         case "voice-transcript", "voice-short":
-            var spoken = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+            var spoken = FallowSession(originDevice: .iPhone)
             let raw = name == "voice-short" ? "The opening screen feels wrong." : DemoCopy.demoRamble
             spoken.captureVoice(raw: raw, distilled: HeuristicDistiller.distill(raw))
             tab = .pause; step = .transcript; session = spoken
@@ -658,11 +712,14 @@ final class PhoneStore {
         case "release", "release-mid", "release-late", "release-auto":
             tab = .pause; step = .release; session = ready; baseOpenness = 0.15
         case "releasing": tab = .pause; step = .releasing; session = .demoFromPhone; baseOpenness = 1
-        case "resting": tab = .pause; step = .resting; session = .demo; baseOpenness = 1
+        case "resting": tab = .pause; step = .resting; session = DemoSessionFactory.fragments; baseOpenness = 1
         case "resting-empty": tab = .pause; step = .resting; session = resting(.runningOnEmpty, .breath); baseOpenness = 1
         case "resting-disengaging":
             tab = .pause; step = .resting; session = resting(.lostPerspective, .someDistance, disengaging: true); baseOpenness = 1
-        case "return-mac": tab = .pause; step = .returning; session = .demo; baseOpenness = 0.12
+        case "return-mac":
+            var handoff = DemoSessionFactory.fragments
+            handoff.requestReturn()
+            tab = .pause; step = .returning; session = handoff; baseOpenness = 0.12
         case "return-phone": tab = .pause; step = .returning; session = returning; baseOpenness = 0.12
         case "reflect": tab = .pause; step = .reflect; session = returning; baseOpenness = 0.12
         case "before-after":

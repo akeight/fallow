@@ -19,7 +19,9 @@ enum BreakCue {
 final class SessionModel {
     var phase: OrbPhase = .dormant
     /// The Mac's session record. The orb phase above is only how it is being shown.
-    var current = FallowSession(originDevice: .mac, phase: .dormant)
+    var current = FallowSession(originDevice: .mac, phase: .dormant) {
+        didSet { persist() }
+    }
     /// Raw recession, 0 through 1. The veil shapes this; it is not pre-curved.
     var softness: Double = 0
     var showsLens = false
@@ -35,12 +37,18 @@ final class SessionModel {
     var returnID = 0
     /// Mac playback. Ignored by observation so assigning it does not refresh the UI.
     @ObservationIgnored var breakCue: ((BreakCue) -> Void)?
+    @ObservationIgnored private let sync: (any FallowSyncing)?
 
     private var pressing = false
     private var holdTask: Task<Void, Never>?
     private var lensTask: Task<Void, Never>?
     private var returnTask: Task<Void, Never>?
     private var releaseTask: Task<Void, Never>?
+
+    /// Without a sync service the session stays on this device, as the iPhone's orb does.
+    init(sync: (any FallowSyncing)? = nil) {
+        self.sync = sync
+    }
 
     var thought: String {
         get { current.unresolvedThought }
@@ -68,7 +76,7 @@ final class SessionModel {
         switch phase {
         case .dormant:
             breakCue?(.open)
-            current = FallowSession(projectName: DemoCopy.project.uppercased(), originDevice: .mac)
+            current = FallowSession(originDevice: .mac)
             phase = .capture
         case .resting where !showsLens:
             current.requestReturn()
@@ -256,6 +264,42 @@ final class SessionModel {
         enterRest()
     }
 
+    /// Applies a session that changed on another device, through the same motion the Mac uses itself.
+    /// A thought already resting here keeps the person's own words.
+    func receive(_ session: FallowSession?) {
+        switch session?.phase {
+        case .resting:
+            guard let session, !current.isAway else { return }
+            current = session
+            settle()
+        case .returnRequested:
+            guard let session else { return }
+            switch phase {
+            case .returnDoorway, .reflecting, .beforeAfter:
+                return
+            default:
+                break
+            }
+            if current.phase == .resting {
+                current.requestReturn()
+            } else {
+                current = session
+            }
+            if phase != .resting {
+                cancelMotion()
+                easeSoftness(to: 1, duration: 0.9)
+            }
+            showsLens = false
+            phase = .returnDoorway
+        default:
+            if phase == .dormant {
+                if current.phase != .dormant { current = FallowSession(originDevice: .mac, phase: .dormant) }
+            } else {
+                leave()
+            }
+        }
+    }
+
     /// Leaves the current step and returns to the quiet orb. The veil clears with it.
     func leave() {
         guard phase != .dormant else { return }
@@ -313,12 +357,51 @@ final class SessionModel {
         current.markReleased()
         phase = .resting
         softness = 1
+        showLensBriefly()
+    }
+
+    /// A session released elsewhere arrives without a hold, so the veil eases in instead.
+    private func settle() {
+        cancelMotion()
+        settleID += 1
+        phase = .resting
+        easeSoftness(to: 1, duration: 0.9)
+        showLensBriefly()
+    }
+
+    private func showLensBriefly() {
         showsLens = true
         lensTask?.cancel()
         lensTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 3_200_000_000)
             guard phase == .resting else { return }
             showsLens = false
+        }
+    }
+
+    private func easeSoftness(to target: Double, duration: Double) {
+        let from = softness
+        returnTask?.cancel()
+        returnTask = Task { @MainActor in
+            let start = Date()
+            while !Task.isCancelled {
+                let t = min(1, Date().timeIntervalSince(start) / duration)
+                softness = from + (target - from) * t * t * (3 - 2 * t)
+                if t >= 1 { return }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
+        }
+    }
+
+    private func persist() {
+        guard let sync else { return }
+        let session = current
+        Task { @MainActor in
+            if session.phase == .dormant {
+                await sync.clear()
+            } else {
+                await sync.save(session)
+            }
         }
     }
 }

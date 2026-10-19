@@ -14,13 +14,13 @@ struct PastView: View {
 
                 Text("How unfinished thoughts changed while you were away.")
                     .font(FallowType.secondary)
-                    .foregroundStyle(Theme.mute)
+                    .foregroundStyle(Theme.muteOnScene)
                     .padding(.top, 8)
 
                 if store.past.isEmpty {
                     Text("Nothing yet. What you leave and what you return with will gather here.")
                         .font(FallowType.secondary)
-                        .foregroundStyle(Theme.ash)
+                        .foregroundStyle(Theme.muteOnScene)
                         .padding(.top, 48)
                 } else {
                     LazyVStack(spacing: 14) {
@@ -47,7 +47,7 @@ private struct PastCard: View {
                 MiniOrb(diameter: 20, glow: session.latestThought == nil ? 0.3 : 0.7)
                 Text(Self.day(session.lastTouched))
                     .font(FallowType.caption)
-                    .foregroundStyle(Theme.ash)
+                    .foregroundStyle(Theme.mute)
                 Text(session.projectName ?? "")
                     .font(FallowType.eyebrow)
                     .tracking(2)
@@ -57,7 +57,7 @@ private struct PastCard: View {
 
             Text("You left with")
                 .font(FallowType.caption)
-                .foregroundStyle(Theme.ash)
+                .foregroundStyle(Theme.mute)
                 .padding(.top, 18)
             ThoughtText(text: session.unresolvedThought, color: Theme.mute)
                 .padding(.top, 6)
@@ -70,13 +70,13 @@ private struct PastCard: View {
             if let returned = session.latestThought {
                 Text(session.reframedThought == nil ? "You returned with" : "It became")
                     .font(FallowType.caption)
-                    .foregroundStyle(Theme.ash)
+                    .foregroundStyle(Theme.mute)
                 ThoughtText(text: returned)
                     .padding(.top, 6)
             } else {
                 Text("You returned to it on your Mac.")
                     .font(FallowType.caption)
-                    .foregroundStyle(Theme.ash)
+                    .foregroundStyle(Theme.mute)
             }
         }
         .padding(20)

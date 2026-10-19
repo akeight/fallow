@@ -9,7 +9,10 @@ struct RootView: View {
             Atmosphere(
                 openness: store.openness,
                 restScene: store.restScene,
-                drifting: store.tab == .pause && store.step == .resting
+                drifting: store.tab == .pause && store.step == .resting,
+                garden: store.gardenOpacity,
+                gardenTop: store.gardenTop,
+                depth: store.isDeep ? 1 : 0
             )
             .ignoresSafeArea()
 
@@ -51,20 +54,21 @@ struct RootView: View {
             if store.showsTabBar {
                 VStack {
                     Spacer()
-                    FallowTabBar(tab: store.tab) { store.select($0) }
-                        .opacity(store.tabBarEmphasis)
+                    FallowTabBar(tab: store.tab, deep: store.isDeep) { store.select($0) }
                         .padding(.bottom, 6)
                 }
                 .ignoresSafeArea(.keyboard)
                 .transition(.opacity.combined(with: .offset(y: 16)))
             }
         }
+        .preferredColorScheme(store.isDeep ? .dark : .light)
         .onAppear {
             store.reduceMotion = reduceMotion
             #if DEBUG
             if let name = UserDefaults.standard.string(forKey: "fallowScreen") {
                 store.open(debugScreen: name)
             }
+            store.demo.applyLaunchArgument()
             #endif
         }
         .onChange(of: reduceMotion) { _, value in store.reduceMotion = value }
