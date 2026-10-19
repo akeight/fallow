@@ -83,6 +83,7 @@
 		B10000000000000000000093 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
 		B100000000000000000000A0 /* FallowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000090 /* FallowStyle.swift */; };
 		B100000000000000000000A1 /* FallowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000090 /* FallowStyle.swift */; };
+		B100000000000000000000D0 /* FallowNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000091 /* FallowNotificationService.swift */; };
 		B100000000000000000000A2 /* SceneWall.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000050 /* SceneWall.jpg */; };
 		B100000000000000000000A3 /* SceneThreshold.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000051 /* SceneThreshold.jpg */; };
 		B100000000000000000000A4 /* SceneValley.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000052 /* SceneValley.jpg */; };
@@ -155,6 +156,7 @@
 		F10000000000000000000090 /* FallowStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowStyle.swift; sourceTree = "<group>"; };
 		F100000000000000000000B0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F100000000000000000000C0 /* LaunchSplash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSplash.swift; sourceTree = "<group>"; };
+		F10000000000000000000091 /* FallowNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowNotificationService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -249,6 +251,7 @@
 				F10000000000000000000039 /* ReturnView.swift */,
 				F1000000000000000000003A /* PastView.swift */,
 				F100000000000000000000C0 /* LaunchSplash.swift */,
+				F10000000000000000000091 /* FallowNotificationService.swift */,
 				G10000000000000000000008 /* Resources */,
 			);
 			path = iOS;
@@ -482,6 +485,7 @@
 				B10000000000000000000039 /* ReturnView.swift in Sources */,
 				B1000000000000000000003A /* PastView.swift in Sources */,
 				B100000000000000000000C0 /* LaunchSplash.swift in Sources */,
+				B100000000000000000000D0 /* FallowNotificationService.swift in Sources */,
 				B1000000000000000000003B /* VoiceCaptureService.swift in Sources */,
 				B10000000000000000000090 /* BreakSounds.swift in Sources */,
 			);

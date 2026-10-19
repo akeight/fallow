@@ -87,6 +87,7 @@ final class PhoneStore {
     let sounds = BreakSounds()
     let interpreter: any FallowInterpreting = FallowInterpreterFactory.make()
     let sync = DemoFallowSyncService()
+    let notifications = FallowNotificationService.shared
     #if DEBUG
     let demo: DemoController
     #endif
@@ -99,7 +100,7 @@ final class PhoneStore {
 
     init() {
         #if DEBUG
-        demo = DemoController(sync: sync)
+        demo = DemoController(sync: sync, notifications: notifications)
         #endif
         orbConfig.idleSize = 100
         orbConfig.holdStartSize = 150
@@ -129,6 +130,7 @@ final class PhoneStore {
         Task {
             if let active = await sync.loadActiveSession() { receive(active) }
         }
+        notifications.onRoute = { [weak self] route in self?.open(route) }
     }
 
     // MARK: Session fields
@@ -360,6 +362,22 @@ final class PhoneStore {
             }
             syncOrb()
         }
+    }
+
+    /// A tap on a FALLOW notification. The thought it names opens on Home where it rests; if that
+    /// thought is gone, Home on its own. A return in progress or a pause being set up is left alone.
+    func open(_ route: FallowNotificationService.Route) {
+        let matches = session != nil && session?.id == route.sessionID
+        if matches, session?.phase != .resting { return }
+        if !matches, tab == .pause, session?.isAway == false { return }
+        cancelRecording()
+        flowTask?.cancel()
+        if matches, route.kind == .gentleNudge { showsNudge = true }
+        transition(0.8) {
+            self.tab = .home
+            self.baseOpenness = 0
+        }
+        syncOrb()
     }
 
     // MARK: Capture
@@ -625,6 +643,7 @@ final class PhoneStore {
     }
 
     private func showReturn() {
+        notifications.cancelPending()
         transition(0.9) {
             self.tab = .pause
             self.step = .returning
@@ -703,6 +722,7 @@ final class PhoneStore {
     // MARK: Private
 
     private func archive(_ session: FallowSession) {
+        notifications.cancelPending()
         past.removeAll { $0.id == session.id }
         past.insert(session, at: 0)
         self.session = nil
