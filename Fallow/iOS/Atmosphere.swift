@@ -65,7 +65,7 @@ struct Atmosphere: View {
                 .opacity(depth * (1 - ramp(openness, 0.15, 0.4)))
 
                 RestLayer(
-                    name: Self.sceneName(for: restScene),
+                    name: restScene.sceneName,
                     size: size,
                     openness: openness,
                     drifting: drifting
@@ -92,15 +92,6 @@ struct Atmosphere: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-    }
-
-    static func sceneName(for distance: FallowDistance) -> String {
-        switch distance {
-        case .breath: "SceneWall"
-        case .someDistance: "SceneValley"
-        case .sleepOnIt: "SceneWater"
-        case .openEnded: "SceneMeadow"
-        }
     }
 }
 

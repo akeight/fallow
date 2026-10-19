@@ -81,6 +81,14 @@
 		B10000000000000000000091 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
 		B10000000000000000000092 /* AuraTransition.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* AuraTransition.wav */; };
 		B10000000000000000000093 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
+		B100000000000000000000A0 /* FallowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000090 /* FallowStyle.swift */; };
+		B100000000000000000000A1 /* FallowStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000090 /* FallowStyle.swift */; };
+		B100000000000000000000A2 /* SceneWall.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000050 /* SceneWall.jpg */; };
+		B100000000000000000000A3 /* SceneThreshold.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000051 /* SceneThreshold.jpg */; };
+		B100000000000000000000A4 /* SceneValley.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000052 /* SceneValley.jpg */; };
+		B100000000000000000000A5 /* SceneMeadow.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000053 /* SceneMeadow.jpg */; };
+		B100000000000000000000A6 /* SceneWater.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000054 /* SceneWater.jpg */; };
+		B100000000000000000000A7 /* HomeGarden.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000057 /* HomeGarden.jpg */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -141,6 +149,7 @@
 		F10000000000000000000082 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F10000000000000000000083 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 		F10000000000000000000084 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
+		F10000000000000000000090 /* FallowStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowStyle.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -189,6 +198,7 @@
 				F10000000000000000000081 /* OpenAIInterpreter.swift */,
 				F1000000000000000000003B /* VoiceCaptureService.swift */,
 				F1000000000000000000001E /* FallowFont.swift */,
+				F10000000000000000000090 /* FallowStyle.swift */,
 				F10000000000000000000082 /* Info.plist */,
 				G10000000000000000000007 /* Fonts */,
 			);
@@ -363,6 +373,12 @@
 				B10000000000000000000015 /* MagicalAura.wav in Resources */,
 				B10000000000000000000017 /* AuraWoosh.wav in Resources */,
 				B10000000000000000000027 /* RestLandscape.jpg in Resources */,
+				B100000000000000000000A2 /* SceneWall.jpg in Resources */,
+				B100000000000000000000A3 /* SceneThreshold.jpg in Resources */,
+				B100000000000000000000A4 /* SceneValley.jpg in Resources */,
+				B100000000000000000000A5 /* SceneMeadow.jpg in Resources */,
+				B100000000000000000000A6 /* SceneWater.jpg in Resources */,
+				B100000000000000000000A7 /* HomeGarden.jpg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -405,6 +421,7 @@
 				B10000000000000000000082 /* OpenAIInterpreter.swift in Sources */,
 				B10000000000000000000064 /* VoiceCaptureService.swift in Sources */,
 				B10000000000000000000023 /* FallowFont.swift in Sources */,
+				B100000000000000000000A0 /* FallowStyle.swift in Sources */,
 				B10000000000000000000004 /* Theme.swift in Sources */,
 				B10000000000000000000005 /* OrbView.swift in Sources */,
 				B10000000000000000000011 /* OrbTuningConfig.swift in Sources */,
@@ -436,6 +453,7 @@
 				B10000000000000000000081 /* FallowInterpreter.swift in Sources */,
 				B10000000000000000000083 /* OpenAIInterpreter.swift in Sources */,
 				B10000000000000000000024 /* FallowFont.swift in Sources */,
+				B100000000000000000000A1 /* FallowStyle.swift in Sources */,
 				B10000000000000000000018 /* Theme.swift in Sources */,
 				B10000000000000000000019 /* OrbView.swift in Sources */,
 				B1000000000000000000001A /* OrbTuningConfig.swift in Sources */,
