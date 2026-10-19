@@ -32,10 +32,11 @@ struct HomeView: View {
             .contentShape(Rectangle())
             .onLongPressGesture(minimumDuration: 0.8) { showsDemo = true }
             .confirmationDialog("Demo", isPresented: $showsDemo) {
-                ForEach(DemoController.Scenario.phone) { scenario in
-                    Button(scenario.phoneTitle) { store.demo.run(scenario) }
-                }
-                Button("Rest Notification") { store.demo.triggerRestNotification() }
+                Button("Prepare Demo Rest") { store.demo.prepareDemoRest() }
+                Button("No Active Session") { store.demo.run(.reset) }
+                Button(DemoController.Scenario.phoneResting.title) { store.demo.run(.phoneResting) }
+                Button("Trigger Rest Notification") { store.demo.triggerRestNotification() }
+                Button(DemoController.Scenario.phoneReturnRequested.title) { store.demo.run(.phoneReturnRequested) }
                 Button("Gentle Nudge") { store.demo.triggerGentleNudge() }
                 Button("Notification Permission") { store.demo.requestNotificationPermission() }
             }
@@ -70,18 +71,6 @@ struct HomeView: View {
                     Spacer(minLength: 18)
 
                     VStack(spacing: 6) {
-                        // The rest's own guidance, wherever it was released. Silence says nothing.
-                        if let line = session.intervention?.line {
-                            Text(line)
-                                .font(FallowType.secondary)
-                                .tracking(0.3)
-                                .foregroundStyle(Theme.ink)
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(3)
-                                .frame(maxWidth: 290)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .padding(.bottom, 10)
-                        }
                         if store.showsNudge {
                             Text(DemoCopy.hadSpace)
                                 .font(FallowType.secondary)

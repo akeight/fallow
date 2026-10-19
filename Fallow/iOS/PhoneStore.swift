@@ -120,6 +120,7 @@ final class PhoneStore {
             case .into: sounds.beginHold()
             case .cancel: sounds.cancelHold()
             case .out: sounds.returnFromBreak()
+            case .cancelOut: break
             case .stop: sounds.stopAll()
             }
         }
@@ -367,6 +368,9 @@ final class PhoneStore {
     /// A tap on a FALLOW notification. The thought it names opens on Home where it rests; if that
     /// thought is gone, Home on its own. A return in progress or a pause being set up is left alone.
     func open(_ route: FallowNotificationService.Route) {
+        #if DEBUG
+        demo.restore(for: route)
+        #endif
         let matches = session != nil && session?.id == route.sessionID
         if matches, session?.phase != .resting { return }
         if !matches, tab == .pause, session?.isAway == false { return }
