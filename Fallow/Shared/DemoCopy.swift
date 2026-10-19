@@ -5,7 +5,6 @@ enum DemoCopy {
     static let unresolved = "Every way I visualize these memories becomes a node graph."
     /// The line spoken on the Mac in the recorded demo, and the thought the iPhone is staged with.
     static let demoThought = "I keep changing the layout and returning to the same version. I can’t tell what’s actually wrong anymore."
-    static let stuckPrompt = "What kind of stuck is this?"
     static let distancePrompt = "How far away do you need to get?"
     static let hold = "Press and hold to let it rest"
     static let returnWhenReady = "Click the orb when you’re ready to return."
@@ -14,8 +13,6 @@ enum DemoCopy {
     static let reflection = "Maybe the relationships shouldn’t be visible at all."
     static let beforeLabel = "Before"
     static let afterLabel = "After"
-    static let goBack = "Go back in"
-    static let keep = "This is what I'm carrying"
     static let showThought = "Use the demo line"
 
     static let phoneUnresolved = "I keep moving the same elements around and nothing feels better."
