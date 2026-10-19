@@ -37,6 +37,8 @@
 		B1000000000000000000001C /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
 		B1000000000000000000001D /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
 		B10000000000000000000060 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
+		B10000000000000000000062 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
+		B10000000000000000000063 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
 		B10000000000000000000061 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
 		B1000000000000000000001E /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000019 /* RootView.swift */; };
 		B1000000000000000000001F /* RestingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000001A /* RestingView.swift */; };
@@ -55,7 +57,8 @@
 		B10000000000000000000038 /* ReleaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000038 /* ReleaseView.swift */; };
 		B10000000000000000000039 /* ReturnView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000039 /* ReturnView.swift */; };
 		B1000000000000000000003A /* PastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003A /* PastView.swift */; };
-		B1000000000000000000003B /* VoiceCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCapture.swift */; };
+		B1000000000000000000003B /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
+		B10000000000000000000064 /* VoiceCaptureService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1000000000000000000003B /* VoiceCaptureService.swift */; };
 		B10000000000000000000050 /* SceneWall.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000050 /* SceneWall.jpg */; };
 		B10000000000000000000051 /* SceneThreshold.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000051 /* SceneThreshold.jpg */; };
 		B10000000000000000000052 /* SceneValley.jpg in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000052 /* SceneValley.jpg */; };
@@ -88,6 +91,7 @@
 		F1000000000000000000000C /* FallowIOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowIOSApp.swift; sourceTree = "<group>"; };
 		F10000000000000000000018 /* FallowSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSession.swift; sourceTree = "<group>"; };
 		F10000000000000000000060 /* FallowBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowBehavior.swift; sourceTree = "<group>"; };
+		F10000000000000000000062 /* ThoughtDistiller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThoughtDistiller.swift; sourceTree = "<group>"; };
 		F10000000000000000000019 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		F1000000000000000000001A /* RestingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestingView.swift; sourceTree = "<group>"; };
 		F1000000000000000000001E /* FallowFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowFont.swift; sourceTree = "<group>"; };
@@ -105,7 +109,7 @@
 		F10000000000000000000038 /* ReleaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseView.swift; sourceTree = "<group>"; };
 		F10000000000000000000039 /* ReturnView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReturnView.swift; sourceTree = "<group>"; };
 		F1000000000000000000003A /* PastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastView.swift; sourceTree = "<group>"; };
-		F1000000000000000000003B /* VoiceCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCapture.swift; sourceTree = "<group>"; };
+		F1000000000000000000003B /* VoiceCaptureService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCaptureService.swift; sourceTree = "<group>"; };
 		F10000000000000000000050 /* SceneWall.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneWall.jpg; sourceTree = "<group>"; };
 		F10000000000000000000051 /* SceneThreshold.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneThreshold.jpg; sourceTree = "<group>"; };
 		F10000000000000000000052 /* SceneValley.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = SceneValley.jpg; sourceTree = "<group>"; };
@@ -151,6 +155,8 @@
 				F10000000000000000000003 /* DemoCopy.swift */,
 				F10000000000000000000018 /* FallowSession.swift */,
 				F10000000000000000000060 /* FallowBehavior.swift */,
+				F10000000000000000000062 /* ThoughtDistiller.swift */,
+				F1000000000000000000003B /* VoiceCaptureService.swift */,
 				F1000000000000000000001E /* FallowFont.swift */,
 				G10000000000000000000007 /* Fonts */,
 			);
@@ -213,7 +219,6 @@
 				F10000000000000000000038 /* ReleaseView.swift */,
 				F10000000000000000000039 /* ReturnView.swift */,
 				F1000000000000000000003A /* PastView.swift */,
-				F1000000000000000000003B /* VoiceCapture.swift */,
 				G10000000000000000000008 /* Resources */,
 			);
 			path = iOS;
@@ -355,6 +360,8 @@
 				B10000000000000000000003 /* DemoCopy.swift in Sources */,
 				B1000000000000000000001D /* FallowSession.swift in Sources */,
 				B10000000000000000000060 /* FallowBehavior.swift in Sources */,
+				B10000000000000000000062 /* ThoughtDistiller.swift in Sources */,
+				B10000000000000000000064 /* VoiceCaptureService.swift in Sources */,
 				B10000000000000000000023 /* FallowFont.swift in Sources */,
 				B10000000000000000000004 /* Theme.swift in Sources */,
 				B10000000000000000000005 /* OrbView.swift in Sources */,
@@ -380,6 +387,7 @@
 				B1000000000000000000000E /* DemoCopy.swift in Sources */,
 				B1000000000000000000001C /* FallowSession.swift in Sources */,
 				B10000000000000000000061 /* FallowBehavior.swift in Sources */,
+				B10000000000000000000063 /* ThoughtDistiller.swift in Sources */,
 				B10000000000000000000024 /* FallowFont.swift in Sources */,
 				B10000000000000000000018 /* Theme.swift in Sources */,
 				B10000000000000000000019 /* OrbView.swift in Sources */,
@@ -399,7 +407,7 @@
 				B10000000000000000000038 /* ReleaseView.swift in Sources */,
 				B10000000000000000000039 /* ReturnView.swift in Sources */,
 				B1000000000000000000003A /* PastView.swift in Sources */,
-				B1000000000000000000003B /* VoiceCapture.swift in Sources */,
+				B1000000000000000000003B /* VoiceCaptureService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,6 +464,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -485,6 +495,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -511,7 +523,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed on this iPhone so the thought can rest in your own words.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -542,7 +554,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_UIAppFonts = CultVP-Branding.otf;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed on this iPhone so the thought can rest in your own words.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

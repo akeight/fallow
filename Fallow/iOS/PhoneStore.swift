@@ -57,6 +57,10 @@ final class PhoneStore {
     var handedToMac = false
     var showsNudge = true
     var isRecording = false
+    /// Between Stop and the carried thought appearing.
+    var isGathering = false
+    /// Why the last voice attempt produced nothing. Typing stays available.
+    var voiceError: VoiceCaptureError?
     var focusTyping = false
     /// Environment openness outside the hold. Changed inside animations so layers interpolate.
     var baseOpenness = 0.0
@@ -70,10 +74,10 @@ final class PhoneStore {
     let orb = SessionModel()
     let orbConfig = OrbTuningConfig()
     let leaves = LeafEmitter()
-    let voice = VoiceCapture()
+    let voice = VoiceCaptureService()
+    let distiller: any ThoughtDistilling = HeuristicDistiller()
 
     @ObservationIgnored private var flowTask: Task<Void, Never>?
-    @ObservationIgnored private var simulatedVoice: Task<Void, Never>?
     @ObservationIgnored private var demoIndex = 0
     @ObservationIgnored private var recordingTarget: RecordingTarget = .thought
 
@@ -91,6 +95,7 @@ final class PhoneStore {
         orbConfig.deformationSpeed = 0.02
         orb.holdDuration = 2.8
         voice.onLevel = { [orb] level in orb.voiceLevel = level }
+        voice.onEndedEarly = { [weak self] in self?.stopRecording() }
         syncOrb()
     }
 
@@ -145,7 +150,7 @@ final class PhoneStore {
     var showsTabBar: Bool {
         switch tab {
         case .home, .past: true
-        case .pause: step == .capture && !isRecording
+        case .pause: step == .capture && !isRecording && !isGathering
         }
     }
 
@@ -287,63 +292,114 @@ final class PhoneStore {
     // MARK: Capture
 
     func toggleRecording() {
-        isRecording ? stopRecording() : startRecording()
+        if isRecording {
+            stopRecording()
+        } else if !isGathering {
+            startRecording()
+        }
     }
 
     func startRecording(_ target: RecordingTarget = .thought) {
-        guard !isRecording else { return }
+        guard !isRecording, !isGathering, !voice.isBusy else { return }
         recordingTarget = target
-        transition(0.5) { self.isRecording = true }
-        syncOrb()
+        voiceError = nil
         Task {
             await voice.start()
-            if voice.unavailable, isRecording {
-                simulateVoice()
+            if voice.isListening {
+                setRecording(true)
+                announce("Listening")
+            } else if let error = voice.error {
+                transition(0.4) { self.voiceError = error }
+                announce(error.message)
             }
         }
     }
 
+    /// Ends listening and turns the note into text. A failure stays on the same screen with typing open.
     func stopRecording() {
         guard isRecording else { return }
-        voice.stop()
-        simulatedVoice?.cancel()
-        orb.voiceLevel = 0
-        let heard = voice.transcript.trimmingCharacters(in: .whitespacesAndNewlines)
-        transition(0.5) { self.isRecording = false }
-        switch recordingTarget {
-        case .shift:
-            reflection = heard.isEmpty ? (reflection.isEmpty ? DemoCopy.phoneReflection : reflection) : heard
+        let target = recordingTarget
+        setRecording(false)
+        if target == .thought {
+            transition(0.4) { self.isGathering = true }
+            announce("Gathering the thought")
             syncOrb()
-        case .reframe:
-            reframe = heard.isEmpty ? (reframe.isEmpty ? DemoCopy.phoneReframe : reframe) : heard
-            syncOrb()
-        case .thought:
-            draft = heard.isEmpty ? DemoCopy.phoneUnresolved : heard
-            focusTyping = false
-            go(.transcript)
         }
+        Task {
+            let started = Date()
+            let heard = await voice.stop()
+            guard let heard else {
+                transition(0.4) {
+                    self.isGathering = false
+                    self.voiceError = self.voice.error ?? .noSpeech
+                }
+                announce((voice.error ?? .noSpeech).message)
+                syncOrb()
+                return
+            }
+            switch target {
+            case .shift:
+                reflection = heard
+                voice.reset()
+            case .reframe:
+                reframe = heard
+                voice.reset()
+            case .thought:
+                let distilled = await distiller.distill(heard)
+                let elapsed = Date().timeIntervalSince(started)
+                if elapsed < 0.6 {
+                    try? await Task.sleep(nanoseconds: UInt64((0.6 - elapsed) * 1_000_000_000))
+                }
+                session?.captureVoice(raw: heard, distilled: distilled)
+                focusTyping = false
+                isGathering = false
+                voice.reset()
+                go(.transcript)
+            }
+        }
+    }
+
+    /// Stops listening without leaving the screen.
+    func cancelListening() {
+        cancelRecording()
+        announce("Stopped")
     }
 
     func typeInstead() {
         cancelRecording()
+        voiceError = nil
+        session?.rawTranscript = nil
+        session?.captureMethod = .text
         focusTyping = true
         go(.transcript)
     }
 
     func rerecord() {
-        draft = ""
         go(.capture)
         startRecording()
     }
 
     func continueFromTranscript() {
         let thought = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        session?.capture(thought.isEmpty ? DemoCopy.phoneUnresolved : thought)
-        interpretation = FallowInterpretation.demo(for: draft)
-        session?.setDifficultyDisengaging(interpretation.difficultyDisengaging)
+        guard !thought.isEmpty, var current = session else { return }
+        current.confirmCapture(thought)
+        interpretation = FallowInterpretation.demo(for: current.rawTranscript ?? thought)
+        current.setDifficultyDisengaging(interpretation.difficultyDisengaging)
+        session = current
         focusTyping = false
         go(.refine)
     }
+
+    #if DEBUG
+    /// Stands in for a long spoken note when there is no microphone to demo with.
+    func useDemoNote() {
+        cancelRecording()
+        voiceError = nil
+        session?.captureVoice(raw: DemoCopy.demoRamble, distilled: HeuristicDistiller.distill(DemoCopy.demoRamble))
+        focusTyping = false
+        go(.transcript)
+    }
+    #endif
 
     func choose(_ state: CreativeState) {
         session?.choose(state)
@@ -479,9 +535,10 @@ final class PhoneStore {
     }
 
     func confirmReflection() {
-        cancelRecording()
         let text = reflection.trimmingCharacters(in: .whitespacesAndNewlines)
-        session?.recordShift(text.isEmpty ? DemoCopy.phoneReflection : text)
+        guard !text.isEmpty else { return }
+        cancelRecording()
+        session?.recordShift(text)
         go(.beforeAfter)
     }
 
@@ -495,9 +552,10 @@ final class PhoneStore {
     }
 
     func confirmReframe() {
-        cancelRecording()
         let text = reframe.trimmingCharacters(in: .whitespacesAndNewlines)
-        session?.recordReframe(text.isEmpty ? DemoCopy.phoneReframe : text)
+        guard !text.isEmpty else { return }
+        cancelRecording()
+        session?.recordReframe(text)
         go(.reframeCompare)
     }
 
@@ -536,35 +594,27 @@ final class PhoneStore {
     }
 
     private func cancelRecording() {
-        guard isRecording else { return }
-        voice.stop()
-        simulatedVoice?.cancel()
+        voice.cancel()
         orb.voiceLevel = 0
-        isRecording = false
+        if isRecording { setRecording(false) }
+        isGathering = false
     }
 
-    /// Without a microphone the orb still listens, so the demo keeps its feel.
-    private func simulateVoice() {
-        simulatedVoice?.cancel()
-        simulatedVoice = Task {
-            var level = 0.0
-            var t = 0.0
-            while !Task.isCancelled, isRecording {
-                t += 0.05
-                let target = max(0, 0.45 + 0.35 * sin(t * 5.3) * sin(t * 1.7) + Double.random(in: -0.15...0.15))
-                level += (target - level) * 0.3
-                orb.voiceLevel = level
-                try? await Task.sleep(nanoseconds: 50_000_000)
-            }
-            orb.voiceLevel = 0
-        }
+    private func setRecording(_ value: Bool) {
+        transition(0.5) { self.isRecording = value }
+        orb.isListening = value
+        syncOrb()
+    }
+
+    private func announce(_ message: String) {
+        AccessibilityNotification.Announcement(message).post()
     }
 
     #if DEBUG
     /// Opens a screen directly, for previews and screenshots: `-fallowScreen release-mid`.
     func open(debugScreen name: String) {
         var setup = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
-        setup.capture(DemoCopy.phoneUnresolved)
+        setup.captureText(DemoCopy.phoneUnresolved)
         interpretation = .demo(for: DemoCopy.phoneUnresolved)
         var chosen = setup
         chosen.choose(.looping)
@@ -590,11 +640,18 @@ final class PhoneStore {
         case "past": tab = .past
         case "capture": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone)
         case "listening":
-            tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); isRecording = true; orb.voiceLevel = 0.6
+            tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); isRecording = true; orb.isListening = true; orb.voiceLevel = 0.6
+        case "gathering": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); isGathering = true
+        case "voice-error": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); voiceError = .microphoneDenied
+        case "voice-transcript", "voice-short":
+            var spoken = FallowSession(projectName: "FRAGMENTS", originDevice: .iPhone)
+            let raw = name == "voice-short" ? "The opening screen feels wrong." : DemoCopy.demoRamble
+            spoken.captureVoice(raw: raw, distilled: HeuristicDistiller.distill(raw))
+            tab = .pause; step = .transcript; session = spoken
         case "transcript": tab = .pause; step = .transcript; session = setup
         case "refine": tab = .pause; step = .refine; session = setup
         case "refine-unsure":
-            setup.capture(DemoCopy.unresolved)
+            setup.captureText(DemoCopy.unresolved)
             interpretation = .demo(for: DemoCopy.unresolved)
             tab = .pause; step = .refine; session = setup
         case "distance": tab = .pause; step = .distance; session = chosen; baseOpenness = 0.15
@@ -641,7 +698,7 @@ final class PhoneStore {
             phase = .dormant
         case .pause:
             switch step {
-            case .capture: phase = isRecording ? .capture : .dormant
+            case .capture: phase = isRecording || isGathering ? .capture : .dormant
             case .transcript, .refine: phase = .dormant
             case .distance, .release: phase = .threshold
             case .releasing, .resting: phase = .resting
