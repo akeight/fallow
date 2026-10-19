@@ -139,7 +139,8 @@ enum OrbMotion {
         reduceMotion: Bool,
         settleStart: Date?,
         returnStart: Date?,
-        laggedEase: Double
+        laggedEase: Double,
+        returnHold: Double = 0
     ) -> OrbDraw {
         let raw = rawProgress(phase: phase, softness: softness)
         let eased = holdEase(raw)
@@ -269,6 +270,11 @@ enum OrbMotion {
             warmth = lerp(max(0, config.warmth - 0.1), min(1, config.warmth + 0.12), gathered)
             let gatheredLight = min(0.70, max(0.55, config.lightOpacity + 0.19))
             lightOpacity = lerp(config.restGlowOpacity, gatheredLight, gathered)
+            // The same listening ripples, while the orb is held to return. Above 1 so they hold
+            // against the bright garden here.
+            if phase == .beforeAfter, returnHold > 0.01 {
+                listen = 1.6
+            }
             lightFraction = lerp(config.coreSize * 0.72, config.coreSize * 0.9, gathered)
             lightBlur = lerp(config.lightBlur * 1.2, config.lightBlur * 0.9, gathered)
             diffusion = lerp(config.diffusion * 1.3, config.diffusion * 0.7, gathered)

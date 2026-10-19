@@ -173,12 +173,13 @@ struct ThoughtText: View {
     var text: String
     var color: Color = Theme.ink
     var alignment: TextAlignment = .leading
+    var size: CGFloat = 16
 
     var body: some View {
         Text("“\(text)”")
-            .font(FallowType.process)
+            .font(.system(size: size, weight: .regular, design: .monospaced))
             .foregroundStyle(color)
-            .lineSpacing(5)
+            .lineSpacing(size < 16 ? 4 : 5)
             .multilineTextAlignment(alignment)
             .fixedSize(horizontal: false, vertical: true)
     }

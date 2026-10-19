@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Home, Pause, Past. Three places, kept quiet. The orb rests on whichever one is open.
+/// Home, Pause, Reflections, and a Settings item for show. The orb rests on whichever one is open.
 struct FallowTabBar: View {
     var tab: PhoneTab
     /// Over the deepened garden the glass goes dark and the type goes light.
@@ -8,21 +8,25 @@ struct FallowTabBar: View {
     var select: (PhoneTab) -> Void
 
     @Namespace private var marker
+    /// Settings is for show: the orb rests on it, but nothing behind the bar changes.
+    @State private var onSettings = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private static let tabs: [PhoneTab] = [.home, .pause, .past]
+    private static let slotCount = tabs.count + 1
     private static let iconSize: CGFloat = 30
 
     var body: some View {
         HStack(spacing: 0) {
             item(.home, title: "Home", symbol: "house")
             item(.pause, title: "Pause", symbol: "leaf")
-            item(.past, title: "Past", symbol: "clock.arrow.circlepath")
+            item(.past, title: "Reflections", symbol: "clock.arrow.circlepath")
+            button(title: "Settings", symbol: "gearshape", isActive: onSettings) { onSettings = true }
         }
         .overlay(alignment: .topLeading) {
             GeometryReader { geo in
-                let slot = geo.size.width / CGFloat(Self.tabs.count)
-                let index = CGFloat(Self.tabs.firstIndex(of: tab) ?? 0)
+                let slot = geo.size.width / CGFloat(Self.slotCount)
+                let index = CGFloat(onSettings ? Self.tabs.count : Self.tabs.firstIndex(of: tab) ?? 0)
                 MiniOrb(diameter: Self.iconSize, glow: 1)
                     .position(x: slot * (index + 0.5), y: Self.iconSize / 2)
             }
@@ -35,11 +39,20 @@ struct FallowTabBar: View {
         .environment(\.colorScheme, deep ? .dark : .light)
         .padding(.horizontal, 44)
         .animation(reduceMotion ? .easeInOut(duration: 0.25) : .spring(duration: 0.85, bounce: 0), value: tab)
+        .animation(reduceMotion ? .easeInOut(duration: 0.25) : .spring(duration: 0.85, bounce: 0), value: onSettings)
+        .onChange(of: tab) { _, _ in onSettings = false }
     }
 
     private func item(_ item: PhoneTab, title: String, symbol: String) -> some View {
-        let isActive = tab == item
-        return Button { select(item) } label: {
+        button(title: title, symbol: symbol, isActive: !onSettings && tab == item) {
+            onSettings = false
+            select(item)
+        }
+        .accessibilityHint(item == .pause ? "Give a thought somewhere to rest" : "")
+    }
+
+    private func button(title: String, symbol: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             VStack(spacing: 3) {
                 Image(systemName: symbol)
                     .font(.system(size: 17, weight: .regular))
@@ -64,7 +77,6 @@ struct FallowTabBar: View {
         }
         .buttonStyle(PressableStyle())
         .accessibilityLabel(title)
-        .accessibilityHint(item == .pause ? "Give a thought somewhere to rest" : "")
         .accessibilityAddTraits(isActive ? .isSelected : [])
     }
 }

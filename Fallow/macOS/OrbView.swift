@@ -37,11 +37,14 @@ struct OrbView: View {
                 reduceMotion: reduceMotion,
                 settleStart: settleStart,
                 returnStart: returnStart,
-                laggedEase: lagged
+                laggedEase: lagged,
+                returnHold: session.returnHold
             )
             let target = holdsShape ? fixedShape(resolved) : resolved
             let holding: Bool = if case .holding = session.phase { true } else { false }
-            let draw = withVoice(pose.follow(target, now: now, tau: holding ? 0.28 : 1.05, reduced: reduceMotion))
+            // The return hold's ripples come in with the click rather than drifting in over a second.
+            let returning = session.phase == .beforeAfter && session.returnHold > 0.01
+            let draw = withVoice(pose.follow(target, now: now, tau: holding || returning ? 0.28 : 1.05, reduced: reduceMotion))
             OrbCanvas(draw: draw, liftsForDarkDesktop: colorScheme == .dark)
                 .frame(width: CGFloat(target.canvas), height: CGFloat(target.canvas))
         }
@@ -452,8 +455,8 @@ private struct OrbCanvas: View {
                 layer.addFilter(.blur(radius: 1.6))
                 layer.stroke(
                     ring,
-                    with: .color(OrbPalette.warm.mix(OrbPalette.arc, 0.45).color.opacity(0.5 * draw.listen * fade)),
-                    lineWidth: 1.4
+                    with: .color(OrbPalette.warm.mix(OrbPalette.arc, 0.45).color.opacity(min(1, 0.5 * draw.listen) * fade)),
+                    lineWidth: 1.4 + 0.8 * CGFloat(max(0, draw.listen - 1))
                 )
             }
         }

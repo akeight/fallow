@@ -33,6 +33,15 @@ extension View {
     }
 }
 
+/// The person's words inside a card, a step under the open-screen thought. Shared with Reflections.
+enum CardThought {
+    static let size: CGFloat = 15
+    /// What was left behind, when it sits above what came back.
+    static let quietSize: CGFloat = 13
+    static let padding: CGFloat = 24
+    static let radius: CGFloat = 24
+}
+
 /// A light, cheap orb for the tab bar and the archive. The live orb stays unique.
 struct MiniOrb: View {
     var diameter: CGFloat = 30

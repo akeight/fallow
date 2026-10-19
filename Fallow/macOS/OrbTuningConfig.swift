@@ -37,6 +37,8 @@ final class OrbTuningConfig {
     var returnSize: Double = OrbTuningDefaults.returnSize
     var returnDuration: Double = OrbTuningDefaults.returnDuration
     var reentryDuration: Double = OrbTuningDefaults.reentryDuration
+    /// How long the orb is held before the return gives way.
+    var returnHoldDuration: Double = OrbTuningDefaults.returnHoldDuration
 
     var asymmetry: Double = OrbTuningDefaults.asymmetry
     var horizontalStretch: Double = OrbTuningDefaults.horizontalStretch
@@ -91,6 +93,7 @@ final class OrbTuningConfig {
         returnSize = OrbTuningDefaults.returnSize
         returnDuration = OrbTuningDefaults.returnDuration
         reentryDuration = OrbTuningDefaults.reentryDuration
+        returnHoldDuration = OrbTuningDefaults.returnHoldDuration
         asymmetry = OrbTuningDefaults.asymmetry
         horizontalStretch = OrbTuningDefaults.horizontalStretch
         verticalStretch = OrbTuningDefaults.verticalStretch
@@ -136,6 +139,7 @@ final class OrbTuningConfig {
         config.returnSize = \(n(returnSize))
         config.returnDuration = \(n(returnDuration))
         config.reentryDuration = \(n(reentryDuration))
+        config.returnHoldDuration = \(n(returnHoldDuration))
         config.asymmetry = \(n(asymmetry))
         config.horizontalStretch = \(n(horizontalStretch))
         config.verticalStretch = \(n(verticalStretch))
@@ -190,6 +194,7 @@ enum OrbTuningDefaults {
     static let returnSize = 168.0
     static let returnDuration = 1.3
     static let reentryDuration = 0.9
+    static let returnHoldDuration = 2.5
 
     static let asymmetry = 0.4
     static let horizontalStretch = 1.06

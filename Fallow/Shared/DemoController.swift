@@ -3,6 +3,14 @@ import Foundation
 
 /// Puts this device's active session into a step of the presentation, as if it had synced
 /// from the other device. The stores apply it through their normal transitions.
+///
+/// Rehearsal, with no code changes between steps:
+/// - Mac: Demo › Reset. Capture `DemoSessionFactory.unresolvedThought` for real, choose its
+///   creative state and distance, and hold to release. The Mac keeps the presenter's own words.
+/// - iPhone: long-press the wordmark › Prepare Demo Rest, then lock the phone. Tap the
+///   notification, check the resting thought, and tap "I’m ready to return".
+/// - Mac: Demo › Return Requested, then reflect and go back in through the real return.
+/// - Between takes: Reset on the Mac, No Active Session on the iPhone.
 @MainActor
 final class DemoController {
     enum Scenario: String, CaseIterable, Identifiable {
@@ -18,25 +26,14 @@ final class DemoController {
         var title: String {
             switch self {
             case .reset: "Reset"
-            case .macReleased: "Mac Released"
-            case .phoneResting: "Phone Resting"
-            case .phoneReturnRequested: "Phone Requests Return"
-            case .macReturning: "Mac Return"
-            case .complete: "Complete"
-            }
-        }
-
-        var phoneTitle: String {
-            switch self {
-            case .reset: "No Active Session"
-            case .macReleased, .phoneResting: "Mac Released / Resting"
+            case .macReleased: "Resting"
+            case .phoneResting: "Mac Resting"
             case .phoneReturnRequested, .macReturning: "Return Requested"
             case .complete: "Complete"
             }
         }
 
         static let mac: [Scenario] = [.reset, .macReleased, .macReturning, .complete]
-        static let phone: [Scenario] = [.reset, .phoneResting, .phoneReturnRequested, .complete]
     }
 
     private let sync: DemoFallowSyncService
@@ -57,9 +54,9 @@ final class DemoController {
         switch scenario {
         case .reset: resetDemo()
         case .macReleased: setMacReleased()
-        case .phoneResting: setPhoneResting()
-        case .phoneReturnRequested: setPhoneReturnRequested()
-        case .macReturning: setMacReturning()
+        case .phoneResting: preparePhoneForMacRest()
+        case .phoneReturnRequested: preparePhoneReturnRequested()
+        case .macReturning: prepareMacReturn()
         case .complete: setComplete()
         }
     }
@@ -71,23 +68,31 @@ final class DemoController {
         run(scenario)
     }
 
+    /// Clears the staged session and, on the iPhone, every pending or delivered FALLOW notification,
+    /// so nothing from the last take can land in the next one.
     func resetDemo() {
+        #if os(iOS)
+        notifications?.clearAll()
+        #endif
         sync.stage(nil)
     }
 
+    /// A thought already resting on this Mac keeps the presenter's words; otherwise the demo session rests.
     func setMacReleased() {
         sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
-    func setPhoneResting() {
+    /// The Mac-originated session, already resting. Setup is not replayed.
+    func preparePhoneForMacRest() {
         sync.stage(DemoSessionFactory.macRestingDemo)
     }
 
-    func setPhoneReturnRequested() {
+    func preparePhoneReturnRequested() {
         sync.stage(returnRequested)
     }
 
-    func setMacReturning() {
+    /// Runs the Mac's real return from the doorway. A session resting here keeps its own words and choices.
+    func prepareMacReturn() {
         sync.stage(returnRequested)
     }
 
@@ -104,6 +109,13 @@ final class DemoController {
     }
 
     #if os(iOS)
+    /// One tap before locking the phone: the Mac session rests here, and its notification follows.
+    func prepareDemoRest() {
+        notifications?.clearAll()
+        preparePhoneForMacRest()
+        triggerRestNotification()
+    }
+
     /// "Your thought is resting now." for the demo session, after `Timing.restDelay`. Lock the phone to see it land.
     func triggerRestNotification() {
         notify(.restStarted, after: FallowNotificationService.Timing.restDelay)
@@ -118,6 +130,13 @@ final class DemoController {
     func requestNotificationPermission() {
         guard let notifications else { return }
         Task { await notifications.requestAuthorizationIfNeeded() }
+    }
+
+    /// The staged session lives in memory, so it is gone if the app was closed before its
+    /// notification was tapped. Stage it again so the tap still lands on the resting thought.
+    func restore(for route: FallowNotificationService.Route) {
+        guard route.sessionID == DemoSessionFactory.id, sync.activeSession == nil else { return }
+        preparePhoneForMacRest()
     }
 
     /// Notifications name a resting session, so one is staged first when nothing is resting.

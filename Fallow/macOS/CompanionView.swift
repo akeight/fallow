@@ -63,6 +63,7 @@ struct CompanionView: View {
                 case .into: sounds.beginHold()
                 case .cancel: sounds.cancelHold()
                 case .out: sounds.returnFromBreak()
+                case .cancelOut: sounds.cancelReturn()
                 case .stop: sounds.stopAll()
                 }
             }
@@ -76,6 +77,7 @@ struct CompanionView: View {
         .onChange(of: layoutKey) { _, _ in syncChrome() }
         .onChange(of: session.softness) { _, _ in syncVeil() }
         .onChange(of: config.holdDuration) { _, _ in pushTiming() }
+        .onChange(of: config.returnHoldDuration) { _, _ in pushTiming() }
         .onChange(of: config.reentryDuration) { _, _ in pushTiming() }
         .onChange(of: config.layoutSignature) { _, _ in syncChrome() }
         .onChange(of: config.veilSignature) { _, _ in syncChrome() }
@@ -91,7 +93,7 @@ struct CompanionView: View {
             capture
         case .classifyStuck:
             choices(
-                prompt: DemoCopy.stuckPrompt,
+                prompt: DemoCopy.feelsLike,
                 hint: session.interpretation?.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess,
                 items: CreativeState.allCases.map { ($0.title, $0 == session.creativeState) },
                 subtitles: CreativeState.allCases.map(\.meaning),
@@ -133,6 +135,7 @@ struct CompanionView: View {
     private func pushTiming() {
         session.holdDuration = config.holdDuration
         session.reentryDuration = config.reentryDuration
+        session.returnHoldDuration = config.returnHoldDuration
     }
 
     /// Ignores hold progress, so the window does not move on every tick.
@@ -202,23 +205,21 @@ struct CompanionView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 22)
         .padding(.vertical, 20)
-        .padding(.trailing, 18)
         .glass(radius: 22)
-        .overlay(alignment: .topTrailing) { leaveMark }
     }
 
     private var capture: some View {
         column {
-            promptPane(DemoCopy.carrying, hint: session.current.hasFullNote ? nil : "Voice, or text. The canvas stays visible.")
+            promptPane(DemoCopy.carrying)
 
             VStack(alignment: .leading, spacing: 10) {
                 voiceStatus(for: .thought)
+                // The arrow sends it, as on the phone; Return does too.
                 ThoughtComposer(
                     text: $session.thought,
                     placeholder: DemoCopy.speakOrType,
                     isRecording: isListening(.thought),
-                    isGathering: gathering,
-                    showsSend: false,
+                    isGathering: gathering || session.isInterpreting,
                     onMic: { toggleListening(.thought) },
                     onSubmit: session.confirmThought
                 )
@@ -226,17 +227,18 @@ struct CompanionView: View {
             }
 
             VStack(spacing: 4) {
-                PrimaryButton(title: session.isInterpreting ? DemoCopy.reading : DemoCopy.keep, action: session.confirmThought)
-                    .disabled(thoughtIsEmpty || voice.isListening || gathering || session.isInterpreting)
-                    .opacity(thoughtIsEmpty || session.isInterpreting ? 0.5 : 1)
                 if session.current.hasFullNote && !voice.isBusy && !gathering {
                     QuietButton(title: DemoCopy.viewFullNote) { showsNote = true }
                         .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
                 }
                 #if DEBUG
-                if thoughtIsEmpty && !voice.isBusy && !gathering {
-                    QuietButton(title: DemoCopy.showThought) { session.captureText(DemoCopy.unresolved) }
-                }
+                // Faded rather than removed: the column sits on the panel's bottom edge, so a row
+                // coming and going with each keystroke would move the field.
+                let offersDemo = thoughtIsEmpty && !voice.isBusy && !gathering
+                QuietButton(title: DemoCopy.showThought) { session.captureText(DemoSessionFactory.unresolvedThought) }
+                    .opacity(offersDemo ? 1 : 0)
+                    .disabled(!offersDemo)
+                    .accessibilityHidden(!offersDemo)
                 #endif
             }
         }
@@ -392,22 +394,53 @@ struct CompanionView: View {
         Color.clear.frame(width: 1, height: CGFloat(height))
     }
 
+    /// One glass pane above the orb: the breath, the thought, then the instruction. Nothing sits below it.
     private var threshold: some View {
-        let extent = max(
-            config.holdStartSize * config.verticalStretch * 0.96,
-            config.holdEndSize * config.verticalStretch * 0.78
-        )
-        return centeredOrb(height: extent)
-            .overlay(alignment: .bottom) {
-                Text(DemoCopy.hold)
-                    .font(FallowType.secondary)
+        let hold = session.holdAmount
+        let fade = Self.soften(hold)
+        let reach = config.holdEndSize * 0.5 * config.verticalStretch * 0.9 + config.holdOuterSoftness + 8
+        return VStack(spacing: 0) {
+            VStack(spacing: 18) {
+                Text(DemoCopy.takeBreath)
+                    .font(FallowType.display(32))
                     .foregroundStyle(Theme.ink)
-                    .fixedSize()
-                    .padding(.horizontal, 22)
-                    .padding(.vertical, 12)
-                    .glass(radius: 22)
-                    .alignmentGuide(.bottom) { d in d[.top] - 24 }
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                ThoughtText(text: session.thought, alignment: .center)
+                    .opacity(fade)
+                Text("Click and hold to let it rest")
+                    .font(FallowType.eyebrow)
+                    .tracking(2.6)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.ink)
+                    .padding(.top, 18)
             }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 26)
+            .frame(width: 420)
+            .glass(radius: 28)
+            .opacity(1 - hold)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, 22)
+
+            Color.clear.frame(height: reach * 2)
+
+            // Balances the pane above, so the orb stays centered with nothing beneath it.
+            Color.clear.frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// 100% → 70% → 35% → nearly gone, as the thought leaves attention. Same as the iPhone.
+    private static func soften(_ hold: Double) -> Double {
+        let points: [(Double, Double)] = [(0, 1), (0.33, 0.7), (0.66, 0.35), (1, 0.03)]
+        guard let first = points.first, hold > first.0 else { return points.first?.1 ?? 1 }
+        for (a, b) in zip(points, points.dropFirst()) where hold <= b.0 {
+            let t = (hold - a.0) / (b.0 - a.0)
+            return a.1 + (b.1 - a.1) * t
+        }
+        return points.last?.1 ?? 0
     }
 
     private var resting: some View {
@@ -452,7 +485,8 @@ struct CompanionView: View {
     private static let returnOrbHeight: CGFloat = 190
 
     /// Welcome back above the orb, the step's pieces below it.
-    private func returnPage<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    /// `nudge` sits just under the orb, plain type, closer than the card beneath it.
+    private func returnPage<Content: View>(nudge: String? = nil, @ViewBuilder content: () -> Content) -> some View {
         centeredOrb(height: Self.returnOrbHeight)
             .overlay(alignment: .top) {
                 VStack(spacing: 12) {
@@ -464,12 +498,26 @@ struct CompanionView: View {
                 .fixedSize()
                 .alignmentGuide(.top) { d in d[.bottom] + 12 }
             }
+            .overlay(alignment: .bottom) {
+                if let nudge {
+                    Text(nudge)
+                        .font(.system(size: 13, weight: .semibold))
+                        .tracking(2.2)
+                        .textCase(.uppercase)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize()
+                        .offset(y: 44)
+                        .opacity(1 - session.returnHold)
+                }
+            }
             .overlay(alignment: .top) {
                 VStack(spacing: 16) {
                     content()
                 }
                 .frame(width: Self.returnWidth)
-                .alignmentGuide(.top) { _ in -Self.returnOrbHeight - 24 }
+                // Clears the nudge line when there is one.
+                .alignmentGuide(.top) { _ in -Self.returnOrbHeight - (nudge == nil ? 24 : 76) }
             }
     }
 
@@ -481,9 +529,7 @@ struct CompanionView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(22)
-            .padding(.trailing, 18)
             .glass(radius: 22)
-            .overlay(alignment: .topTrailing) { leaveMark }
 
             VStack(alignment: .leading, spacing: 10) {
                 voiceStatus(for: .reflection)
@@ -509,7 +555,7 @@ struct CompanionView: View {
     }
 
     private var beforeAfter: some View {
-        returnPage {
+        returnPage(nudge: "Click and hold when you’re ready to return") {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
                     Eyebrow(text: DemoCopy.beforeLabel)
@@ -526,19 +572,10 @@ struct CompanionView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(24)
-            .padding(.trailing, 14)
             .glass(radius: 22)
-            .overlay(alignment: .topTrailing) { leaveMark }
-
-            PrimaryButton(title: DemoCopy.goBack, action: session.goBackIn)
-                .padding(.top, 4)
         }
     }
 
-    private var leaveMark: some View {
-        LeaveButton(action: session.leave)
-            .padding(10)
-    }
 }
 
 /// A behind-window blur clipped to rounded corners, kept in the light appearance so ink text stays legible.
@@ -625,6 +662,16 @@ private struct OrbInput: ViewModifier {
                 .modifier(PointingCursor(enabled: !session.showsLens))
                 .accessibilityAddTraits(.isButton)
                 .accessibilityLabel("Return to your thought")
+        case .beforeAfter:
+            content.gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in session.pressReturn() }
+                    .onEnded { _ in session.releaseReturn() }
+            )
+            .modifier(PointingCursor(enabled: true))
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel("Click and hold to return")
+            .accessibilityAction { session.finishReturn() }
         default:
             content
         }

@@ -176,32 +176,34 @@ private struct TranscriptStep: View {
     }
 
     private var carried: some View {
-        ThoughtText(text: store.draft, color: Theme.inkOnDeep)
+        ThoughtText(text: store.draft, color: Theme.inkOnDeep, size: CardThought.size)
             .frame(maxWidth: .infinity, minHeight: 102, alignment: .topLeading)
-            .padding(20)
-            .glass(radius: 20)
+            .padding(CardThought.padding)
+            .glass(radius: CardThought.radius)
     }
 
     private var editor: some View {
         ZStack(alignment: .topLeading) {
             if store.draft.isEmpty {
                 Text("Write it the way it sounds in your head.")
-                    .font(FallowType.process)
+                    .font(.system(size: CardThought.size, design: .monospaced))
                     .foregroundStyle(Theme.muteOnDeep)
                     .padding(.top, 8)
                     .padding(.leading, 5)
                     .allowsHitTesting(false)
             }
             TextEditor(text: $store.draft)
-                .font(FallowType.process)
+                .font(.system(size: CardThought.size, design: .monospaced))
                 .foregroundStyle(Theme.inkOnDeep)
-                .lineSpacing(5)
+                .lineSpacing(4)
                 .scrollContentBackground(.hidden)
                 .focused($focused)
         }
         .frame(height: 130)
-        .padding(14)
-        .glass(radius: 20)
+        // The editor insets its own text, so this lands the words where the carried card puts them.
+        .padding(.horizontal, CardThought.padding - 5)
+        .padding(.vertical, CardThought.padding - 8)
+        .glass(radius: CardThought.radius)
     }
 }
 

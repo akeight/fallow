@@ -64,11 +64,11 @@ struct ReturnView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: "You left with", color: Theme.muteOnDense)
-                        ThoughtText(text: session.unresolvedThought, color: Theme.ink)
+                        ThoughtText(text: session.unresolvedThought, color: Theme.ink, size: CardThought.size)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .glass(radius: 20)
+                    .padding(CardThought.padding)
+                    .glass(radius: CardThought.radius)
                 }
                 .padding(.top, orbY + 76)
             }
@@ -108,11 +108,11 @@ struct ReturnView: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: "You left with", color: Theme.muteOnDense)
-                        ThoughtText(text: session.unresolvedThought, color: Theme.ink)
+                        ThoughtText(text: session.unresolvedThought, color: Theme.ink, size: CardThought.size)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .glass(radius: 20)
+                    .padding(CardThought.padding)
+                    .glass(radius: CardThought.radius)
                 }
                 .padding(.top, geo.size.height * 0.52)
             }
@@ -190,7 +190,7 @@ private struct BeforeAfter: View {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: DemoCopy.beforeLabel, color: Theme.muteOnDense)
-                        ClampedThought(text: session.unresolvedThought, color: Theme.muteOnDense, lines: 3, clamped: $beforeClamped)
+                        ClampedThought(text: session.unresolvedThought, color: Theme.muteOnDense, size: CardThought.quietSize, lines: 3, clamped: $beforeClamped)
                     }
 
                     Rectangle()
@@ -200,7 +200,7 @@ private struct BeforeAfter: View {
 
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: DemoCopy.afterLabel, color: Theme.muteOnDense)
-                        ClampedThought(text: store.reflection, color: Theme.ink, lines: 4, clamped: $afterClamped)
+                        ClampedThought(text: store.reflection, color: Theme.ink, size: CardThought.size, lines: 4, clamped: $afterClamped)
                     }
 
                     if beforeClamped || afterClamped {
@@ -232,6 +232,7 @@ private struct BeforeAfter: View {
 private struct ClampedThought: View {
     var text: String
     var color: Color
+    var size: CGFloat
     var lines: Int
     @Binding var clamped: Bool
 
@@ -239,12 +240,12 @@ private struct ClampedThought: View {
     @State private var whole: CGFloat = 0
 
     var body: some View {
-        ThoughtText(text: text, color: color)
+        ThoughtText(text: text, color: color, size: size)
             .lineLimit(lines)
             .truncationMode(.tail)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0; update() }
             .background(alignment: .top) {
-                ThoughtText(text: text, color: color)
+                ThoughtText(text: text, color: color, size: size)
                     .hidden()
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { whole = $0; update() }
             }
@@ -271,7 +272,7 @@ private struct FullThoughtsSheet: View {
                 VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: DemoCopy.beforeLabel)
-                        ThoughtText(text: before, color: Theme.mute)
+                        ThoughtText(text: before, color: Theme.mute, size: CardThought.quietSize)
                             .textSelection(.enabled)
                     }
                     Rectangle()
@@ -280,7 +281,7 @@ private struct FullThoughtsSheet: View {
                         .padding(.vertical, 22)
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: DemoCopy.afterLabel)
-                        ThoughtText(text: after, color: Theme.ink)
+                        ThoughtText(text: after, color: Theme.ink, size: CardThought.size)
                             .textSelection(.enabled)
                     }
                 }
