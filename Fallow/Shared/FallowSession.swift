@@ -143,6 +143,13 @@ extension FallowSession {
         phase = .interpreting
     }
 
+    /// Takes the interpreter's suggestion without choosing for the person: a confident state is
+    /// preselected but not confirmed. Nil (failed or not run) leaves everything for them to pick.
+    mutating func applyInterpretation(_ interpretation: FallowInterpretation?) {
+        creativeState = interpretation?.suggestedState
+        setDifficultyDisengaging(interpretation?.difficultyDisengaging ?? false)
+    }
+
     mutating func choose(_ state: CreativeState) {
         creativeState = state
         phase = .choosingDistance

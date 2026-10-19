@@ -48,7 +48,7 @@ private struct CaptureStep: View {
                     text: $store.draft,
                     placeholder: store.voiceError == nil ? "Speak it, and let it out" : DemoCopy.tryAgain,
                     isRecording: store.isRecording,
-                    isGathering: store.isGathering,
+                    isGathering: store.isGathering || store.isInterpreting,
                     deep: true,
                     onMic: store.toggleRecording,
                     onSubmit: store.submitTyped
@@ -59,7 +59,7 @@ private struct CaptureStep: View {
                         QuietButton(title: "Cancel", color: Theme.muteOnDeep) { store.cancelListening() }
                     }
                     #if DEBUG
-                    if !store.isRecording && !store.isGathering && store.draft.isEmpty {
+                    if !store.isRecording && !store.isGathering && !store.isInterpreting && store.draft.isEmpty {
                         QuietButton(title: "Use the demo note", color: Theme.muteOnDeep) { store.useDemoNote() }
                     }
                     #endif
@@ -226,9 +226,9 @@ private struct TranscriptStep: View {
                 Spacer(minLength: 16)
 
                 VStack(spacing: 6) {
-                    PrimaryButton(title: "Continue") { store.continueFromTranscript() }
-                        .disabled(isEmpty)
-                        .opacity(isEmpty ? 0.5 : 1)
+                    PrimaryButton(title: store.isInterpreting ? DemoCopy.reading : "Continue") { store.continueFromTranscript() }
+                        .disabled(isEmpty || store.isInterpreting)
+                        .opacity(isEmpty || store.isInterpreting ? 0.5 : 1)
                     Button { store.rerecord() } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "mic")
@@ -334,7 +334,7 @@ private struct RefineStep: View {
                     .foregroundStyle(Theme.inkOnDeep)
                     .padding(.top, geo.size.height * 0.08)
 
-                Text(store.interpretation.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess)
+                Text(store.interpretation?.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess)
                     .font(FallowType.caption)
                     .foregroundStyle(Theme.muteOnDeep)
                     .padding(.top, 8)
@@ -344,7 +344,7 @@ private struct RefineStep: View {
                         ChoiceRow(
                             title: state.title,
                             subtitle: state.meaning,
-                            note: state == store.interpretation.suggestedState ? "Suggested" : nil,
+                            note: state == store.interpretation?.suggestedState ? "Suggested" : nil,
                             selected: store.highlightedState == state
                         ) { store.choose(state) }
                     }

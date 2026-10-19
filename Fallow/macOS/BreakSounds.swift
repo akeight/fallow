@@ -58,6 +58,12 @@ final class BreakSounds {
 
     private func player(named name: String) -> AVAudioPlayer? {
         guard let url = Bundle.main.url(forResource: name, withExtension: "wav") else { return nil }
+        #if os(iOS)
+        // Voice capture leaves the session record-only. Ambient mixes with other audio and follows the silent switch.
+        let session = AVAudioSession.sharedInstance()
+        try? session.setCategory(.ambient)
+        try? session.setActive(true)
+        #endif
         let player = try? AVAudioPlayer(contentsOf: url)
         player?.volume = 1
         player?.prepareToPlay()

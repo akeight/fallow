@@ -73,6 +73,14 @@
 		B10000000000000000000073 /* DemoSessionFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000071 /* DemoSessionFactory.swift */; };
 		B10000000000000000000074 /* DemoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000072 /* DemoController.swift */; };
 		B10000000000000000000075 /* DemoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000072 /* DemoController.swift */; };
+		B10000000000000000000080 /* FallowInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000080 /* FallowInterpreter.swift */; };
+		B10000000000000000000081 /* FallowInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000080 /* FallowInterpreter.swift */; };
+		B10000000000000000000082 /* OpenAIInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000081 /* OpenAIInterpreter.swift */; };
+		B10000000000000000000083 /* OpenAIInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000081 /* OpenAIInterpreter.swift */; };
+		B10000000000000000000090 /* BreakSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000016 /* BreakSounds.swift */; };
+		B10000000000000000000091 /* AuraWoosh.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000017 /* AuraWoosh.wav */; };
+		B10000000000000000000092 /* AuraTransition.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000014 /* AuraTransition.wav */; };
+		B10000000000000000000093 /* MagicalAura.wav in Resources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000015 /* MagicalAura.wav */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -128,6 +136,11 @@
 		F10000000000000000000070 /* FallowSyncing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowSyncing.swift; sourceTree = "<group>"; };
 		F10000000000000000000071 /* DemoSessionFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSessionFactory.swift; sourceTree = "<group>"; };
 		F10000000000000000000072 /* DemoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoController.swift; sourceTree = "<group>"; };
+		F10000000000000000000080 /* FallowInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowInterpreter.swift; sourceTree = "<group>"; };
+		F10000000000000000000081 /* OpenAIInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIInterpreter.swift; sourceTree = "<group>"; };
+		F10000000000000000000082 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F10000000000000000000083 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
+		F10000000000000000000084 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -151,6 +164,8 @@
 		G10000000000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				F10000000000000000000083 /* Config.xcconfig */,
+				F10000000000000000000084 /* Secrets.example.xcconfig */,
 				G10000000000000000000002 /* Shared */,
 				G10000000000000000000003 /* macOS */,
 				G10000000000000000000004 /* iOS */,
@@ -170,8 +185,11 @@
 				F10000000000000000000072 /* DemoController.swift */,
 				F10000000000000000000060 /* FallowBehavior.swift */,
 				F10000000000000000000062 /* ThoughtDistiller.swift */,
+				F10000000000000000000080 /* FallowInterpreter.swift */,
+				F10000000000000000000081 /* OpenAIInterpreter.swift */,
 				F1000000000000000000003B /* VoiceCaptureService.swift */,
 				F1000000000000000000001E /* FallowFont.swift */,
+				F10000000000000000000082 /* Info.plist */,
 				G10000000000000000000007 /* Fonts */,
 			);
 			path = Shared;
@@ -361,6 +379,9 @@
 				B10000000000000000000055 /* Leaf1.png in Resources */,
 				B10000000000000000000056 /* Leaf2.png in Resources */,
 				B10000000000000000000057 /* HomeGarden.jpg in Resources */,
+				B10000000000000000000091 /* AuraWoosh.wav in Resources */,
+				B10000000000000000000092 /* AuraTransition.wav in Resources */,
+				B10000000000000000000093 /* MagicalAura.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -380,6 +401,8 @@
 				B10000000000000000000074 /* DemoController.swift in Sources */,
 				B10000000000000000000060 /* FallowBehavior.swift in Sources */,
 				B10000000000000000000062 /* ThoughtDistiller.swift in Sources */,
+				B10000000000000000000080 /* FallowInterpreter.swift in Sources */,
+				B10000000000000000000082 /* OpenAIInterpreter.swift in Sources */,
 				B10000000000000000000064 /* VoiceCaptureService.swift in Sources */,
 				B10000000000000000000023 /* FallowFont.swift in Sources */,
 				B10000000000000000000004 /* Theme.swift in Sources */,
@@ -410,6 +433,8 @@
 				B10000000000000000000075 /* DemoController.swift in Sources */,
 				B10000000000000000000061 /* FallowBehavior.swift in Sources */,
 				B10000000000000000000063 /* ThoughtDistiller.swift in Sources */,
+				B10000000000000000000081 /* FallowInterpreter.swift in Sources */,
+				B10000000000000000000083 /* OpenAIInterpreter.swift in Sources */,
 				B10000000000000000000024 /* FallowFont.swift in Sources */,
 				B10000000000000000000018 /* Theme.swift in Sources */,
 				B10000000000000000000019 /* OrbView.swift in Sources */,
@@ -430,6 +455,7 @@
 				B10000000000000000000039 /* ReturnView.swift in Sources */,
 				B1000000000000000000003A /* PastView.swift in Sources */,
 				B1000000000000000000003B /* VoiceCaptureService.swift in Sources */,
+				B10000000000000000000090 /* BreakSounds.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,6 +464,7 @@
 /* Begin XCBuildConfiguration section */
 		D10000000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F10000000000000000000083 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -457,6 +484,7 @@
 		};
 		D10000000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = F10000000000000000000083 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -485,6 +513,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shared/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -518,6 +547,7 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shared/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -547,6 +577,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U87NQ69U35;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shared/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";
@@ -580,6 +611,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = U87NQ69U35;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Shared/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FALLOW;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FALLOW listens so you can say what you’re carrying instead of typing it.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Your words are transcribed so the thought can rest in your own words. FALLOW uses on-device recognition when it’s available.";

@@ -34,6 +34,7 @@ enum DemoCopy {
 
     static let listening = "Listening…"
     static let gathering = "Gathering the thought…"
+    static let reading = "Reading it…"
     static let carryingVoice = "This is what you’re carrying"
     static let edit = "Edit"
     static let viewFullNote = "View full note"
