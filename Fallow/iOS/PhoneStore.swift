@@ -53,8 +53,10 @@ final class PhoneStore {
         didSet { persist() }
     }
     var past: [FallowSession] = FallowSession.demoPast
-    /// The classifier's guess, kept apart from the session until the person chooses.
-    var interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
+    /// The interpreter's last answer for this capture, or nil when it failed or has not run.
+    var interpretation: FallowInterpretation?
+    /// A typed thought is being read before the state screen.
+    var isInterpreting = false
     var releaseLine: ReleaseLine = .releasing
     var showsNudge = true
     var isRecording = false
@@ -76,7 +78,8 @@ final class PhoneStore {
     let orbConfig = OrbTuningConfig()
     let leaves = LeafEmitter()
     let voice = VoiceCaptureService()
-    let distiller: any ThoughtDistilling = HeuristicDistiller()
+    let sounds = BreakSounds()
+    let interpreter: any FallowInterpreting = FallowInterpreterFactory.make()
     let sync = DemoFallowSyncService()
     #if DEBUG
     let demo: DemoController
@@ -84,6 +87,8 @@ final class PhoneStore {
 
     @ObservationIgnored private var flowTask: Task<Void, Never>?
     @ObservationIgnored private var recordingTarget: RecordingTarget = .thought
+    /// Bumped on every new interpretation or cancel, so a late answer never lands on the wrong capture.
+    @ObservationIgnored private var interpretID = 0
 
     init() {
         #if DEBUG
@@ -101,6 +106,15 @@ final class PhoneStore {
         orbConfig.returnDuration = 1.8
         orbConfig.deformationSpeed = 0.02
         orb.holdDuration = 2.8
+        orb.breakCue = { [sounds] cue in
+            switch cue {
+            case .open: sounds.open()
+            case .into: sounds.beginHold()
+            case .cancel: sounds.cancelHold()
+            case .out: sounds.returnFromBreak()
+            case .stop: sounds.stopAll()
+            }
+        }
         voice.onLevel = { [orb] level in orb.voiceLevel = level }
         voice.onEndedEarly = { [weak self] in self?.stopRecording() }
         sync.onRemoteChange = { [weak self] session in self?.receive(session) }
@@ -135,7 +149,7 @@ final class PhoneStore {
 
     /// The highlighted choice: the person's pick, or the guess until they make one.
     var highlightedState: CreativeState? {
-        session?.creativeState ?? interpretation.suggestedState
+        session?.creativeState ?? interpretation?.suggestedState
     }
 
     var difficultyDisengaging: Bool {
@@ -188,7 +202,7 @@ final class PhoneStore {
     var showsTabBar: Bool {
         switch tab {
         case .home, .past: true
-        case .pause: step == .capture && !isRecording && !isGathering
+        case .pause: step == .capture && !isRecording && !isGathering && !isInterpreting
         }
     }
 
@@ -265,7 +279,8 @@ final class PhoneStore {
             return
         }
         session = FallowSession(originDevice: .iPhone)
-        interpretation = FallowInterpretation(suggestedState: nil, difficultyDisengaging: false)
+        interpretation = nil
+        sounds.open()
         transition(0.6) {
             self.tab = .pause
             self.step = .capture
@@ -395,18 +410,28 @@ final class PhoneStore {
                 reframe = heard
                 voice.reset()
             case .thought:
-                let distilled = await distiller.distill(heard)
-                let elapsed = Date().timeIntervalSince(started)
-                if elapsed < 0.6 {
-                    try? await Task.sleep(nanoseconds: UInt64((0.6 - elapsed) * 1_000_000_000))
-                }
-                session?.captureVoice(raw: heard, distilled: distilled)
-                focusTyping = false
-                isGathering = false
-                voice.reset()
-                go(.transcript)
+                await carryVoice(heard, started: started)
             }
         }
+    }
+
+    /// Keeps the whole note, then carries the distilled thread if interpretation worked
+    /// or the note itself if it did not. Either way the person lands on the editable thought.
+    private func carryVoice(_ heard: String, started: Date) async {
+        interpretID += 1
+        let id = interpretID
+        let result = try? await interpreter.interpret(text: heard)
+        let elapsed = Date().timeIntervalSince(started)
+        if elapsed < 0.6 {
+            try? await Task.sleep(nanoseconds: UInt64((0.6 - elapsed) * 1_000_000_000))
+        }
+        guard id == interpretID, isGathering else { return }
+        session?.captureVoice(raw: heard, distilled: result?.distilledThought)
+        interpretation = result
+        focusTyping = false
+        isGathering = false
+        voice.reset()
+        go(.transcript)
     }
 
     /// Stops listening without leaving the screen.
@@ -430,12 +455,33 @@ final class PhoneStore {
         startRecording()
     }
 
+    /// A spoken note was already read while gathering. Typed words are kept exactly as written
+    /// and only classified. If reading fails, the state screen opens with nothing suggested.
     func continueFromTranscript() {
         let thought = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !thought.isEmpty, var current = session else { return }
+        guard !thought.isEmpty, let current = session, !isInterpreting else { return }
+        guard current.captureMethod == .text else {
+            proceedToRefine(thought, interpretation: interpretation)
+            return
+        }
+        interpretID += 1
+        let id = interpretID
+        transition(0.4) { self.isInterpreting = true }
+        announce(DemoCopy.reading)
+        syncOrb()
+        Task {
+            let result = try? await interpreter.interpret(text: thought)
+            guard id == interpretID else { return }
+            isInterpreting = false
+            proceedToRefine(thought, interpretation: result)
+        }
+    }
+
+    private func proceedToRefine(_ thought: String, interpretation result: FallowInterpretation?) {
+        guard var current = session else { return }
         current.confirmCapture(thought)
-        interpretation = FallowInterpretation.demo(for: current.rawTranscript ?? thought)
-        current.setDifficultyDisengaging(interpretation.difficultyDisengaging)
+        current.applyInterpretation(result)
+        interpretation = result
         session = current
         focusTyping = false
         go(.refine)
@@ -443,12 +489,13 @@ final class PhoneStore {
 
     #if DEBUG
     /// Stands in for a long spoken note when there is no microphone to demo with.
+    /// Goes through the same interpretation as a real note.
     func useDemoNote() {
         cancelRecording()
         voiceError = nil
-        session?.captureVoice(raw: DemoCopy.demoRamble, distilled: HeuristicDistiller.distill(DemoCopy.demoRamble))
-        focusTyping = false
-        go(.transcript)
+        transition(0.4) { self.isGathering = true }
+        syncOrb()
+        Task { await carryVoice(DemoCopy.demoRamble, started: Date()) }
     }
     #endif
 
@@ -604,6 +651,7 @@ final class PhoneStore {
 
     func goBackIn() {
         guard var session else { return }
+        sounds.returnFromBreak()
         session.complete()
         archive(session)
     }
@@ -641,6 +689,8 @@ final class PhoneStore {
         orb.voiceLevel = 0
         if isRecording { setRecording(false) }
         isGathering = false
+        isInterpreting = false
+        interpretID += 1
     }
 
     private func setRecording(_ value: Bool) {
@@ -669,7 +719,7 @@ final class PhoneStore {
     func open(debugScreen name: String) {
         var setup = FallowSession(originDevice: .iPhone)
         setup.captureText(DemoCopy.phoneUnresolved)
-        interpretation = .demo(for: DemoCopy.phoneUnresolved)
+        interpretation = LocalInterpreter.interpretation(for: DemoCopy.phoneUnresolved)
         var chosen = setup
         chosen.choose(.looping)
         var ready = chosen
@@ -706,7 +756,7 @@ final class PhoneStore {
         case "refine": tab = .pause; step = .refine; session = setup
         case "refine-unsure":
             setup.captureText(DemoCopy.unresolved)
-            interpretation = .demo(for: DemoCopy.unresolved)
+            interpretation = LocalInterpreter.interpretation(for: DemoCopy.unresolved)
             tab = .pause; step = .refine; session = setup
         case "distance": tab = .pause; step = .distance; session = chosen; baseOpenness = 0.15
         case "release", "release-mid", "release-late", "release-auto":
@@ -755,7 +805,7 @@ final class PhoneStore {
             phase = .dormant
         case .pause:
             switch step {
-            case .capture: phase = isRecording || isGathering ? .capture : .dormant
+            case .capture: phase = isRecording || isGathering || isInterpreting ? .capture : .dormant
             case .transcript, .refine: phase = .dormant
             case .distance, .release: phase = .threshold
             case .releasing, .resting: phase = .resting

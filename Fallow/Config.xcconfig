@@ -1,0 +1,7 @@
+// Shared build settings for both apps. Committed; holds no secrets.
+// The real key lives in Secrets.xcconfig, which is gitignored. See Secrets.example.xcconfig.
+
+FALLOW_OPENAI_API_KEY =
+FALLOW_OPENAI_MODEL = gpt-4.1-mini
+
+#include? "Secrets.xcconfig"

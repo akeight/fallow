@@ -82,27 +82,3 @@ enum FallowBehaviorResolver {
         static let notCarrying = "You don’t need to keep carrying this."
     }
 }
-
-/// What a classifier returns. A nil state means confidence was low:
-/// FALLOW says "Not sure yet" and lets the person choose instead of pretending.
-struct FallowInterpretation: Equatable {
-    var suggestedState: CreativeState?
-    var difficultyDisengaging: Bool
-
-    /// Keyword stand-in until a model is connected.
-    static func demo(for thought: String) -> FallowInterpretation {
-        let text = thought.lowercased()
-        let cues: [(CreativeState, [String])] = [
-            (.runningOnEmpty, ["tired", "exhausted", "drained", "no energy", "empty"]),
-            (.tooMuchInput, ["too many", "too much", "references", "tried everything", "overwhelm"]),
-            (.looping, ["same", "again", "around", "keep ", "over and over", "circling"]),
-            (.lostPerspective, ["can’t tell", "can't tell", "whether", "what’s working", "what's working"])
-        ]
-        let state = cues.first { _, words in words.contains(where: text.contains) }?.0
-        let stopping = ["should stop", "can’t stop", "can't stop", "one more", "let go"]
-        return FallowInterpretation(
-            suggestedState: state,
-            difficultyDisengaging: stopping.contains(where: text.contains)
-        )
-    }
-}

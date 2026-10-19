@@ -2,10 +2,7 @@ import Foundation
 import NaturalLanguage
 
 /// Turns a spoken note into the one thread FALLOW carries. Nil means "carry the note as it is".
-///
-/// This is one half of a future model's structured output: `distilledThought` comes here,
-/// while `creativeState`, `confidence`, and `difficultyDisengaging` go to `FallowInterpretation`.
-/// Summarizing what someone is carrying and reading why they are stuck stay separate.
+/// `LocalInterpreter` uses this when no model is configured.
 protocol ThoughtDistilling: Sendable {
     func distill(_ raw: String) async -> String?
 }

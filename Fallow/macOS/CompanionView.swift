@@ -17,7 +17,6 @@ struct CompanionView: View {
     @State private var showsNote = false
     /// Which field the microphone is filling.
     @State private var voiceTarget: VoiceTarget = .thought
-    private let distiller: any ThoughtDistilling = HeuristicDistiller()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -91,7 +90,9 @@ struct CompanionView: View {
         case .classifyStuck:
             choices(
                 prompt: DemoCopy.stuckPrompt,
+                hint: session.interpretation?.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess,
                 items: CreativeState.allCases.map { ($0.title, $0 == session.creativeState) },
+                notes: CreativeState.allCases.map { $0 == session.interpretation?.suggestedState ? "Suggested" : nil },
                 select: { session.chooseState(CreativeState.allCases[$0]) }
             )
         case .chooseDistance:
@@ -180,7 +181,7 @@ struct CompanionView: View {
                         .foregroundStyle(Theme.ink)
                         .lineLimit(1...8)
                         .fixedSize(horizontal: false, vertical: true)
-                        .disabled(voice.isListening || gathering)
+                        .disabled(voice.isListening || gathering || session.isInterpreting)
                         .onSubmit(session.confirmThought)
                         .padding(.vertical, 6)
                     micButton(.thought)
@@ -205,8 +206,8 @@ struct CompanionView: View {
                             .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
                     }
                 }
-                quietButton(DemoCopy.keep, action: session.confirmThought)
-                    .disabled(thoughtIsEmpty || voice.isListening || gathering)
+                quietButton(session.isInterpreting ? DemoCopy.reading : DemoCopy.keep, action: session.confirmThought)
+                    .disabled(thoughtIsEmpty || voice.isListening || gathering || session.isInterpreting)
                     .opacity(thoughtIsEmpty ? 0.45 : 1)
                 #if DEBUG
                 if thoughtIsEmpty && !voice.isBusy && !gathering {
@@ -320,20 +321,14 @@ struct CompanionView: View {
         gathering = true
         announce("Gathering the thought")
         Task {
-            let started = Date()
             guard let heard = await voice.stop() else {
                 gathering = false
                 session.voiceLevel = 0
                 announce((voice.error ?? .noSpeech).message)
                 return
             }
-            let distilled = await distiller.distill(heard)
-            let elapsed = Date().timeIntervalSince(started)
-            if elapsed < 0.6 {
-                try? await Task.sleep(nanoseconds: UInt64((0.6 - elapsed) * 1_000_000_000))
-            }
-            guard session.phase == .capture else { return }
-            session.captureVoice(raw: heard, distilled: distilled)
+            await session.carryVoice(heard)
+            guard gathering, session.phase == .capture else { return }
             gathering = false
             session.voiceLevel = 0
             voice.reset()
@@ -342,6 +337,7 @@ struct CompanionView: View {
 
     private func cancelListening() {
         voice.cancel()
+        session.cancelInterpretation()
         gathering = false
         showsNote = false
         session.isListening = false
@@ -361,13 +357,27 @@ struct CompanionView: View {
         AccessibilityNotification.Announcement(message).post()
     }
 
-    private func choices(prompt: String, items: [(String, Bool)], select: @escaping (Int) -> Void) -> some View {
+    private func choices(
+        prompt: String,
+        hint: String? = nil,
+        items: [(String, Bool)],
+        notes: [String?] = [],
+        select: @escaping (Int) -> Void
+    ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             card {
-                Text(prompt)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(prompt)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if let hint {
+                        Text(hint)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.mute)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 VStack(spacing: 6) {
                     ForEach(Array(items.enumerated()), id: \.offset) { index, item in
                         Button {
@@ -378,6 +388,11 @@ struct CompanionView: View {
                                     .font(.system(size: 14, weight: item.1 ? .medium : .regular))
                                     .foregroundStyle(Theme.ink)
                                 Spacer(minLength: 8)
+                                if let note = notes.indices.contains(index) ? notes[index] : nil {
+                                    Text(note)
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundStyle(Theme.mute)
+                                }
                                 if item.1 {
                                     Image(systemName: "checkmark")
                                         .font(.system(size: 11, weight: .semibold))

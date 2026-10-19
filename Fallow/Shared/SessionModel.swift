@@ -35,9 +35,16 @@ final class SessionModel {
     var settleID = 0
     /// Increments when the return entrance should play again.
     var returnID = 0
+    /// The interpreter's last answer for this capture, or nil when it failed or has not run.
+    var interpretation: FallowInterpretation?
+    /// A typed thought is being read before the state choice.
+    var isInterpreting = false
     /// Mac playback. Ignored by observation so assigning it does not refresh the UI.
     @ObservationIgnored var breakCue: ((BreakCue) -> Void)?
     @ObservationIgnored private let sync: (any FallowSyncing)?
+    @ObservationIgnored private let interpreter: any FallowInterpreting
+    /// Bumped on every new interpretation or exit, so a late answer never lands on the wrong capture.
+    @ObservationIgnored private var interpretID = 0
 
     private var pressing = false
     private var holdTask: Task<Void, Never>?
@@ -46,8 +53,9 @@ final class SessionModel {
     private var releaseTask: Task<Void, Never>?
 
     /// Without a sync service the session stays on this device, as the iPhone's orb does.
-    init(sync: (any FallowSyncing)? = nil) {
+    init(sync: (any FallowSyncing)? = nil, interpreter: any FallowInterpreting = FallowInterpreterFactory.make()) {
         self.sync = sync
+        self.interpreter = interpreter
     }
 
     var thought: String {
@@ -77,6 +85,7 @@ final class SessionModel {
         case .dormant:
             breakCue?(.open)
             current = FallowSession(originDevice: .mac)
+            interpretation = nil
             phase = .capture
         case .resting where !showsLens:
             current.requestReturn()
@@ -92,15 +101,57 @@ final class SessionModel {
         current.phase = .capturing
     }
 
+    /// Reads a spoken note, then keeps the whole note and carries the distilled thread,
+    /// or the note itself if reading failed. Waits at least `minimum` so gathering never flickers.
+    func carryVoice(_ raw: String, minimum: TimeInterval = 0.6) async {
+        interpretID += 1
+        let id = interpretID
+        let started = Date()
+        let result = try? await interpreter.interpret(text: raw)
+        let elapsed = Date().timeIntervalSince(started)
+        if elapsed < minimum {
+            try? await Task.sleep(nanoseconds: UInt64((minimum - elapsed) * 1_000_000_000))
+        }
+        guard id == interpretID, phase == .capture else { return }
+        interpretation = result
+        captureVoice(raw: raw, distilled: result?.distilledThought)
+    }
+
+    /// Drops any answer still on its way, e.g. when listening is cancelled mid-gather.
+    func cancelInterpretation() {
+        interpretID += 1
+        isInterpreting = false
+    }
+
     func captureText(_ text: String) {
         current.captureText(text)
         current.phase = .capturing
     }
 
+    /// A spoken note was already read while gathering. Typed words are kept exactly as written
+    /// and only classified. If reading fails, the state choice opens with nothing suggested.
     func confirmThought() {
         let text = thought.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty, !isInterpreting, phase == .capture else { return }
+        guard current.captureMethod == .text else {
+            classify(text, interpretation: interpretation)
+            return
+        }
+        interpretID += 1
+        let id = interpretID
+        isInterpreting = true
+        Task { @MainActor in
+            let result = try? await interpreter.interpret(text: text)
+            guard id == interpretID, phase == .capture else { return }
+            isInterpreting = false
+            classify(text, interpretation: result)
+        }
+    }
+
+    private func classify(_ text: String, interpretation result: FallowInterpretation?) {
         current.confirmCapture(text)
+        current.applyInterpretation(result)
+        interpretation = result
         phase = .classifyStuck
     }
 
@@ -331,6 +382,8 @@ final class SessionModel {
     }
 
     private func cancelMotion() {
+        interpretID += 1
+        isInterpreting = false
         pressing = false
         holdTask?.cancel()
         holdTask = nil
