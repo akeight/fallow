@@ -249,7 +249,10 @@ final class PhoneStore {
             case .distance: return OrbPlacement(y: 0.38, scale: 0.78)
             case .release: return OrbPlacement(y: 0.46, scale: 1)
             case .releasing, .resting: return OrbPlacement(y: 0.5, scale: 0.78)
-            case .returning: return OrbPlacement(y: 0.33, scale: 0.9)
+            case .returning:
+                // The Mac handoff sits where Home's resting orb does, at the same visual size.
+                if session?.originDevice == .mac { return OrbPlacement(y: HomeView.activeOrbY, scale: 0.68) }
+                return OrbPlacement(y: 0.33, scale: 0.9)
             case .reflect, .reframe: return OrbPlacement(y: 0.12, scale: 0.5)
             case .beforeAfter, .reframeCompare: return OrbPlacement(y: 0.11, scale: 0.45)
             case .stillStuck: return OrbPlacement(y: 0.38, scale: 0.78)
@@ -659,6 +662,7 @@ final class PhoneStore {
     // MARK: Private
 
     private func archive(_ session: FallowSession) {
+        past.removeAll { $0.id == session.id }
         past.insert(session, at: 0)
         self.session = nil
         transition(1) {

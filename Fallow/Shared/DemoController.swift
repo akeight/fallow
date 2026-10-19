@@ -26,6 +26,15 @@ final class DemoController {
             }
         }
 
+        var phoneTitle: String {
+            switch self {
+            case .reset: "No Active Session"
+            case .macReleased, .phoneResting: "Mac Released / Resting"
+            case .phoneReturnRequested, .macReturning: "Return Requested"
+            case .complete: "Complete"
+            }
+        }
+
         static let mac: [Scenario] = [.reset, .macReleased, .macReturning, .complete]
         static let phone: [Scenario] = [.reset, .phoneResting, .phoneReturnRequested, .complete]
     }
