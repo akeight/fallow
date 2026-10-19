@@ -29,7 +29,9 @@ struct CompanionView: View {
                 Color.black.opacity(0.01)
                     .contentShape(Rectangle())
             }
+            // Light only around the orb; the orb reads the desktop's appearance itself.
             content
+                .environment(\.colorScheme, .light)
                 .frame(width: area.width, height: area.height, alignment: alignment)
                 .offset(x: area.minX - window.minX, y: window.maxY - area.maxY)
                 .id(contentKey)
@@ -92,6 +94,7 @@ struct CompanionView: View {
                 prompt: DemoCopy.stuckPrompt,
                 hint: session.interpretation?.suggestedState == nil ? DemoCopy.notSureYet : DemoCopy.suggestedGuess,
                 items: CreativeState.allCases.map { ($0.title, $0 == session.creativeState) },
+                subtitles: CreativeState.allCases.map(\.meaning),
                 notes: CreativeState.allCases.map { $0 == session.interpretation?.suggestedState ? "Suggested" : nil },
                 select: { session.chooseState(CreativeState.allCases[$0]) }
             )
@@ -168,124 +171,127 @@ struct CompanionView: View {
         return Color.clear.frame(width: side, height: side)
     }
 
+    /// The first steps share one column beside the orb's home: separate glass pieces with room between them.
+    private func column<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .trailing, spacing: 0) {
+            VStack(alignment: .leading, spacing: 16) {
+                content()
+            }
+            .frame(width: Self.columnWidth)
+            orbSpace
+        }
+        .padding(16)
+    }
+
+    private static let columnWidth: CGFloat = 380
+
+    /// The question on its own pane: a serif title over a quiet caption.
+    private func promptPane(_ title: String, hint: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(FallowType.display(28))
+                .foregroundStyle(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            if let hint {
+                Text(hint)
+                    .font(FallowType.caption)
+                    .foregroundStyle(Theme.mute)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 22)
+        .padding(.vertical, 20)
+        .padding(.trailing, 18)
+        .glass(radius: 22)
+        .overlay(alignment: .topTrailing) { leaveMark }
+    }
+
     private var capture: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            card {
-                Text(DemoCopy.carrying)
-                    .font(.system(size: 19, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
-                HStack(alignment: .bottom, spacing: 8) {
-                    TextField(DemoCopy.speakOrType, text: $session.thought, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .font(FallowType.macProcess)
-                        .foregroundStyle(Theme.ink)
-                        .lineLimit(1...8)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .disabled(voice.isListening || gathering || session.isInterpreting)
-                        .onSubmit(session.confirmThought)
-                        .padding(.vertical, 6)
-                    micButton(.thought)
-                }
-                .padding(.leading, 12)
-                .padding(.trailing, 4)
-                .padding(.vertical, 4)
-                .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .strokeBorder(Color.white.opacity(0.7), lineWidth: 1)
+        column {
+            promptPane(DemoCopy.carrying, hint: session.current.hasFullNote ? nil : "Voice, or text. The canvas stays visible.")
+
+            VStack(alignment: .leading, spacing: 10) {
+                voiceStatus(for: .thought)
+                ThoughtComposer(
+                    text: $session.thought,
+                    placeholder: DemoCopy.speakOrType,
+                    isRecording: isListening(.thought),
+                    isGathering: gathering,
+                    showsSend: false,
+                    onMic: { toggleListening(.thought) },
+                    onSubmit: session.confirmThought
                 )
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    voiceStatus(hint: session.current.hasFullNote ? nil : "Voice, or text. The canvas stays visible.")
-                    Spacer(minLength: 0)
-                    if session.current.hasFullNote && !voice.isBusy && !gathering {
-                        Button(DemoCopy.viewFullNote) { showsNote = true }
-                            .buttonStyle(.plain)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.ash)
-                            .fixedSize()
-                            .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
-                    }
-                }
-                quietButton(session.isInterpreting ? DemoCopy.reading : DemoCopy.keep, action: session.confirmThought)
+                .disabled(session.isInterpreting)
+            }
+
+            VStack(spacing: 4) {
+                PrimaryButton(title: session.isInterpreting ? DemoCopy.reading : DemoCopy.keep, action: session.confirmThought)
                     .disabled(thoughtIsEmpty || voice.isListening || gathering || session.isInterpreting)
-                    .opacity(thoughtIsEmpty ? 0.45 : 1)
+                    .opacity(thoughtIsEmpty || session.isInterpreting ? 0.5 : 1)
+                if session.current.hasFullNote && !voice.isBusy && !gathering {
+                    QuietButton(title: DemoCopy.viewFullNote) { showsNote = true }
+                        .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
+                }
                 #if DEBUG
                 if thoughtIsEmpty && !voice.isBusy && !gathering {
-                    Button(DemoCopy.showThought) { session.captureText(DemoCopy.unresolved) }
-                        .buttonStyle(.plain)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.ash)
+                    QuietButton(title: DemoCopy.showThought) { session.captureText(DemoCopy.unresolved) }
                 }
                 #endif
             }
-            HStack {
-                Spacer(minLength: 0)
-                orbSpace
-            }
         }
-        .padding(12)
     }
 
     private var thoughtIsEmpty: Bool {
         session.thought.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private func micButton(_ target: VoiceTarget) -> some View {
-        let listening = voice.isListening && voiceTarget == target
-        return Button {
-            listening ? stopListening() : startListening(target)
-        } label: {
-            Image(systemName: listening ? "stop.fill" : "mic")
-                .font(.system(size: listening ? 10 : 13, weight: .medium))
-                .foregroundStyle(listening ? Theme.canvas : Theme.ink)
-                .frame(width: 30, height: 30)
-                .background(listening ? Theme.ink.opacity(0.85) : Color.white.opacity(0.8), in: Circle())
-                .overlay(Circle().strokeBorder(Color.white.opacity(listening ? 0 : 1), lineWidth: 1))
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .buttonStyle(.plain)
-        .disabled(gathering || voice.state == .requestingPermission)
-        .help(listening ? "Stop listening" : "Speak it")
-        .accessibilityLabel(listening ? "Stop listening" : target == .thought ? "Speak your thought" : "Speak what feels different")
-        .accessibilityValue(listening ? "Recording" : "")
+    private func isListening(_ target: VoiceTarget) -> Bool {
+        voice.isListening && voiceTarget == target
     }
 
-    /// One quiet line: the latest words while listening, then gathering, or why voice did not work.
-    private func voiceStatus(hint: String?) -> some View {
-        Group {
-            if voice.isListening {
-                Text(voice.recentTranscript.isEmpty ? DemoCopy.listening : voice.recentTranscript)
-                    .lineLimit(1)
-                    .truncationMode(.head)
-                    .accessibilityHidden(true)
-            } else if gathering {
-                Text(DemoCopy.gathering)
-            } else if let error = voice.error {
-                Text(error.message)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else if let hint {
-                Text(hint)
-            }
+    private func toggleListening(_ target: VoiceTarget) {
+        isListening(target) ? stopListening() : startListening(target)
+    }
+
+    /// Only the latest words while listening, or why voice did not work. Gathering shows in the composer.
+    @ViewBuilder
+    private func voiceStatus(for target: VoiceTarget) -> some View {
+        if isListening(target) {
+            Text(voice.recentTranscript.isEmpty ? " " : voice.recentTranscript)
+                .font(FallowType.process)
+                .foregroundStyle(Theme.mute)
+                .lineLimit(2)
+                .truncationMode(.head)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 20)
+                .animation(.easeOut(duration: 0.3), value: voice.recentTranscript)
+                .accessibilityHidden(true)
+                .transition(.fallowText)
+        } else if voiceTarget == target, let error = voice.error {
+            Text(error.message)
+                .font(FallowType.caption)
+                .foregroundStyle(Theme.mute)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 20)
+                .transition(.fallowText)
         }
-        .font(.system(size: 13))
-        .foregroundStyle(Theme.mute)
-        .animation(.easeOut(duration: 0.3), value: voice.recentTranscript)
     }
 
     private var fullNote: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
             Eyebrow(text: DemoCopy.fullNote)
             ScrollView {
                 Text(session.current.rawTranscript ?? "")
-                    .font(FallowType.macProcess)
+                    .font(FallowType.process)
                     .foregroundStyle(Theme.ink)
-                    .lineSpacing(4)
+                    .lineSpacing(5)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(18)
-        .frame(width: 340, height: 260)
+        .padding(22)
+        .frame(width: 360, height: 280)
     }
 
     private func startListening(_ target: VoiceTarget) {
@@ -357,70 +363,28 @@ struct CompanionView: View {
         AccessibilityNotification.Announcement(message).post()
     }
 
+    /// One answer per glass row; choosing one is the answer.
     private func choices(
         prompt: String,
         hint: String? = nil,
         items: [(String, Bool)],
+        subtitles: [String?] = [],
         notes: [String?] = [],
         select: @escaping (Int) -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            card {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(prompt)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let hint {
-                        Text(hint)
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.mute)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+        column {
+            promptPane(prompt, hint: hint)
+            VStack(spacing: 8) {
+                ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                    ChoiceRow(
+                        title: item.0,
+                        subtitle: subtitles.indices.contains(index) ? subtitles[index] : nil,
+                        note: notes.indices.contains(index) ? notes[index] : nil,
+                        selected: item.1
+                    ) { select(index) }
                 }
-                VStack(spacing: 6) {
-                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                        Button {
-                            select(index)
-                        } label: {
-                            HStack {
-                                Text(item.0)
-                                    .font(.system(size: 14, weight: item.1 ? .medium : .regular))
-                                    .foregroundStyle(Theme.ink)
-                                Spacer(minLength: 8)
-                                if let note = notes.indices.contains(index) ? notes[index] : nil {
-                                    Text(note)
-                                        .font(.system(size: 11, weight: .medium))
-                                        .foregroundStyle(Theme.mute)
-                                }
-                                if item.1 {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(Theme.ink)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(
-                                Color.white.opacity(item.1 ? 0.78 : 0.26),
-                                in: RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .strokeBorder(Color.white.opacity(item.1 ? 0.9 : 0.45), lineWidth: 1)
-                            )
-                            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            HStack {
-                Spacer(minLength: 0)
-                orbSpace
             }
         }
-        .padding(12)
     }
 
     /// Hold, rest, and return share the screen's center for the orb; the copy sits around this space.
@@ -436,42 +400,50 @@ struct CompanionView: View {
         return centeredOrb(height: extent)
             .overlay(alignment: .bottom) {
                 Text(DemoCopy.hold)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(FallowType.secondary)
                     .foregroundStyle(Theme.ink)
                     .fixedSize()
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 7)
-                    .frostedCard(radius: 16)
-                    .alignmentGuide(.bottom) { d in d[.top] - 18 }
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 12)
+                    .glass(radius: 22)
+                    .alignmentGuide(.bottom) { d in d[.top] - 24 }
             }
     }
 
     private var resting: some View {
         centeredOrb(height: config.restSize * config.verticalStretch * 0.8)
             .overlay(alignment: .top) {
-                VStack(spacing: 14) {
-                    FallowWordmark(size: 34)
+                VStack(spacing: 12) {
+                    Text(DemoCopy.itsHere)
+                        .font(FallowType.display(34))
+                        .foregroundStyle(Theme.ink)
                     Eyebrow(text: session.current.restingLine)
                 }
                 .fixedSize()
-                .alignmentGuide(.top) { d in d[.bottom] + 40 }
+                .alignmentGuide(.top) { d in d[.bottom] + 44 }
             }
             .overlay(alignment: .bottom) {
                 Text(session.showsLens ? (session.restLine ?? DemoCopy.returnWhenReady) : DemoCopy.returnWhenReady)
                     .id(session.showsLens)
-                    .transition(.opacity)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Theme.mute)
+                    .transition(.fallowText)
+                    .font(.system(size: 17, weight: .regular))
+                    .tracking(0.3)
+                    .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
-                    .fixedSize()
-                    .alignmentGuide(.bottom) { d in d[.top] - 40 }
+                    .lineSpacing(4)
+                    .frame(width: 340)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .alignmentGuide(.bottom) { d in d[.top] - 44 }
             }
             .animation(.easeInOut(duration: 0.6), value: session.showsLens)
     }
 
-    /// Welcome back above the orb, the step's cards below it.
+    private static let returnWidth: CGFloat = 420
+    private static let returnOrbHeight: CGFloat = 190
+
+    /// Welcome back above the orb, the step's pieces below it.
     private func returnPage<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        centeredOrb(height: 190)
+        centeredOrb(height: Self.returnOrbHeight)
             .overlay(alignment: .top) {
                 VStack(spacing: 12) {
                     Text(DemoCopy.welcomeBack)
@@ -480,77 +452,43 @@ struct CompanionView: View {
                     Eyebrow(text: DemoCopy.different)
                 }
                 .fixedSize()
-                .alignmentGuide(.top) { d in d[.bottom] + 8 }
+                .alignmentGuide(.top) { d in d[.bottom] + 12 }
             }
             .overlay(alignment: .top) {
-                VStack(spacing: 12) {
+                VStack(spacing: 16) {
                     content()
                 }
-                .frame(width: 400)
-                .alignmentGuide(.top) { d in -190 - 8 }
+                .frame(width: Self.returnWidth)
+                .alignmentGuide(.top) { _ in -Self.returnOrbHeight - 24 }
             }
     }
 
     private var doorway: some View {
         returnPage {
-            HStack(alignment: .top, spacing: 14) {
-                Image(systemName: "scribble.variable")
-                    .font(.system(size: 18))
-                    .foregroundStyle(Theme.mute)
-                    .padding(.top, 2)
-                    .accessibilityHidden(true)
-                Text("“\(session.thought)”")
-                    .font(FallowType.macProcess)
-                    .foregroundStyle(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 10) {
+                Eyebrow(text: "You left with")
+                ThoughtText(text: session.thought)
             }
-            .padding(18)
-            .padding(.trailing, 20)
-            .frostedCard()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(22)
+            .padding(.trailing, 18)
+            .glass(radius: 22)
             .overlay(alignment: .topTrailing) { leaveMark }
 
-            HStack(spacing: 10) {
-                TextField(DemoCopy.different, text: $session.reflection)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 15))
-                    .foregroundStyle(Theme.ink)
-                    .disabled(voice.isListening)
-                    .onSubmit(session.confirmReflection)
-                micButton(.reflection)
-                Button(action: session.confirmReflection) {
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(0.8), in: Circle())
-                        .overlay(Circle().strokeBorder(Color.white, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .disabled(reflectionIsEmpty || voice.isListening)
-                .opacity(reflectionIsEmpty ? 0.45 : 1)
-                .help("Continue")
-                .accessibilityLabel("Continue")
-            }
-            .padding(.leading, 18)
-            .padding(.trailing, 8)
-            .padding(.vertical, 8)
-            .frostedCard()
-
-            if voiceTarget == .reflection && (voice.isListening || voice.error != nil) {
-                voiceStatus(hint: nil)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 18)
+            VStack(alignment: .leading, spacing: 10) {
+                voiceStatus(for: .reflection)
+                ThoughtComposer(
+                    text: $session.reflection,
+                    placeholder: "Say it, or write it.",
+                    isRecording: isListening(.reflection),
+                    onMic: { toggleListening(.reflection) },
+                    onSubmit: session.confirmReflection
+                )
             }
 
             #if DEBUG
             if reflectionIsEmpty && !voice.isBusy {
-                Button(DemoCopy.showThought) {
-                    session.reflection = DemoCopy.reflection
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.ash)
+                QuietButton(title: DemoCopy.showThought) { session.reflection = DemoCopy.reflection }
             }
             #endif
         }
@@ -562,97 +500,34 @@ struct CompanionView: View {
 
     private var beforeAfter: some View {
         returnPage {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(DemoCopy.beforeLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.ash)
-                Text(session.thought)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.mute)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(DemoCopy.afterLabel)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Theme.ash)
-                    .padding(.top, 12)
-                Text(session.reflection)
-                    .font(.system(size: 17))
-                    .foregroundStyle(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Eyebrow(text: DemoCopy.beforeLabel)
+                    ThoughtText(text: session.thought, color: Theme.mute)
+                }
+                Rectangle()
+                    .fill(Theme.rim)
+                    .frame(height: 1)
+                    .padding(.vertical, 22)
+                VStack(alignment: .leading, spacing: 10) {
+                    Eyebrow(text: DemoCopy.afterLabel)
+                    ThoughtText(text: session.reflection)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(18)
-            .padding(.trailing, 20)
-            .frostedCard()
+            .padding(24)
+            .padding(.trailing, 14)
+            .glass(radius: 22)
             .overlay(alignment: .topTrailing) { leaveMark }
 
-            Button(action: session.goBackIn) {
-                HStack(spacing: 8) {
-                    Text(DemoCopy.goBack)
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 12, weight: .semibold))
-                }
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.ink)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 11)
-                .frostedCard(radius: 20)
-            }
-            .buttonStyle(.plain)
+            PrimaryButton(title: DemoCopy.goBack, action: session.goBackIn)
+                .padding(.top, 4)
         }
     }
 
     private var leaveMark: some View {
         LeaveButton(action: session.leave)
-            .padding(8)
-    }
-
-    private func card<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            content()
-        }
-        .padding(18)
-        .padding(.trailing, 20)
-        .frame(width: 300, alignment: .leading)
-        .frostedCard()
-        .overlay(alignment: .topTrailing) { leaveMark }
-    }
-
-    private func quietButton(_ title: String, action: @escaping () -> Void) -> some View {
-        Button(title, action: action)
-            .buttonStyle(.plain)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(Theme.ink)
-            .padding(.top, 4)
-    }
-}
-
-extension View {
-    /// Frosted macOS glass: the desktop blurs through, warmed by a translucent paper tint.
-    func frostedCard(radius: CGFloat = 18) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .circular)
-        return background {
-            ZStack {
-                FrostedGlass(cornerRadius: radius)
-                shape.fill(
-                    LinearGradient(
-                        colors: [Theme.paper.opacity(0.62), Theme.paper.opacity(0.4)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-            }
-        }
-        .overlay(
-            shape.strokeBorder(
-                LinearGradient(
-                    colors: [Color.white.opacity(0.75), Color.white.opacity(0.18)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                ),
-                lineWidth: 1
-            )
-        )
-        .shadow(color: Color(hex: 0x5C4A32).opacity(0.12), radius: 14, y: 6)
+            .padding(10)
     }
 }
 
@@ -693,16 +568,12 @@ struct LeaveButton: View {
             Image(systemName: "xmark")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Theme.ink)
-                .frame(width: 22, height: 22)
-                .background {
-                    ZStack {
-                        FrostedGlass(cornerRadius: 11)
-                        Circle().fill(Theme.paper.opacity(0.5))
-                    }
-                }
-                .overlay(Circle().strokeBorder(Color.white.opacity(0.6), lineWidth: 1))
+                .frame(width: 24, height: 24)
+                .glass(radius: 12)
+                .contentShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressableStyle())
+        .environment(\.colorScheme, .light)
         .help("Leave")
         .accessibilityLabel("Leave")
     }

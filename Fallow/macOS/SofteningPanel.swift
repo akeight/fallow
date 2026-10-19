@@ -45,7 +45,7 @@ final class SofteningPanel: NSPanel {
         effect.addSubview(tint)
 
         landscape.wantsLayer = true
-        landscape.layer?.contents = Self.frostedLandscape()
+        landscape.layer?.contents = Self.frosted(Self.fallbackScene)
         landscape.layer?.contentsGravity = .resizeAspectFill
         landscape.layer?.masksToBounds = true
         landscape.frame = root.bounds
@@ -86,9 +86,26 @@ final class SofteningPanel: NSPanel {
         }
     }
 
-    /// Blurred once up front; the image is small, so stretching it to the screen only softens it further.
-    private static func frostedLandscape() -> CGImage? {
-        guard let url = Bundle.main.url(forResource: "RestLandscape", withExtension: "jpg"),
+    /// Crossfades to a frosted scene, or to the fallback landscape if the name is not bundled.
+    func setScene(_ name: String) {
+        guard name != sceneName, let image = Self.frosted(name) ?? Self.frosted(Self.fallbackScene) else { return }
+        sceneName = name
+        let fade = CATransition()
+        fade.type = .fade
+        fade.duration = landscape.alphaValue > 0.01 ? 1.2 : 0
+        fade.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        landscape.layer?.add(fade, forKey: "scene")
+        landscape.layer?.contents = image
+    }
+
+    static let fallbackScene = "RestLandscape"
+    private var sceneName = SofteningPanel.fallbackScene
+    private static var frostedCache: [String: CGImage] = [:]
+
+    /// Blurred once per scene; the images are small, so stretching them to the screen only softens them further.
+    private static func frosted(_ name: String) -> CGImage? {
+        if let cached = frostedCache[name] { return cached }
+        guard let url = Bundle.main.url(forResource: name, withExtension: "jpg"),
               let source = CIImage(contentsOf: url) else { return nil }
         let frosted = source.clampedToExtent()
             .applyingGaussianBlur(sigma: 9)
@@ -97,7 +114,9 @@ final class SofteningPanel: NSPanel {
                 kCIInputBrightnessKey: 0.06
             ])
             .cropped(to: source.extent)
-        return CIContext().createCGImage(frosted, from: source.extent)
+        let image = CIContext().createCGImage(frosted, from: source.extent)
+        frostedCache[name] = image
+        return image
     }
 
     /// `amount` is already the curved recession, 0 through 1.

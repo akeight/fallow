@@ -101,7 +101,7 @@ struct HomeView: View {
             }
             .multilineTextAlignment(.center)
             .frame(maxHeight: .infinity, alignment: .bottom)
-            .padding(.bottom, 150)
+            .padding(.bottom, 240)
         }
         .frame(maxHeight: .infinity)
     }

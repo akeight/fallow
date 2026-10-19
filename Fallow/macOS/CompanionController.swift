@@ -128,6 +128,7 @@ final class CompanionController {
             contrast: config.workspaceContrast
         )
         let landscape = isHoldStep ? 0.18 + 0.82 * curved : curved
+        if let scene { softening?.setScene(scene) }
         softening?.setLandscape(amount: landscape * landscapeStrength)
         placeLeave()
     }
@@ -151,6 +152,20 @@ final class CompanionController {
             0.88
         default:
             0
+        }
+    }
+
+    /// The same scenes as the phone: the threshold to let go, the chosen distance to rest, the garden to return.
+    private var scene: String? {
+        switch session.phase {
+        case .threshold, .holding:
+            "SceneThreshold"
+        case .resting:
+            session.distance?.sceneName ?? SofteningPanel.fallbackScene
+        case .returnDoorway, .reflecting, .beforeAfter:
+            "HomeGarden"
+        default:
+            nil
         }
     }
 
@@ -294,18 +309,18 @@ final class CompanionController {
         case .dormant, .reentering:
             return NSSize(width: homeSide, height: homeSide)
         case .capture:
-            return NSSize(width: 480, height: 600)
+            return NSSize(width: 500, height: 720)
         case .classifyStuck:
-            return NSSize(width: 480, height: 680)
+            return NSSize(width: 500, height: 780)
         case .chooseDistance:
-            return NSSize(width: 480, height: 640)
+            return NSSize(width: 500, height: 720)
         case .threshold, .holding:
             let side = CGFloat(max(420, config.holdEndSize * 1.55 + 80))
             return NSSize(width: side, height: side + 36)
         case .resting:
             return NSSize(width: 520, height: 400)
         case .returnDoorway, .reflecting, .beforeAfter:
-            return NSSize(width: 560, height: 720)
+            return NSSize(width: 560, height: 820)
         }
     }
 
