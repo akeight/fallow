@@ -45,6 +45,11 @@ final class BreakSounds {
         outOfBreak?.play()
     }
 
+    /// The return hold ended early. The exit tone fades instead of finishing.
+    func cancelReturn() {
+        fadeOut(outOfBreak)
+    }
+
     func stopAll() {
         holding = false
         fade?.cancel()
@@ -81,6 +86,7 @@ final class BreakSounds {
             }
             player?.stop()
             if intoBreak === player { intoBreak = nil }
+            if outOfBreak === player { outOfBreak = nil }
         }
     }
 }

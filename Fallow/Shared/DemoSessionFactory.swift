@@ -2,16 +2,19 @@ import Foundation
 
 /// The one session both devices stage for the presentation. Edit these values before filming;
 /// the Mac and the iPhone read the same fields, so they cannot disagree.
-/// Keep `unresolvedThought` identical to the line spoken on the Mac.
+/// Keep `unresolvedThought` identical to the line spoken on the Mac, and choose the same
+/// `creativeState` and `distance` there, so both devices show the same intervention.
+/// There is no project name: `projectName` stays nil.
 enum DemoSessionFactory {
-    static let unresolvedThought = DemoCopy.unresolved
+    static let unresolvedThought = DemoCopy.demoThought
     static let rawTranscript: String? = nil
     static let creativeState: CreativeState = .lostPerspective
     static let difficultyDisengaging = false
     static let distance: FallowDistance = .someDistance
     static let originDevice: OriginDevice = .mac
 
-    private static let id = UUID(uuidString: "F4110000-0000-4000-8000-000000000001")!
+    /// Fixed, so a notification scheduled for the demo session still names it after a relaunch.
+    static let id = UUID(uuidString: "F4110000-0000-4000-8000-000000000001")!
 
     /// Released on the Mac a little while ago, and resting.
     static var macRestingDemo: FallowSession {

@@ -10,6 +10,8 @@ enum BreakCue {
     case cancel
     /// The screen is returning to normal.
     case out
+    /// The return hold was let go before it finished, so the exit tone stops.
+    case cancelOut
     /// The session was left before the return finished.
     case stop
 }
@@ -27,6 +29,10 @@ final class SessionModel {
     var showsLens = false
     var holdDuration = 1.8
     var reentryDuration = 0.9
+    /// How long the orb is held to leave a return, matching the iPhone.
+    var returnHoldDuration = 2.5
+    /// 0 until the return orb is held, then the fraction of that hold. Stays full through the way back.
+    var returnHold = 0.0
     /// Smoothed microphone level, 0 through 1.
     var voiceLevel = 0.0
     /// The microphone is open. Under Reduce Motion the orb holds a still gather instead of following the level.
@@ -47,7 +53,9 @@ final class SessionModel {
     @ObservationIgnored private var interpretID = 0
 
     private var pressing = false
+    private var returnPressing = false
     private var holdTask: Task<Void, Never>?
+    private var returnHoldTask: Task<Void, Never>?
     private var lensTask: Task<Void, Never>?
     private var returnTask: Task<Void, Never>?
     private var releaseTask: Task<Void, Never>?
@@ -234,6 +242,52 @@ final class SessionModel {
         phase = .beforeAfter
     }
 
+    /// Holding the return orb. Letting go early eases it back; finishing it leaves the return.
+    func pressReturn() {
+        guard phase == .beforeAfter, !returnPressing else { return }
+        returnPressing = true
+        breakCue?(.out)
+        returnHoldTask?.cancel()
+        let duration = max(0.2, returnHoldDuration)
+        let start = Date()
+        let from = returnHold
+        returnHoldTask = Task { @MainActor in
+            while !Task.isCancelled && returnPressing {
+                let t = min(1, Date().timeIntervalSince(start) / duration)
+                returnHold = from + (1 - from) * t
+                if returnHold >= 0.995 {
+                    finishReturn()
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
+        }
+    }
+
+    func releaseReturn() {
+        guard returnPressing else { return }
+        returnPressing = false
+        returnHoldTask?.cancel()
+        returnHoldTask = nil
+        guard phase == .beforeAfter else { return }
+        if returnHold >= 0.98 {
+            finishReturn()
+        } else {
+            breakCue?(.cancelOut)
+            easeReturnHold(to: 0)
+        }
+    }
+
+    /// The hold completed, or VoiceOver asked for it.
+    func finishReturn() {
+        guard phase == .beforeAfter else { return }
+        returnPressing = false
+        returnHoldTask?.cancel()
+        returnHoldTask = nil
+        returnHold = 1
+        goBackIn()
+    }
+
     func goBackIn() {
         guard phase == .beforeAfter else { return }
         current.beginReentry()
@@ -252,6 +306,24 @@ final class SessionModel {
             current.complete()
             phase = .dormant
             softness = 0
+            returnHold = 0
+        }
+    }
+
+    private func easeReturnHold(to target: Double) {
+        let from = returnHold
+        returnHoldTask?.cancel()
+        returnHoldTask = Task { @MainActor in
+            let duration = 0.45
+            let start = Date()
+            while !Task.isCancelled {
+                guard phase == .beforeAfter, !returnPressing else { return }
+                let t = min(1, Date().timeIntervalSince(start) / duration)
+                let eased = t * t * (3 - 2 * t)
+                returnHold = from + (target - from) * eased
+                if t >= 1 { return }
+                try? await Task.sleep(nanoseconds: 16_000_000)
+            }
         }
     }
 
@@ -385,8 +457,12 @@ final class SessionModel {
         interpretID += 1
         isInterpreting = false
         pressing = false
+        returnPressing = false
+        returnHold = 0
         holdTask?.cancel()
         holdTask = nil
+        returnHoldTask?.cancel()
+        returnHoldTask = nil
         releaseTask?.cancel()
         releaseTask = nil
         lensTask?.cancel()

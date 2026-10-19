@@ -216,6 +216,9 @@ final class CompanionController {
         switch session.phase {
         case .capture, .classifyStuck, .chooseDistance:
             homeCenter
+        case .threshold, .holding:
+            // A little below center, so the orb only grazes the pane above it. Screen y runs up.
+            CGPoint(x: area.midX, y: area.midY - 30)
         default:
             CGPoint(x: area.midX, y: area.midY)
         }

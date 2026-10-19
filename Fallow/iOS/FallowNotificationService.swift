@@ -104,6 +104,13 @@ final class FallowNotificationService: NSObject, UNUserNotificationCenterDelegat
         center.removePendingNotificationRequests(withIdentifiers: Kind.allCases.map(\.identifier))
     }
 
+    /// Pending and delivered alike, so an old banner cannot be tapped into a fresh start.
+    func clearAll() {
+        let identifiers = Kind.allCases.map(\.identifier)
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        center.removeDeliveredNotifications(withIdentifiers: identifiers)
+    }
+
     // MARK: Routing
 
     private func deliver(_ route: Route) {

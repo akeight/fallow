@@ -113,6 +113,7 @@ struct OrbTunerView: View {
                         slider("Orb size", $config.returnSize, 80...260, "pt")
                         slider("Return duration", $config.returnDuration, 0.6...2.2, "s")
                         slider("Re-entry duration", $config.reentryDuration, 0.4...1.8, "s")
+                        slider("Hold to return", $config.returnHoldDuration, 1.2...4, "s")
                     }
                     group("Form") {
                         slider("Asymmetry", $config.asymmetry, 0...1)
@@ -178,6 +179,7 @@ struct OrbTunerView: View {
         config.reset()
         session.holdDuration = config.holdDuration
         session.reentryDuration = config.reentryDuration
+        session.returnHoldDuration = config.returnHoldDuration
     }
 
     private func copyConfig() {
@@ -217,8 +219,9 @@ struct OrbTunerView: View {
                 session.showPreview(.returnDoorway)
             case .reentering:
                 session.showPreview(.beforeAfter)
+                session.returnHoldDuration = config.returnHoldDuration
                 session.reentryDuration = config.reentryDuration
-                session.goBackIn()
+                session.pressReturn()
             default:
                 session.showPreview(preview.phase)
             }
