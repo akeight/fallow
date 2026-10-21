@@ -64,7 +64,7 @@ enum FallowBehaviorResolver {
         case (.someDistance, .tooMuchInput):
             return .fullStop("\(Line.noMoreInput) \(Line.asksNothing)")
         case (.someDistance, .lostPerspective):
-            return .perceptualPrompt("\(Line.lookFarther) \(Line.eyeGoesFirst)")
+            return .perceptualPrompt("\(Line.seeFarther) \(Line.unrelated)")
         case (.someDistance, .runningOnEmpty):
             return .fullStop(Line.leaveIt)
         }
@@ -76,7 +76,8 @@ enum FallowBehaviorResolver {
         static let noMoreInput = "No more input for now."
         static let asksNothing = "Let your attention land somewhere that asks nothing from you."
         static let lookFarther = "Look farther away."
-        static let eyeGoesFirst = "Notice what your eye goes to first."
+        static let seeFarther = "Go somewhere you can see farther than your screen."
+        static let unrelated = "Notice one thing that has nothing to do with the project."
         static let leaveIt = "Leave it here."
         static let hold = "I’ll hold it."
         static let notCarrying = "You don’t need to keep carrying this."

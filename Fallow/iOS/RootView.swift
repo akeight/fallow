@@ -8,6 +8,7 @@ struct RootView: View {
     @State private var fullHeight: CGFloat = 0
     @State private var visibleHeight: CGFloat = 0
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     private static var launchesWithSplash: Bool {
         #if DEBUG
@@ -113,6 +114,9 @@ struct RootView: View {
             #endif
         }
         .onChange(of: reduceMotion) { _, value in store.reduceMotion = value }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { store.appBecameActive() }
+        }
         .onChange(of: store.orb.settleID) { _, _ in store.holdCompleted() }
         .onChange(of: store.holdProgress >= 0.85) { _, near in
             if near { store.holdNearTick += 1 }

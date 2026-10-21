@@ -32,6 +32,7 @@ struct CompanionView: View {
             // Light only around the orb; the orb reads the desktop's appearance itself.
             content
                 .environment(\.colorScheme, .light)
+                .fixedSize(horizontal: false, vertical: isInput)
                 .frame(width: area.width, height: area.height, alignment: alignment)
                 .offset(x: area.minX - window.minX, y: window.maxY - area.maxY)
                 .id(contentKey)
@@ -102,8 +103,9 @@ struct CompanionView: View {
             )
         case .chooseDistance:
             choices(
-                prompt: DemoCopy.distancePrompt,
-                items: FallowDistance.allCases.map { ($0.title, $0 == session.distance) },
+                prompt: session.creativeState?.pausePrompt ?? DemoCopy.distancePrompt,
+                hint: session.creativeState == nil ? nil : DemoCopy.distancePrompt,
+                items: FallowDistance.allCases.map { ($0.title(for: session.creativeState), $0 == session.distance) },
                 select: { session.chooseDistance(FallowDistance.allCases[$0]) }
             )
         case .threshold, .holding:
@@ -156,11 +158,27 @@ struct CompanionView: View {
 
     private var alignment: Alignment {
         switch session.phase {
+        case .capture, .classifyStuck, .chooseDistance:
+            promptHangsBelowOrb ? .top : .bottom
         case .threshold, .holding, .resting, .returnDoorway, .reflecting, .beforeAfter:
             .center
         default:
             .bottomTrailing
         }
+    }
+
+    /// Asking for the thought, the state, or the distance.
+    private var isInput: Bool {
+        switch session.phase {
+        case .capture, .classifyStuck, .chooseDistance: true
+        default: false
+        }
+    }
+
+    /// The orb is in the top half of the screen, so the prompt hangs beneath it.
+    /// Screen y runs upward, and during these steps the window is the whole screen.
+    private var promptHangsBelowOrb: Bool {
+        layout.orbCenter.y >= layout.window.midY
     }
 
     private var orb: some View {
@@ -169,21 +187,16 @@ struct CompanionView: View {
             .help(session.phase == .resting ? "Return" : "FALLOW")
     }
 
-    private var orbSpace: some View {
-        let side = CGFloat(OrbMotion.canvasExtent(phase: session.phase, config: config))
-        return Color.clear.frame(width: side, height: side)
-    }
-
-    /// The first steps share one column beside the orb's home: separate glass pieces with room between them.
+    /// The prompt and the fields. The pinned edge is the one that meets the orb, so a taller
+    /// step grows away from the glass instead of onto it.
     private func column<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .trailing, spacing: 0) {
-            VStack(alignment: .leading, spacing: 16) {
-                content()
-            }
-            .frame(width: Self.columnWidth)
-            orbSpace
+        VStack(alignment: .leading, spacing: 16) {
+            content()
         }
-        .padding(16)
+        .frame(width: Self.columnWidth)
+        .padding(.horizontal, 16)
+        .padding(.top, promptHangsBelowOrb ? 0 : 16)
+        .padding(.bottom, promptHangsBelowOrb ? 16 : 0)
     }
 
     private static let columnWidth: CGFloat = 380
@@ -192,7 +205,7 @@ struct CompanionView: View {
     private func promptPane(_ title: String, hint: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(FallowType.display(28))
+                .font(FallowType.display(31))
                 .foregroundStyle(Theme.ink)
                 .fixedSize(horizontal: false, vertical: true)
             if let hint {
@@ -402,7 +415,7 @@ struct CompanionView: View {
         return VStack(spacing: 0) {
             VStack(spacing: 18) {
                 Text(DemoCopy.takeBreath)
-                    .font(FallowType.display(32))
+                    .font(FallowType.display(35))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -448,7 +461,7 @@ struct CompanionView: View {
             .overlay(alignment: .top) {
                 VStack(spacing: 12) {
                     Text(DemoCopy.itsHere)
-                        .font(FallowType.display(34))
+                        .font(FallowType.display(37))
                         .foregroundStyle(Theme.ink)
                     Eyebrow(text: session.current.restingLine)
                 }
@@ -491,7 +504,7 @@ struct CompanionView: View {
             .overlay(alignment: .top) {
                 VStack(spacing: 12) {
                     Text(DemoCopy.welcomeBack)
-                        .font(FallowType.display(40))
+                        .font(FallowType.display(44))
                         .foregroundStyle(Theme.ink)
                     Eyebrow(text: DemoCopy.different)
                 }
@@ -524,6 +537,11 @@ struct CompanionView: View {
     private var doorway: some View {
         returnPage {
             VStack(alignment: .leading, spacing: 10) {
+                Text(session.reentryLine)
+                    .font(FallowType.secondary)
+                    .foregroundStyle(Theme.mute)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 4)
                 Eyebrow(text: "You left with")
                 ThoughtText(text: session.thought)
             }

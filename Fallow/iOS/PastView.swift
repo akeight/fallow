@@ -8,7 +8,7 @@ struct PastView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text("Reflections")
-                    .font(FallowType.display(34))
+                    .font(FallowType.display(37))
                     .foregroundStyle(Theme.ink)
                     .padding(.top, 28)
 

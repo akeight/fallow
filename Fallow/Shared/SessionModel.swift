@@ -22,7 +22,10 @@ final class SessionModel {
     var phase: OrbPhase = .dormant
     /// The Mac's session record. The orb phase above is only how it is being shown.
     var current = FallowSession(originDevice: .mac, phase: .dormant) {
-        didSet { persist() }
+        didSet {
+            persist()
+            notifications?.apply(FallowReturnPolicy.action(from: oldValue, to: current))
+        }
     }
     /// Raw recession, 0 through 1. The veil shapes this; it is not pre-curved.
     var softness: Double = 0
@@ -48,6 +51,8 @@ final class SessionModel {
     /// Mac playback. Ignored by observation so assigning it does not refresh the UI.
     @ObservationIgnored var breakCue: ((BreakCue) -> Void)?
     @ObservationIgnored private let sync: (any FallowSyncing)?
+    /// Only where this model is the session's owner. The iPhone's orb-only model has none, so it never schedules.
+    @ObservationIgnored private let notifications: FallowNotificationService?
     @ObservationIgnored private let interpreter: any FallowInterpreting
     /// Bumped on every new interpretation or exit, so a late answer never lands on the wrong capture.
     @ObservationIgnored private var interpretID = 0
@@ -61,8 +66,13 @@ final class SessionModel {
     private var releaseTask: Task<Void, Never>?
 
     /// Without a sync service the session stays on this device, as the iPhone's orb does.
-    init(sync: (any FallowSyncing)? = nil, interpreter: any FallowInterpreting = FallowInterpreterFactory.make()) {
+    init(
+        sync: (any FallowSyncing)? = nil,
+        notifications: FallowNotificationService? = nil,
+        interpreter: any FallowInterpreting = FallowInterpreterFactory.make()
+    ) {
         self.sync = sync
+        self.notifications = notifications
         self.interpreter = interpreter
     }
 
@@ -81,6 +91,9 @@ final class SessionModel {
 
     /// What the rest offers, or nil when FALLOW should stay quiet.
     var restLine: String? { current.intervention?.line }
+
+    /// The first line of the welcome back.
+    var reentryLine: String { FallowReturnPolicy.reentryLine(for: current) }
 
     var holdAmount: Double {
         if case .holding(let progress) = phase { return progress }
@@ -288,8 +301,31 @@ final class SessionModel {
         goBackIn()
     }
 
+    /// A tap on the return nudge for the thought resting here opens its doorway, as clicking the orb does.
+    func openReturn(sessionID: UUID?) {
+        guard phase == .resting, current.phase == .resting, current.id == sessionID else { return }
+        lensTask?.cancel()
+        lensTask = nil
+        showsLens = false
+        current.requestReturn()
+        phase = .returnDoorway
+    }
+
     func goBackIn() {
         guard phase == .beforeAfter else { return }
+        reenter(skipping: false)
+    }
+
+    /// Straight from the doorway back to the desk. Nothing is recorded about whether the break helped.
+    func skipReentry() {
+        guard phase == .returnDoorway || phase == .reflecting else { return }
+        cancelInterpretation()
+        returnPressing = false
+        returnHold = 0
+        reenter(skipping: true)
+    }
+
+    private func reenter(skipping: Bool) {
         current.beginReentry()
         phase = .reentering
         breakCue?(.out)
@@ -303,7 +339,11 @@ final class SessionModel {
                 try? await Task.sleep(nanoseconds: 16_000_000)
             }
             showsLens = false
-            current.complete()
+            if skipping {
+                current.skipReentry()
+            } else {
+                current.complete()
+            }
             phase = .dormant
             softness = 0
             returnHold = 0

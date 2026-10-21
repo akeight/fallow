@@ -19,6 +19,9 @@ enum PhoneStep: Equatable {
     case returning
     case reflect
     case beforeAfter
+    case stillStuck
+    case reframe
+    case reframeCompare
 }
 
 enum ReleaseLine: Equatable {
@@ -30,6 +33,7 @@ enum ReleaseLine: Equatable {
 enum RecordingTarget: Equatable {
     case thought
     case shift
+    case reframe
 }
 
 /// Where the orb sits for the current screen, as a fraction of the content height.
@@ -46,7 +50,10 @@ final class PhoneStore {
     var step: PhoneStep = .capture
     /// The one thread being worked with, from capture through return. Screens read and write it.
     var session: FallowSession? = nil {
-        didSet { persist() }
+        didSet {
+            persist()
+            notifications.apply(FallowReturnPolicy.action(from: oldValue, to: session))
+        }
     }
     var past: [FallowSession] = FallowSession.demoPast
     /// The interpreter's last answer for this capture, or nil when it failed or has not run.
@@ -86,7 +93,7 @@ final class PhoneStore {
     let voice = VoiceCaptureService()
     let sounds = BreakSounds()
     let interpreter: any FallowInterpreting = FallowInterpreterFactory.make()
-    let sync = DemoFallowSyncService()
+    let sync = DemoFallowSyncService(defaults: .standard)
     let notifications = FallowNotificationService.shared
     #if DEBUG
     let demo: DemoController
@@ -129,7 +136,10 @@ final class PhoneStore {
         sync.onRemoteChange = { [weak self] session in self?.receive(session) }
         syncOrb()
         Task {
-            if let active = await sync.loadActiveSession() { receive(active) }
+            let active = await sync.loadActiveSession()
+            if let active { receive(active) }
+            notifications.cancelStaleReturn(restored: active)
+            appBecameActive()
         }
         notifications.onRoute = { [weak self] route in self?.open(route) }
     }
@@ -150,6 +160,16 @@ final class PhoneStore {
     var reflection: String {
         get { session?.returnedThought ?? "" }
         set { session?.returnedThought = newValue }
+    }
+
+    var reframe: String {
+        get { session?.reframedThought ?? "" }
+        set { session?.reframedThought = newValue }
+    }
+
+    /// The first line of the welcome back.
+    var reentryLine: String {
+        session.map { FallowReturnPolicy.reentryLine(for: $0) } ?? DemoCopy.hadSpace
     }
 
     /// The highlighted choice: the person's pick, or the guess until they make one.
@@ -220,7 +240,7 @@ final class PhoneStore {
             return .afterRelease
         case .resting:
             return .resting
-        case .returning, .reflect, .beforeAfter:
+        case .returning, .reflect, .beforeAfter, .stillStuck, .reframe, .reframeCompare:
             return .draining
         default:
             return .off
@@ -255,16 +275,19 @@ final class PhoneStore {
                 return keyboardVisible ? OrbPlacement(y: 0.16, scale: 0.42) : OrbPlacement(y: 0.21, scale: 0.5)
             case .refine: return OrbPlacement(y: 0.09, scale: 0.42)
             case .distance: return OrbPlacement(y: 0.38, scale: 0.78)
-            case .release: return OrbPlacement(y: 0.46, scale: 1)
+            // Low enough that the thought stays above the orb's touch target.
+            case .release: return OrbPlacement(y: 0.52, scale: 1)
             case .releasing, .resting: return OrbPlacement(y: 0.5, scale: 0.78)
             case .returning:
                 // The Mac handoff sits where Home's resting orb does, at the same visual size.
                 if session?.originDevice == .mac { return OrbPlacement(y: HomeView.activeOrbY, scale: 0.68) }
                 return OrbPlacement(y: 0.33, scale: 0.9)
-            case .reflect: return OrbPlacement(y: 0.12, scale: 0.5)
+            case .reflect, .reframe: return OrbPlacement(y: 0.12, scale: 0.5)
             // Near the middle: it is what you hold to return.
             // Matches the release orb's size so entering and leaving rest feel like one gesture.
             case .beforeAfter: return OrbPlacement(y: 0.26, scale: 1.07)
+            case .reframeCompare: return OrbPlacement(y: 0.11, scale: 0.45)
+            case .stillStuck: return OrbPlacement(y: 0.38, scale: 0.78)
             }
         }
     }
@@ -324,7 +347,8 @@ final class PhoneStore {
         case .refine: .transcript
         case .distance: .refine
         case .release: .distance
-        case .reflect: .returning
+        case .reflect, .stillStuck: .returning
+        case .reframe: .stillStuck
         default: nil
         }
         guard let previous else {
@@ -365,8 +389,9 @@ final class PhoneStore {
         }
     }
 
-    /// A tap on a FALLOW notification. The thought it names opens on Home where it rests; if that
-    /// thought is gone, Home on its own. A return in progress or a pause being set up is left alone.
+    /// A tap on a FALLOW notification. A return nudge opens the welcome back for the thought it names;
+    /// the others open it on Home where it rests. If that thought is gone, Home on its own.
+    /// A return in progress or a pause being set up is left alone.
     func open(_ route: FallowNotificationService.Route) {
         #if DEBUG
         demo.restore(for: route)
@@ -376,6 +401,10 @@ final class PhoneStore {
         if !matches, tab == .pause, session?.isAway == false { return }
         cancelRecording()
         flowTask?.cancel()
+        if matches, route.kind == .returnNudge {
+            returnToIt()
+            return
+        }
         if matches, route.kind == .gentleNudge { showsNudge = true }
         transition(0.8) {
             self.tab = .home
@@ -435,6 +464,9 @@ final class PhoneStore {
             switch target {
             case .shift:
                 reflection = heard
+                voice.reset()
+            case .reframe:
+                reframe = heard
                 voice.reset()
             case .thought:
                 await carryVoice(heard, started: started)
@@ -656,8 +688,42 @@ final class PhoneStore {
         syncOrb()
     }
 
+    /// Coming back by opening the app: once the planned check-in has passed, a thought released here
+    /// opens on its welcome back, as if the nudge had been tapped. Before then, Home shows it resting.
+    /// A Mac thought is handed back on the Mac, so the phone never requests that return by itself.
+    func appBecameActive(now: Date = Date()) {
+        guard let session, session.phase == .resting, session.originDevice == .iPhone,
+              let returnAt = session.returnAt, returnAt <= now else { return }
+        returnToIt()
+    }
+
     func somethingShifted() {
         go(.reflect)
+    }
+
+    func stillStuck() {
+        session?.markStillStuck()
+        go(.stillStuck)
+    }
+
+    func sayWhatsUnresolved() {
+        go(.reframe)
+    }
+
+    func confirmReframe() {
+        let text = reframe.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        cancelRecording()
+        session?.recordReframe(text)
+        go(.reframeCompare)
+    }
+
+    /// Back to the work from Still stuck, without the hold the shifted path uses.
+    func goBackIn() {
+        guard var session else { return }
+        sounds.returnFromBreak()
+        session.complete()
+        archive(session)
     }
 
     func confirmReflection() {
@@ -795,6 +861,8 @@ final class PhoneStore {
         ready.choose(.someDistance)
         var returning = FallowSession.demoFromPhone
         returning.requestReturn()
+        var stuck = returning
+        stuck.markStillStuck()
 
         func resting(_ state: CreativeState, _ distance: FallowDistance, disengaging: Bool = false) -> FallowSession {
             var rest = setup
@@ -846,6 +914,11 @@ final class PhoneStore {
             returning.unresolvedThought = DemoCopy.demoRamble
             returning.recordShift(DemoCopy.demoRamble)
             tab = .pause; step = .beforeAfter; session = returning; baseOpenness = 0.12
+        case "still-stuck": tab = .pause; step = .stillStuck; session = stuck; baseOpenness = 0.12
+        case "reframe": tab = .pause; step = .reframe; session = stuck; baseOpenness = 0.12
+        case "reframe-compare":
+            stuck.recordReframe(DemoCopy.phoneReframe)
+            tab = .pause; step = .reframeCompare; session = stuck; baseOpenness = 0.12
         default: break
         }
         if name == "listening" { orb.showPreview(.capture); return }
@@ -881,9 +954,9 @@ final class PhoneStore {
             case .transcript, .refine: phase = .dormant
             case .distance, .release: phase = .threshold
             case .releasing, .resting: phase = .resting
-            case .returning: phase = .returnDoorway
-            case .reflect: phase = isRecording ? .capture : .reflecting
-            case .beforeAfter: phase = .beforeAfter
+            case .returning, .stillStuck: phase = .returnDoorway
+            case .reflect, .reframe: phase = isRecording ? .capture : .reflecting
+            case .beforeAfter, .reframeCompare: phase = .beforeAfter
             }
         }
         if orb.phase == phase { return }

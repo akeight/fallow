@@ -187,7 +187,7 @@ enum OrbTuningDefaults {
     static let workspaceContrast = 0.48
     static let workspaceRecession = 1.0
 
-    static let restSize = 108.0
+    static let restSize = 150.0
     static let restBreathDuration = 9.2
     static let restGlowOpacity = 0.72
 

@@ -24,7 +24,7 @@ struct RestingView: View {
 
                 VStack(spacing: 12) {
                     Text(DemoCopy.itsHere)
-                        .font(FallowType.display(34))
+                        .font(FallowType.display(37))
                         .foregroundStyle(Theme.ink)
                     Eyebrow(
                         text: FallowBehaviorResolver.reassurance(difficultyDisengaging: store.difficultyDisengaging) ?? DemoCopy.letItBe,

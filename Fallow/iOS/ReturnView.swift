@@ -16,6 +16,18 @@ struct ReturnView: View {
                     confirm: store.confirmReflection
                 )
                 .transition(.fallowText)
+            case .stillStuck:
+                stillStuck.transition(.fallowText)
+            case .reframe:
+                recapture(
+                    prompt: DemoCopy.unresolvedNow,
+                    text: $store.reframe,
+                    target: .reframe,
+                    confirm: store.confirmReframe
+                )
+                .transition(.fallowText)
+            case .reframeCompare:
+                compare.transition(.fallowText)
             case .beforeAfter:
                 BeforeAfter(store: store)
                     .transition(.fallowText)
@@ -51,7 +63,7 @@ struct ReturnView: View {
 
                 // Bottom-aligned so the heading ends where Home's does, whether it takes one line or two.
                 Text(DemoCopy.macReady)
-                    .font(FallowType.display(30))
+                    .font(FallowType.display(33))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
@@ -87,23 +99,28 @@ struct ReturnView: View {
                     .padding(.top, 4)
 
                     Text(DemoCopy.welcomeBack)
-                        .font(FallowType.display(34))
+                        .font(FallowType.display(37))
                         .foregroundStyle(Theme.ink)
                         .multilineTextAlignment(.center)
                         .padding(.top, 10)
 
                     Spacer(minLength: 0)
 
-                    PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
-                    .frame(minHeight: 52)
+                    VStack(spacing: 6) {
+                        PrimaryButton(title: DemoCopy.somethingShifted) { store.somethingShifted() }
+                            .frame(minHeight: 52)
+                        QuietButton(title: DemoCopy.stillStuck, color: Theme.muteOnDense) { store.stillStuck() }
+                    }
                     .padding(.bottom, 10)
                 }
 
                 // The prompt and the thought sit on the lower third, under the orb.
                 VStack(spacing: 14) {
-                    Text(DemoCopy.hadSpace)
+                    Text(store.reentryLine)
                         .font(FallowType.secondary)
                         .foregroundStyle(Theme.muteOnDense)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                         .contentTransition(.opacity)
 
                     VStack(alignment: .leading, spacing: 10) {
@@ -115,8 +132,70 @@ struct ReturnView: View {
                     .glass(radius: CardThought.radius)
                 }
                 .padding(.top, geo.size.height * 0.52)
+                .allowsHitTesting(false)
             }
             .padding(.horizontal, 28)
+        }
+    }
+
+    // MARK: Still stuck
+
+    private var stillStuck: some View {
+        VStack(spacing: 0) {
+            HStack {
+                CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDense) { store.back() }
+                Spacer()
+            }
+            .padding(.top, 4)
+
+            Text(DemoCopy.stillCarrying)
+                .font(FallowType.display(31))
+                .foregroundStyle(Theme.ink)
+                .multilineTextAlignment(.center)
+                .padding(.top, 14)
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 8) {
+                ChoiceRow(title: DemoCopy.leaveLonger, selected: false) { store.leaveLonger() }
+                ChoiceRow(title: DemoCopy.sayUnresolved, selected: false) { store.sayWhatsUnresolved() }
+                ChoiceRow(title: DemoCopy.goBackAnyway, selected: false) { store.goBackIn() }
+            }
+            .padding(.bottom, 28)
+        }
+        .padding(.horizontal, 24)
+    }
+
+    /// What still feels unresolved, set beside the thought that was left.
+    private var compare: some View {
+        let session = store.session ?? .demoFromPhone
+        return GeometryReader { geo in
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Eyebrow(text: DemoCopy.originalLabel, color: Theme.muteOnDense)
+                    ThoughtText(text: session.unresolvedThought, color: Theme.muteOnDense)
+                }
+
+                Rectangle()
+                    .fill(Theme.rim)
+                    .frame(height: 1)
+                    .padding(.vertical, 26)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Eyebrow(text: DemoCopy.nowLabel, color: Theme.muteOnDense)
+                    ThoughtText(text: store.reframe, color: Theme.ink)
+                }
+
+                Spacer(minLength: 16)
+
+                VStack(spacing: 6) {
+                    PrimaryButton(title: DemoCopy.goBack) { store.goBackIn() }
+                    QuietButton(title: DemoCopy.leaveLittleLonger, color: Theme.muteOnDense) { store.leaveLonger() }
+                }
+                .padding(.bottom, 10)
+            }
+            .padding(.top, geo.size.height * 0.24)
+            .padding(.horizontal, 32)
         }
     }
 
@@ -138,7 +217,7 @@ struct ReturnView: View {
                 .padding(.top, 4)
 
                 Text(prompt)
-                    .font(FallowType.display(28))
+                    .font(FallowType.display(31))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .padding(.top, geo.size.height * 0.15)
