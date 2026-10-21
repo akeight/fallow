@@ -168,7 +168,7 @@ extension AnyTransition {
     }
 }
 
-/// The unresolved thought, set in mono so it reads as the person's own words.
+/// The unresolved thought, in the person's own words.
 struct ThoughtText: View {
     var text: String
     var color: Color = Theme.ink
@@ -177,7 +177,7 @@ struct ThoughtText: View {
 
     var body: some View {
         Text("“\(text)”")
-            .font(.system(size: size, weight: .regular, design: .monospaced))
+            .font(FallowType.words(size))
             .foregroundStyle(color)
             .lineSpacing(size < 16 ? 4 : 5)
             .multilineTextAlignment(alignment)

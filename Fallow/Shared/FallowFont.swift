@@ -2,7 +2,7 @@ import CoreText
 import SwiftUI
 
 enum FallowFont {
-    /// Family name reported by the bundled Cult VP file.
+    /// Family name reported by the bundled Cult VP file. The wordmark only.
     static let name = "Cult VP"
 
     static func register() {
@@ -24,8 +24,10 @@ enum FallowType {
     static let caption = Font.system(size: 13, weight: .regular)
     static let button = Font.system(size: 17, weight: .semibold)
     static let quietButton = Font.system(size: 16, weight: .regular)
-    static let process = Font.system(size: 16, weight: .regular, design: .monospaced)
-    static let macProcess = Font.system(size: 15, weight: .regular, design: .monospaced)
+    /// The person's own words, where SF Mono used to sit.
+    static func words(_ size: CGFloat) -> Font { .custom("AvenirNext-Regular", size: size) }
+    static let process = words(16)
+    static let macProcess = words(15)
     static func display(_ size: CGFloat) -> Font { .system(size: size, weight: .regular, design: .serif) }
     static let eyebrow = Font.system(size: 12, weight: .medium)
 }
