@@ -3,7 +3,7 @@ import SwiftUI
 /// Press and hold the orb to hand the thought over. Progress has no bar: the thought itself
 /// becomes harder to read, the room opens, and letting go early simply eases everything back.
 struct ReleaseView: View {
-    var store: PhoneStore
+    @Bindable var store: PhoneStore
 
     var body: some View {
         let hold = store.holdProgress
@@ -12,34 +12,18 @@ struct ReleaseView: View {
         let chrome = releasing ? 0 : 1 - ramp(hold, 0.08, 0.55)
 
         GeometryReader { geo in
+            // The orb is drawn behind this screen. Its touch target is a 190pt circle, so the
+            // words stop above it. A long thought would otherwise cover the hold.
+            let orbY = geo.size.height * store.orbPlacement.y
+            let clearance = geo.size.height - (orbY - 95 - 28)
+
             ZStack {
-                VStack(spacing: 0) {
-                    HStack {
-                        CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
-                        Spacer()
+                if !releasing {
+                    ViewThatFits(in: .vertical) {
+                        column(hold: hold, chrome: chrome, clearance: clearance, shrinks: false)
+                        column(hold: hold, chrome: chrome, clearance: clearance, shrinks: true)
                     }
-                    .padding(.top, 4)
-                    .opacity(chrome)
-                    .allowsHitTesting(chrome > 0.5)
-
-                    Text(DemoCopy.takeBreath)
-                        .font(FallowType.display(30))
-                        .foregroundStyle(Theme.inkOnDeep)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(2)
-                        .padding(.top, 6)
-                        .opacity(chrome)
-                        .blur(radius: 4 * (1 - chrome))
-
-                    if !releasing {
-                        thought(hold: hold)
-                            .padding(.top, 34)
-                            .transition(.opacity)
-                    }
-
-                    Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 28)
 
                 if !releasing {
                     Text(DemoCopy.hold)
@@ -48,7 +32,8 @@ struct ReleaseView: View {
                         .textCase(.uppercase)
                         .foregroundStyle(Theme.muteOnDeep)
                         .opacity(chrome)
-                        .position(x: geo.size.width / 2, y: geo.size.height * store.orbPlacement.y + 118)
+                        .position(x: geo.size.width / 2, y: orbY + 118)
+                        .allowsHitTesting(false)
                 }
 
                 if releasing {
@@ -60,15 +45,62 @@ struct ReleaseView: View {
         }
     }
 
+    /// The breath and the thought. With room, the thought stays as written.
+    /// When it is long, it scales down so it stays above the orb.
+    private func column(hold: Double, chrome: Double, clearance: CGFloat, shrinks: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                CornerButton(systemName: "chevron.left", label: "Back", color: Theme.muteOnDeep) { store.back() }
+                Spacer()
+            }
+            .padding(.top, 4)
+            .opacity(chrome)
+            .allowsHitTesting(chrome > 0.5)
+
+            Text(DemoCopy.takeBreath)
+                .font(FallowType.display(33))
+                .foregroundStyle(Theme.inkOnDeep)
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+                .padding(.top, 6)
+                .opacity(chrome)
+                .blur(radius: 4 * (1 - chrome))
+                .allowsHitTesting(false)
+
+            thought(hold: hold, shrinks: shrinks)
+                .padding(.top, 34)
+                .allowsHitTesting(false)
+
+            if !shrinks {
+                Spacer(minLength: clearance)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.bottom, shrinks ? clearance : 0)
+    }
+
     /// 100% → 70% → 35% → nearly gone, softening and drifting back as it leaves attention.
-    private func thought(hold: Double) -> some View {
+    private func thought(hold: Double, shrinks: Bool) -> some View {
         let fade = interpolate(hold, [(0, 1), (0.33, 0.7), (0.66, 0.35), (1, 0.03)])
-        return ThoughtText(text: store.draft, color: Theme.inkOnDeep, alignment: .center)
-            .opacity(fade)
-            .blur(radius: 5 * ramp(hold, 0.2, 1))
-            .scaleEffect(1 - 0.06 * hold)
-            .offset(y: -18 * hold)
-            .accessibilityLabel("Your thought: \(store.draft)")
+        let quote = Text("“\(store.draft)”")
+            .font(FallowType.words(16))
+            .foregroundStyle(Theme.inkOnDeep)
+            .lineSpacing(5)
+            .multilineTextAlignment(.center)
+        return Group {
+            if shrinks {
+                quote
+                    .minimumScaleFactor(0.68)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            } else {
+                quote.fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .opacity(fade)
+        .blur(radius: 5 * ramp(hold, 0.2, 1))
+        .scaleEffect(1 - 0.06 * hold)
+        .offset(y: -18 * hold)
+        .accessibilityLabel("Your thought: \(store.draft)")
     }
 
     private var releaseLine: some View {
@@ -76,11 +108,11 @@ struct ReleaseView: View {
             switch store.releaseLine {
             case .releasing:
                 Text(DemoCopy.releasing)
-                    .font(FallowType.display(26))
+                    .font(FallowType.display(29))
                     .transition(.fallowText)
             case .restingNow:
                 Text(DemoCopy.restingNow)
-                    .font(FallowType.display(30))
+                    .font(FallowType.display(33))
                     .transition(.fallowText)
             }
         }

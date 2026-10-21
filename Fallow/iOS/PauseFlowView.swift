@@ -19,7 +19,7 @@ struct PauseFlowView: View {
                 ReleaseView(store: store).transition(.opacity)
             case .resting:
                 RestingView(store: store).transition(.fallowText)
-            case .returning, .reflect, .beforeAfter:
+            case .returning, .reflect, .beforeAfter, .stillStuck, .reframe, .reframeCompare:
                 ReturnView(store: store).transition(.fallowText)
             }
         }
@@ -33,7 +33,7 @@ private struct CaptureStep: View {
     var body: some View {
         VStack(spacing: 0) {
             Text(DemoCopy.carrying)
-                .font(FallowType.display(32))
+                .font(FallowType.display(35))
                 .foregroundStyle(Theme.inkOnDeep)
                 .multilineTextAlignment(.center)
                 .padding(.top, 66)
@@ -186,14 +186,14 @@ private struct TranscriptStep: View {
         ZStack(alignment: .topLeading) {
             if store.draft.isEmpty {
                 Text("Write it the way it sounds in your head.")
-                    .font(.system(size: CardThought.size, design: .monospaced))
+                    .font(FallowType.words(CardThought.size))
                     .foregroundStyle(Theme.muteOnDeep)
                     .padding(.top, 8)
                     .padding(.leading, 5)
                     .allowsHitTesting(false)
             }
             TextEditor(text: $store.draft)
-                .font(.system(size: CardThought.size, design: .monospaced))
+                .font(FallowType.words(CardThought.size))
                 .foregroundStyle(Theme.inkOnDeep)
                 .lineSpacing(4)
                 .scrollContentBackground(.hidden)
@@ -250,7 +250,7 @@ private struct RefineStep: View {
                 .padding(.top, 4)
 
                 Text(DemoCopy.feelsLike)
-                    .font(FallowType.display(30))
+                    .font(FallowType.display(33))
                     .foregroundStyle(Theme.inkOnDeep)
                     .padding(.top, geo.size.height * 0.08)
 
@@ -281,6 +281,8 @@ private struct RefineStep: View {
 private struct DistanceStep: View {
     var store: PhoneStore
 
+    private var state: CreativeState? { store.session?.creativeState }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -289,18 +291,26 @@ private struct DistanceStep: View {
             }
             .padding(.top, 4)
 
-            Text(DemoCopy.distancePrompt)
-                .font(FallowType.display(28))
+            Text(state?.pausePrompt ?? DemoCopy.distancePrompt)
+                .font(FallowType.display(31))
                 .foregroundStyle(Theme.inkOnDeep)
                 .multilineTextAlignment(.center)
                 .padding(.top, 14)
                 .padding(.horizontal, 16)
 
+            if state != nil {
+                Text(DemoCopy.distancePrompt)
+                    .font(FallowType.caption)
+                    .foregroundStyle(Theme.muteOnDeep)
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 8)
+            }
+
             Spacer(minLength: 0)
 
             VStack(spacing: 8) {
                 ForEach(FallowDistance.allCases) { kind in
-                    ChoiceRow(title: kind.title, selected: store.session?.distance == kind) {
+                    ChoiceRow(title: kind.title(for: state), selected: store.session?.distance == kind) {
                         store.choose(kind)
                     }
                 }
