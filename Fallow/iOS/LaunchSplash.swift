@@ -67,8 +67,9 @@ struct OrbBloom: View {
     }
 }
 
-/// Slow to start, then gathering: the orb comes alive and its light takes the screen.
-private let bloomCurve = { (duration: Double) in Animation.timingCurve(0.55, 0, 0.75, 0.4, duration: duration) }
+/// The swell used to rest until halfway through, then gather. The rest is half as long.
+/// Once it is moving, the gather and the duration are the same.
+private let bloomCurve = { (duration: Double) in Animation.timingCurve(0.275, 0, 0.75, 0.4, duration: duration) }
 
 /// False when cancelled, so a skipped sequence stops where it is.
 private func pause(_ seconds: Double) async -> Bool {
@@ -96,6 +97,7 @@ struct LaunchSplash: View {
     @State private var clearing = 1.0
     @State private var task: Task<Void, Never>?
     @State private var skipped = false
+    @State private var started = false
 
     var body: some View {
         ZStack {
@@ -132,10 +134,13 @@ struct LaunchSplash: View {
         .accessibilityLabel("FALLOW")
         .accessibilityAddTraits(.isImage)
         .onAppear(perform: start)
-        .onDisappear { task?.cancel() }
     }
 
     private func start() {
+        // A scene-phase flicker on device calls onDisappear and would cancel this sequence
+        // halfway, leaving the meadow up forever. It runs through once it has begun.
+        guard !started else { return }
+        started = true
         orb.showPreview(.dormant)
         task = Task { @MainActor in
             if reduceMotion {
@@ -155,17 +160,15 @@ struct LaunchSplash: View {
             attention = 1
             guard await pause(1.2) else { return }
 
-            // Listening: the ripples, with a gentle made-up voice so the light gathers and breathes.
+            // Listening: the ripples. One level, not a new value every frame — that flood
+            // was the update SwiftUI refused, and the swell never started.
             attention = 0
             orb.showPreview(.capture)
             orb.isListening = true
-            let started = Date()
-            while Date().timeIntervalSince(started) < 1.6 {
-                let t = Date().timeIntervalSince(started)
-                orb.voiceLevel = 0.3 + 0.22 * sin(t * 5.2) + 0.1 * sin(t * 11.3)
-                guard await pause(1.0 / 30.0) else { return }
-            }
+            orb.voiceLevel = 0.35
+            guard await pause(1.6) else { return }
             orb.voiceLevel = 0
+            orb.isListening = false
 
             await bloom(duration: 1.25)
         }

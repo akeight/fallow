@@ -232,12 +232,135 @@ struct ChoiceRow: View {
     }
 }
 
+/// The open microphone, drawn as one scrolling line of marks across the field.
+/// Quiet is a dot. Speech is a thin bar. Older sound sits on the left and steps aside
+/// as new sound arrives on the right, so a phrase travels the width of the input.
+/// The trail lives on a reference type so a loud microphone cannot publish SwiftUI state
+/// more than once in a frame. That update is what froze the phone.
+private struct ListeningBars: View {
+    var level: Double
+    var color: Color
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var meter = ListeningMeter()
+
+    private static let barWidth: CGFloat = 2
+    private static let minPitch: CGFloat = 4.5
+    private static let maxHeight: CGFloat = 30
+    private static let dot: CGFloat = 2.5
+
+    var body: some View {
+        GeometryReader { geo in
+            let count = Self.columns(in: geo.size.width)
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                let trail = meter.sample(
+                    level: level,
+                    at: timeline.date,
+                    count: count,
+                    reduced: reduceMotion
+                )
+                Canvas { context, size in
+                    Self.draw(trail, color: color, in: context, size: size)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Listening")
+    }
+
+    private static func columns(in width: CGFloat) -> Int {
+        guard width > minPitch else { return 1 }
+        return max(1, Int(width / minPitch))
+    }
+
+    private static func draw(_ trail: [Double], color: Color, in context: GraphicsContext, size: CGSize) {
+        guard !trail.isEmpty, size.width > 0, size.height > 0 else { return }
+        let pitch = size.width / CGFloat(trail.count)
+        let quietInk = color.opacity(0.45)
+        let ink = color.opacity(0.9)
+        for index in trail.indices {
+            let amount = trail[index]
+            let quiet = amount < 0.16
+            let height = min(size.height, quiet ? dot : dot + (maxHeight - dot) * amount)
+            let rect = CGRect(
+                x: pitch * (CGFloat(index) + 0.5) - barWidth / 2,
+                y: (size.height - height) / 2,
+                width: barWidth,
+                height: height
+            )
+            let path = Path(roundedRect: rect, cornerRadius: barWidth / 2)
+            context.fill(path, with: .color(quiet ? quietInk : ink))
+        }
+    }
+}
+
+/// Scrolling history of the microphone. Mutated in place, so a frame does not schedule another update.
+/// The same timeline date is idempotent: drawing twice in one tick does not step the row twice.
+private final class ListeningMeter {
+    private var trail: [Double] = []
+    private var last = Date.distantPast
+    private var shiftedAt = Date.distantPast
+    private var live = 0.0
+
+    /// One column of history. The field holds a few seconds of voice.
+    private static let step = 0.048
+
+    func sample(level: Double, at date: Date, count: Int, reduced: Bool) -> [Double] {
+        let count = max(1, count)
+        if trail.count != count {
+            if trail.count > count {
+                trail.removeFirst(trail.count - count)
+            } else {
+                trail.insert(contentsOf: Array(repeating: 0, count: count - trail.count), at: 0)
+            }
+        }
+        let dt = min(0.05, max(0, date.timeIntervalSince(last)))
+        last = date
+        let heard = Self.heard(level)
+        if heard >= live || dt == 0 {
+            live = heard
+        } else {
+            // A pause falls away into dots. The spoken shape stays, because it has already scrolled left.
+            let keep = exp(-dt / 0.12)
+            live = live * keep + heard * (1 - keep)
+        }
+        if reduced {
+            let mid = Double(max(count - 1, 1)) / 2
+            for index in 0..<count {
+                let distance = abs(Double(index) - mid) / mid
+                trail[index] = live * (0.45 + 0.55 * (1 - distance))
+            }
+            return trail
+        }
+        if shiftedAt == .distantPast || date.timeIntervalSince(shiftedAt) >= Self.step {
+            let elapsed = shiftedAt == .distantPast ? Self.step : date.timeIntervalSince(shiftedAt)
+            let steps = min(count, max(1, Int(elapsed / Self.step)))
+            trail.removeFirst(steps)
+            trail.append(contentsOf: Array(repeating: live, count: steps))
+            shiftedAt = date
+        } else if let lastIndex = trail.indices.last {
+            trail[lastIndex] = live
+        }
+        return trail
+    }
+
+    /// The shared level is tuned for the orb, where speech often sits near a fifth of the meter.
+    private static func heard(_ level: Double) -> Double {
+        let x = min(1, max(0, level))
+        if x < 0.04 { return 0 }
+        return min(1, pow(x, 0.42))
+    }
+}
+
 /// One place to put a thought: type into it, or speak it. The arrow appears once there is something to send.
 struct ThoughtComposer: View {
     @Binding var text: String
     var placeholder: String
     var isRecording: Bool
     var isGathering = false
+    /// The microphone's smoothed level, 0 through 1, while `isRecording`.
+    var level: Double = 0
     /// Light type and dark glass over the deepened garden.
     var deep = false
     /// Off when a separate button below confirms the thought.
@@ -257,16 +380,21 @@ struct ThoughtComposer: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: 6) {
             Group {
-                if busy {
-                    Text(isRecording ? DemoCopy.listening : DemoCopy.gathering)
+                if isRecording {
+                    ListeningBars(level: level, color: ink)
+                        .transition(.opacity)
+                } else if isGathering {
+                    Text(DemoCopy.gathering)
                         .foregroundStyle(ink)
+                        .font(FallowType.secondary)
+                        .padding(.vertical, 9)
                         .transition(.opacity)
                 } else {
                     field
+                        .font(FallowType.secondary)
+                        .padding(.vertical, 9)
                 }
             }
-            .font(FallowType.secondary)
-            .padding(.vertical, 9)
             .frame(maxWidth: .infinity, alignment: .leading)
 
             circleButton(

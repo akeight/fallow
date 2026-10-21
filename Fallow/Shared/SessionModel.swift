@@ -149,13 +149,14 @@ final class SessionModel {
         current.phase = .capturing
     }
 
-    /// A spoken note was already read while gathering. Typed words are kept exactly as written
-    /// and only classified. If reading fails, the state choice opens with nothing suggested.
+    /// Typed words are classified as written. A spoken note reuses the reading from gathering
+    /// when that reading is confident enough to suggest a state. Otherwise the carried sentence
+    /// is read the same way typed words are, so a failed or unsure first pass can still suggest.
     func confirmThought() {
         let text = thought.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !isInterpreting, phase == .capture else { return }
-        guard current.captureMethod == .text else {
-            classify(text, interpretation: interpretation)
+        if current.captureMethod != .text, let suggestion = interpretation, suggestion.suggestedState != nil {
+            classify(text, interpretation: suggestion)
             return
         }
         interpretID += 1

@@ -5,8 +5,8 @@ import Foundation
 /// from the other device. The stores apply it through their normal transitions.
 ///
 /// Rehearsal, with no code changes between steps:
-/// - Mac: Demo › Reset. Capture `DemoSessionFactory.unresolvedThought` for real, choose its
-///   creative state and distance, and hold to release. The Mac keeps the presenter's own words.
+/// - Mac: Demo › Reset. Capture a thought for real, choose its creative state and distance,
+///   and hold to release. The Mac keeps the presenter's own words.
 /// - iPhone: long-press the wordmark › Prepare Demo Rest, then lock the phone. Tap the
 ///   notification, check the resting thought, and tap "I’m ready to return".
 /// - Mac: Demo › Return Requested, then reflect and go back in through the real return.

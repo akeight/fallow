@@ -113,8 +113,9 @@ struct OpenAIInterpreter: FallowInterpreting {
     - runningOnEmpty: tired or depleted; nothing left to give. "I'm exhausted and I don't have anything left to give this."
 
     confidence: a number from 0.0 to 1.0 for how clearly the input matches creativeState.
-    Use 0.8 or higher only when the language clearly fits one state. If the input is ambiguous,
-    fits several states equally, or does not describe being stuck, return 0.4 or lower.
+    When one state is a better reading than the others, return at least 0.75, even if a second state is also plausible.
+    Use 0.9 or higher only when the language clearly fits that one state.
+    Return 0.4 or lower only when the input does not describe being stuck, or when two states fit equally and neither is the better reading.
 
     difficultyDisengaging: true only when the person explicitly says they know they should stop
     but are having trouble stopping (for example "I should stop but I can't", "just one more change").

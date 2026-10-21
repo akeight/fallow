@@ -42,27 +42,20 @@ private struct CaptureStep: View {
 
             VStack(spacing: 14) {
                 status
-                    .frame(minHeight: 66, alignment: .bottom)
 
                 ThoughtComposer(
                     text: $store.draft,
                     placeholder: store.voiceError == nil ? "Speak it, and let it out" : DemoCopy.tryAgain,
                     isRecording: store.isRecording,
                     isGathering: store.isGathering || store.isInterpreting,
+                    level: store.orb.voiceLevel,
                     deep: true,
                     onMic: store.toggleRecording,
                     onSubmit: store.submitTyped
                 )
 
-                VStack(spacing: 0) {
-                    if store.isRecording {
-                        QuietButton(title: "Cancel", color: Theme.muteOnDeep) { store.cancelListening() }
-                    }
-                    #if DEBUG
-                    if !store.isRecording && !store.isGathering && !store.isInterpreting && store.draft.isEmpty {
-                        QuietButton(title: "Use the demo note", color: Theme.muteOnDeep) { store.useDemoNote() }
-                    }
-                    #endif
+                if store.isRecording {
+                    QuietButton(title: "Cancel", color: Theme.muteOnDeep) { store.cancelListening() }
                 }
             }
             .padding(.bottom, store.keyboardVisible ? 12 : store.isRecording ? 40 : 96)
@@ -70,21 +63,10 @@ private struct CaptureStep: View {
         .padding(.horizontal, 28)
     }
 
-    /// Only the latest words while listening; older ones fade away so the screen stays calm.
+    /// Why voice did not work. Listening itself stays inside the field.
     @ViewBuilder
     private var status: some View {
-        if store.isRecording {
-            Text(store.voice.recentTranscript.isEmpty ? " " : store.voice.recentTranscript)
-                .font(FallowType.process)
-                .foregroundStyle(Theme.muteOnDeep)
-                .multilineTextAlignment(.center)
-                .lineLimit(3)
-                .truncationMode(.head)
-                .mask(LinearGradient(colors: [.clear, .black, .black], startPoint: .top, endPoint: .center))
-                .animation(.easeOut(duration: 0.3), value: store.voice.recentTranscript)
-                .accessibilityHidden(true)
-                .transition(.fallowText)
-        } else if let error = store.voiceError {
+        if !store.isRecording, let error = store.voiceError {
             Text(error.message)
                 .font(FallowType.secondary)
                 .foregroundStyle(Theme.muteOnDeep)

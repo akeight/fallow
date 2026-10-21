@@ -2,11 +2,9 @@ import Foundation
 
 /// The one session both devices stage for the presentation. Edit these values before filming;
 /// the Mac and the iPhone read the same fields, so they cannot disagree.
-/// Keep `unresolvedThought` identical to the line spoken on the Mac, and choose the same
-/// `creativeState` and `distance` there, so both devices show the same intervention.
 /// There is no project name: `projectName` stays nil.
 enum DemoSessionFactory {
-    static let unresolvedThought = DemoCopy.demoThought
+    static let unresolvedThought = "I keep changing the layout and returning to the same version. I can’t tell what’s actually wrong anymore."
     static let rawTranscript: String? = nil
     static let creativeState: CreativeState = .lostPerspective
     static let difficultyDisengaging = false
