@@ -3,8 +3,6 @@ import Foundation
 enum DemoCopy {
     static let carrying = "What are you carrying?"
     static let unresolved = "Every way I visualize these memories becomes a node graph."
-    /// The line spoken on the Mac in the recorded demo, and the thought the iPhone is staged with.
-    static let demoThought = "I keep changing the layout and returning to the same version. I can’t tell what’s actually wrong anymore."
     static let distancePrompt = "How far away do you need to get?"
     static let hold = "Press and hold to let it rest"
     static let returnWhenReady = "Click the orb when you’re ready to return."
@@ -13,7 +11,6 @@ enum DemoCopy {
     static let reflection = "Maybe the relationships shouldn’t be visible at all."
     static let beforeLabel = "Before"
     static let afterLabel = "After"
-    static let showThought = "Use the demo line"
 
     static let phoneUnresolved = "I keep moving the same elements around and nothing feels better."
     static let nothingResting = "Nothing is resting."
@@ -41,7 +38,6 @@ enum DemoCopy {
     static let fullNote = "Full note"
     static let speakOrType = "Say it, or type it."
     static let tryAgain = "Try again"
-    static let demoRamble = "I’ve been working on this forever and originally I thought the cards were the problem, then I changed all of those, and now the spacing feels wrong, and every time I move things around I end up putting them back and I honestly don’t even know what I’m looking at anymore."
 
     static let notSureYet = "Not sure yet. Choose what fits."
     static let suggestedGuess = "A guess. Change it if it doesn’t fit."

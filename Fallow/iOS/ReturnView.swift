@@ -226,6 +226,7 @@ struct ReturnView: View {
                     text: text,
                     placeholder: store.voiceError?.message ?? "Say it, or write it.",
                     isRecording: store.isRecording,
+                    level: store.orb.voiceLevel,
                     onMic: { store.isRecording ? store.stopRecording() : store.startRecording(target) },
                     onSubmit: confirm
                 )

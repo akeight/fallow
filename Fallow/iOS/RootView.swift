@@ -99,7 +99,10 @@ struct RootView: View {
                 LaunchSplash(
                     store: store,
                     onCovered: { homeHidden = false },
-                    onFinished: { showsSplash = false }
+                    onFinished: {
+                        showsSplash = false
+                        store.splashFinished()
+                    }
                 )
             }
         }
@@ -115,7 +118,10 @@ struct RootView: View {
         }
         .onChange(of: reduceMotion) { _, value in store.reduceMotion = value }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { store.appBecameActive() }
+            // Deferred so a launch-time active transition cannot update the store inside this frame.
+            // Doing it here stalls the splash: the orb never expands across the screen.
+            guard phase == .active else { return }
+            Task { @MainActor in store.appBecameActive() }
         }
         .onChange(of: store.orb.settleID) { _, _ in store.holdCompleted() }
         .onChange(of: store.holdProgress >= 0.85) { _, near in

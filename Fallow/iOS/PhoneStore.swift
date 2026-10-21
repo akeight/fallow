@@ -135,11 +135,14 @@ final class PhoneStore {
         voice.onEndedEarly = { [weak self] in self?.stopRecording() }
         sync.onRemoteChange = { [weak self] session in self?.receive(session) }
         syncOrb()
+        // A due return waits until the splash has bloomed. Opening it during the splash
+        // replaces the screen underneath and the orb never expands.
+        defersReturnUntilSplash = Self.launchesWithSplash
         Task {
             let active = await sync.loadActiveSession()
             if let active { receive(active) }
             notifications.cancelStaleReturn(restored: active)
-            appBecameActive()
+            if !defersReturnUntilSplash { appBecameActive() }
         }
         notifications.onRoute = { [weak self] route in self?.open(route) }
     }
@@ -514,13 +517,14 @@ final class PhoneStore {
         startRecording()
     }
 
-    /// A spoken note was already read while gathering. Typed words are kept exactly as written
-    /// and only classified. If reading fails, the state screen opens with nothing suggested.
+    /// Typed words are classified as written. A spoken note reuses the reading from gathering
+    /// when that reading is confident enough to suggest a state. Otherwise the carried sentence
+    /// is read the same way typed words are, so a failed or unsure first pass can still suggest.
     func continueFromTranscript() {
         let thought = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !thought.isEmpty, let current = session, !isInterpreting else { return }
-        guard current.captureMethod == .text else {
-            proceedToRefine(thought, interpretation: interpretation)
+        if current.captureMethod != .text, let suggestion = interpretation, suggestion.suggestedState != nil {
+            proceedToRefine(thought, interpretation: suggestion)
             return
         }
         interpretID += 1
@@ -545,18 +549,6 @@ final class PhoneStore {
         focusTyping = false
         go(.refine)
     }
-
-    #if DEBUG
-    /// Stands in for a long spoken note when there is no microphone to demo with.
-    /// Goes through the same interpretation as a real note.
-    func useDemoNote() {
-        cancelRecording()
-        voiceError = nil
-        transition(0.4) { self.isGathering = true }
-        syncOrb()
-        Task { await carryVoice(DemoCopy.demoRamble, started: Date()) }
-    }
-    #endif
 
     func choose(_ state: CreativeState) {
         session?.choose(state)
@@ -688,13 +680,33 @@ final class PhoneStore {
         syncOrb()
     }
 
+    /// The launch splash is still covering the screen. A due return is held until it finishes.
+    private var defersReturnUntilSplash = false
+
+    /// The meadow has cleared. A check-in that came due while it played can open now.
+    func splashFinished() {
+        defersReturnUntilSplash = false
+        appBecameActive()
+    }
+
     /// Coming back by opening the app: once the planned check-in has passed, a thought released here
     /// opens on its welcome back, as if the nudge had been tapped. Before then, Home shows it resting.
     /// A Mac thought is handed back on the Mac, so the phone never requests that return by itself.
     func appBecameActive(now: Date = Date()) {
+        guard !defersReturnUntilSplash else { return }
         guard let session, session.phase == .resting, session.originDevice == .iPhone,
               let returnAt = session.returnAt, returnAt <= now else { return }
         returnToIt()
+    }
+
+    /// Same rule as the splash: a debug screen or demo take opens straight onto its scene.
+    private static var launchesWithSplash: Bool {
+        #if DEBUG
+        let defaults = UserDefaults.standard
+        return defaults.string(forKey: "fallowScreen") == nil && defaults.string(forKey: "fallowDemo") == nil
+        #else
+        return true
+        #endif
     }
 
     func somethingShifted() {
@@ -884,7 +896,7 @@ final class PhoneStore {
         case "voice-error": tab = .pause; step = .capture; session = FallowSession(originDevice: .iPhone); voiceError = .microphoneDenied
         case "voice-transcript", "voice-short":
             var spoken = FallowSession(originDevice: .iPhone)
-            let raw = name == "voice-short" ? "The opening screen feels wrong." : DemoCopy.demoRamble
+            let raw = name == "voice-short" ? "The opening screen feels wrong." : DemoCopy.phoneUnresolved
             spoken.captureVoice(raw: raw, distilled: HeuristicDistiller.distill(raw))
             tab = .pause; step = .transcript; session = spoken
         case "transcript": tab = .pause; step = .transcript; session = setup
@@ -911,8 +923,8 @@ final class PhoneStore {
             returning.recordShift(DemoCopy.phoneReflection)
             tab = .pause; step = .beforeAfter; session = returning; baseOpenness = 0.12
         case "before-after-long":
-            returning.unresolvedThought = DemoCopy.demoRamble
-            returning.recordShift(DemoCopy.demoRamble)
+            returning.unresolvedThought = DemoCopy.phoneUnresolved
+            returning.recordShift(DemoCopy.phoneUnresolved)
             tab = .pause; step = .beforeAfter; session = returning; baseOpenness = 0.12
         case "still-stuck": tab = .pause; step = .stillStuck; session = stuck; baseOpenness = 0.12
         case "reframe": tab = .pause; step = .reframe; session = stuck; baseOpenness = 0.12

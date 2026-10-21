@@ -494,3 +494,67 @@ final class FallowPersistenceTests: XCTestCase {
         XCTAssertNil(cleared)
     }
 }
+
+// MARK: - Voice suggestions
+
+private final class ScriptedInterpreter: FallowInterpreting, @unchecked Sendable {
+    var results: [FallowInterpretation]
+    private(set) var calls: [String] = []
+
+    init(results: [FallowInterpretation]) {
+        self.results = results
+    }
+
+    func interpret(text: String) async throws -> FallowInterpretation {
+        calls.append(text)
+        guard !results.isEmpty else { throw InterpretationError.malformedResponse }
+        return results.removeFirst()
+    }
+}
+
+private func reading(_ state: CreativeState, confidence: Double, thought: String) -> FallowInterpretation {
+    FallowInterpretation(
+        distilledThought: thought,
+        creativeState: state,
+        confidence: confidence,
+        difficultyDisengaging: false
+    )
+}
+
+@MainActor
+final class VoiceSuggestionTests: XCTestCase {
+    func testAConfidentSpokenNoteKeepsItsSuggestion() async {
+        let reader = ScriptedInterpreter(results: [
+            reading(.looping, confidence: 0.8, thought: "I keep returning to the same layout.")
+        ])
+        let model = SessionModel(interpreter: reader)
+        model.tapOrb()
+        await model.carryVoice("I keep changing it and going back.", minimum: 0)
+        model.confirmThought()
+
+        XCTAssertEqual(model.phase, .classifyStuck)
+        XCTAssertEqual(model.interpretation?.suggestedState, .looping)
+        XCTAssertEqual(model.creativeState, .looping)
+        XCTAssertEqual(reader.calls.count, 1)
+    }
+
+    func testAnUnsureSpokenNoteIsReadAgainFromTheCarriedSentence() async {
+        let carried = "I keep returning to the same layout."
+        let reader = ScriptedInterpreter(results: [
+            reading(.lostPerspective, confidence: 0.4, thought: carried),
+            reading(.looping, confidence: 0.8, thought: carried)
+        ])
+        let model = SessionModel(interpreter: reader)
+        model.tapOrb()
+        await model.carryVoice("long ramble that never settles", minimum: 0)
+        model.confirmThought()
+        for _ in 0..<50 where model.phase != .classifyStuck {
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+
+        XCTAssertEqual(model.phase, .classifyStuck)
+        XCTAssertEqual(reader.calls, ["long ramble that never settles", carried])
+        XCTAssertEqual(model.interpretation?.suggestedState, .looping)
+        XCTAssertEqual(model.creativeState, .looping)
+    }
+}

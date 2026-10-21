@@ -63,16 +63,39 @@ final class BreakSounds {
 
     private func player(named name: String) -> AVAudioPlayer? {
         guard let url = Bundle.main.url(forResource: name, withExtension: "wav") else { return nil }
-        #if os(iOS)
-        // Voice capture leaves the session record-only. Ambient mixes with other audio and follows the silent switch.
-        let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.ambient)
-        try? session.setActive(true)
-        #endif
+        prepareSession()
         let player = try? AVAudioPlayer(contentsOf: url)
-        player?.volume = 1
+        player?.volume = volume(named: name)
         player?.prepareToPlay()
         return player
+    }
+
+    /// Playback follows the media volume and mixes with other audio. Ambient stays silent under
+    /// the phone's ringer switch, which the simulator does not have. Voice capture also leaves
+    /// the session record-only, and that category cannot play until it is switched back.
+    private func prepareSession() {
+        #if os(iOS)
+        let session = AVAudioSession.sharedInstance()
+        let ready = session.category == .playback
+            && session.mode == .default
+            && session.categoryOptions.contains(.mixWithOthers)
+        if !ready {
+            try? session.setActive(false, options: .notifyOthersOnDeactivation)
+            try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        }
+        try? session.setActive(true)
+        #endif
+    }
+
+    /// Relative to full playback. Shared level is a quarter of full, then another tenth quieter.
+    /// The hold and return files are louder, so they sit lower still.
+    private func volume(named name: String) -> Float {
+        let shared: Float = 0.25 * 0.9
+        switch name {
+        case "AuraTransition": return shared * 0.3
+        case "MagicalAura": return shared * 0.35
+        default: return shared
+        }
     }
 
     private func fadeOut(_ player: AVAudioPlayer?) {

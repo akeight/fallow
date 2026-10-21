@@ -233,32 +233,18 @@ struct CompanionView: View {
                     placeholder: DemoCopy.speakOrType,
                     isRecording: isListening(.thought),
                     isGathering: gathering || session.isInterpreting,
+                    level: session.voiceLevel,
                     onMic: { toggleListening(.thought) },
                     onSubmit: session.confirmThought
                 )
                 .disabled(session.isInterpreting)
             }
 
-            VStack(spacing: 4) {
-                if session.current.hasFullNote && !voice.isBusy && !gathering {
-                    QuietButton(title: DemoCopy.viewFullNote) { showsNote = true }
-                        .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
-                }
-                #if DEBUG
-                // Faded rather than removed: the column sits on the panel's bottom edge, so a row
-                // coming and going with each keystroke would move the field.
-                let offersDemo = thoughtIsEmpty && !voice.isBusy && !gathering
-                QuietButton(title: DemoCopy.showThought) { session.captureText(DemoSessionFactory.unresolvedThought) }
-                    .opacity(offersDemo ? 1 : 0)
-                    .disabled(!offersDemo)
-                    .accessibilityHidden(!offersDemo)
-                #endif
+            if session.current.hasFullNote && !voice.isBusy && !gathering {
+                QuietButton(title: DemoCopy.viewFullNote) { showsNote = true }
+                    .popover(isPresented: $showsNote, arrowEdge: .bottom) { fullNote }
             }
         }
-    }
-
-    private var thoughtIsEmpty: Bool {
-        session.thought.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func isListening(_ target: VoiceTarget) -> Bool {
@@ -269,21 +255,10 @@ struct CompanionView: View {
         isListening(target) ? stopListening() : startListening(target)
     }
 
-    /// Only the latest words while listening, or why voice did not work. Gathering shows in the composer.
+    /// Why voice did not work. Listening itself stays inside the field.
     @ViewBuilder
     private func voiceStatus(for target: VoiceTarget) -> some View {
-        if isListening(target) {
-            Text(voice.recentTranscript.isEmpty ? " " : voice.recentTranscript)
-                .font(FallowType.process)
-                .foregroundStyle(Theme.mute)
-                .lineLimit(2)
-                .truncationMode(.head)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 20)
-                .animation(.easeOut(duration: 0.3), value: voice.recentTranscript)
-                .accessibilityHidden(true)
-                .transition(.fallowText)
-        } else if voiceTarget == target, let error = voice.error {
+        if !isListening(target), voiceTarget == target, let error = voice.error {
             Text(error.message)
                 .font(FallowType.caption)
                 .foregroundStyle(Theme.mute)
@@ -555,21 +530,12 @@ struct CompanionView: View {
                     text: $session.reflection,
                     placeholder: "Say it, or write it.",
                     isRecording: isListening(.reflection),
+                    level: session.voiceLevel,
                     onMic: { toggleListening(.reflection) },
                     onSubmit: session.confirmReflection
                 )
             }
-
-            #if DEBUG
-            if reflectionIsEmpty && !voice.isBusy {
-                QuietButton(title: DemoCopy.showThought) { session.reflection = DemoCopy.reflection }
-            }
-            #endif
         }
-    }
-
-    private var reflectionIsEmpty: Bool {
-        session.reflection.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var beforeAfter: some View {
