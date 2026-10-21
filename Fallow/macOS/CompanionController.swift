@@ -244,15 +244,6 @@ final class CompanionController {
         return panel.screen ?? NSScreen.main
     }
 
-    private func fitted(_ frame: NSRect, within visible: NSRect) -> NSRect {
-        var frame = frame
-        if frame.maxX > visible.maxX { frame.origin.x -= frame.maxX - visible.maxX }
-        if frame.minX < visible.minX { frame.origin.x += visible.minX - frame.minX }
-        if frame.maxY > visible.maxY { frame.origin.y -= frame.maxY - visible.maxY }
-        if frame.minY < visible.minY { frame.origin.y += visible.minY - frame.minY }
-        return frame
-    }
-
     private func watchEscape() {
         escapeMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             #if DEBUG
@@ -340,19 +331,40 @@ final class CompanionController {
                 height: size.height
             )
         default:
-            // The card sits above the orb, whose slot is the bottom-right corner of this area.
-            let half = CGFloat(OrbMotion.canvasExtent(phase: session.phase, config: config)) / 2
-            let home = homeCenter
-            return fitted(
-                NSRect(
-                    x: home.x + 12 + half - size.width,
-                    y: home.y - 12 - half,
-                    width: size.width,
-                    height: size.height
-                ),
-                within: visible
-            )
+            return inputFrame(on: visible)
         }
+    }
+
+    /// Capture, the state, and the distance. The orb stays where it was.
+    /// In the top half the card hangs under the orb, which rests on the card.
+    /// In the bottom half the card sits above the orb, its bottom on the crown, and grows upward.
+    private func inputFrame(on visible: NSRect) -> NSRect {
+        let home = homeCenter
+        let width = panelSize.width
+        let x = min(max(home.x - width / 2, visible.minX + 8), visible.maxX - 8 - width)
+        let upper = home.y >= visible.midY
+        if upper {
+            // Rest on the pane's top edge. The heading starts below that, so the orb does not cover it.
+            let top = min(home.y - inputBody + 8, visible.maxY - 8)
+            let bottom = visible.minY + 8
+            let height = max(160, top - bottom)
+            return NSRect(x: x, y: top - height, width: width, height: height)
+        }
+        let bottom = min(max(home.y + inputCrown, visible.minY + 8), visible.maxY - 168)
+        let top = visible.maxY - 8
+        let height = max(160, top - bottom)
+        return NSRect(x: x, y: min(bottom, top - height), width: width, height: height)
+    }
+
+    /// Half the input orb's height. The upper card tucks just under this.
+    private var inputBody: CGFloat {
+        let diameter = config.idleSize * 1.14
+        return CGFloat(diameter / 2 * config.verticalStretch)
+    }
+
+    /// The input orb's crown, plus a little air, so a taller prompt never settles onto the glass.
+    private var inputCrown: CGFloat {
+        inputBody + 12
     }
 
     private func centered(size: NSSize, visible: NSRect) -> NSRect {
