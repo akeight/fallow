@@ -1,9 +1,6 @@
 # Fallow
-
+**A creative pause companion.**
 ![Three orbs resting in an open sky](docs/hero.jpg)
-
-A creative pause companion.
-
 
 ## The problem
 
