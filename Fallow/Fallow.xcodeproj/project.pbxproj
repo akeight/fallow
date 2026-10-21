@@ -93,6 +93,24 @@
 		B100000000000000000000B0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000B0 /* Assets.xcassets */; };
 		B100000000000000000000B1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000B0 /* Assets.xcassets */; };
 		B100000000000000000000C0 /* LaunchSplash.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000C0 /* LaunchSplash.swift */; };
+		B100000000000000000000E0 /* FallowReturnPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E0 /* FallowReturnPolicy.swift */; };
+		B100000000000000000000E1 /* FallowReturnPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E0 /* FallowReturnPolicy.swift */; };
+		B100000000000000000000D1 /* FallowNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000091 /* FallowNotificationService.swift */; };
+		B100000000000000000000E2 /* NotificationOrb.png in Resources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E1 /* NotificationOrb.png */; };
+		B100000000000000000000E3 /* NotificationOrb.png in Resources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E1 /* NotificationOrb.png */; };
+		B100000000000000000000F0 /* FallowLifecycleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000F0 /* FallowLifecycleTests.swift */; };
+		B100000000000000000000F1 /* FallowSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000018 /* FallowSession.swift */; };
+		B100000000000000000000F2 /* FallowBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000060 /* FallowBehavior.swift */; };
+		B100000000000000000000F3 /* FallowReturnPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E0 /* FallowReturnPolicy.swift */; };
+		B100000000000000000000F4 /* DemoCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000003 /* DemoCopy.swift */; };
+		B100000000000000000000F5 /* FallowInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000080 /* FallowInterpreter.swift */; };
+		B100000000000000000000F6 /* OpenAIInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000081 /* OpenAIInterpreter.swift */; };
+		B100000000000000000000F7 /* ThoughtDistiller.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000062 /* ThoughtDistiller.swift */; };
+		B100000000000000000000F8 /* FallowSyncing.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000070 /* FallowSyncing.swift */; };
+		B100000000000000000000F9 /* FallowNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000091 /* FallowNotificationService.swift */; };
+		B100000000000000000000FA /* SessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000002 /* SessionModel.swift */; };
+		B100000000000000000000FB /* OrbPhase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10000000000000000000001 /* OrbPhase.swift */; };
+		B100000000000000000000FC /* NotificationOrb.png in Resources */ = {isa = PBXBuildFile; fileRef = F100000000000000000000E1 /* NotificationOrb.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -157,6 +175,10 @@
 		F100000000000000000000B0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F100000000000000000000C0 /* LaunchSplash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSplash.swift; sourceTree = "<group>"; };
 		F10000000000000000000091 /* FallowNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowNotificationService.swift; sourceTree = "<group>"; };
+		F100000000000000000000E0 /* FallowReturnPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowReturnPolicy.swift; sourceTree = "<group>"; };
+		F100000000000000000000E1 /* NotificationOrb.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = NotificationOrb.png; sourceTree = "<group>"; };
+		F100000000000000000000F0 /* FallowLifecycleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallowLifecycleTests.swift; sourceTree = "<group>"; };
+		F100000000000000000000F1 /* FallowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FallowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +196,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000000000000000000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -185,6 +214,7 @@
 				G10000000000000000000002 /* Shared */,
 				G10000000000000000000003 /* macOS */,
 				G10000000000000000000004 /* iOS */,
+				G1000000000000000000000A /* FallowTests */,
 				G10000000000000000000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -200,6 +230,8 @@
 				F10000000000000000000071 /* DemoSessionFactory.swift */,
 				F10000000000000000000072 /* DemoController.swift */,
 				F10000000000000000000060 /* FallowBehavior.swift */,
+				F100000000000000000000E0 /* FallowReturnPolicy.swift */,
+				F10000000000000000000091 /* FallowNotificationService.swift */,
 				F10000000000000000000062 /* ThoughtDistiller.swift */,
 				F10000000000000000000080 /* FallowInterpreter.swift */,
 				F10000000000000000000081 /* OpenAIInterpreter.swift */,
@@ -209,6 +241,7 @@
 				F10000000000000000000082 /* Info.plist */,
 				F100000000000000000000B0 /* Assets.xcassets */,
 				G10000000000000000000007 /* Fonts */,
+				G10000000000000000000009 /* Resources */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -251,7 +284,6 @@
 				F10000000000000000000039 /* ReturnView.swift */,
 				F1000000000000000000003A /* PastView.swift */,
 				F100000000000000000000C0 /* LaunchSplash.swift */,
-				F10000000000000000000091 /* FallowNotificationService.swift */,
 				G10000000000000000000008 /* Resources */,
 			);
 			path = iOS;
@@ -262,8 +294,17 @@
 			children = (
 				F1000000000000000000000D /* FALLOW.app */,
 				F1000000000000000000000E /* FALLOW Companion.app */,
+				F100000000000000000000F1 /* FallowTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		G1000000000000000000000A /* FallowTests */ = {
+			isa = PBXGroup;
+			children = (
+				F100000000000000000000F0 /* FallowLifecycleTests.swift */,
+			);
+			path = FallowTests;
 			sourceTree = "<group>";
 		};
 		G10000000000000000000006 /* Resources */ = {
@@ -296,6 +337,14 @@
 				F10000000000000000000055 /* Leaf1.png */,
 				F10000000000000000000056 /* Leaf2.png */,
 				F10000000000000000000057 /* HomeGarden.jpg */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		G10000000000000000000009 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F100000000000000000000E1 /* NotificationOrb.png */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -337,6 +386,23 @@
 			productReference = F1000000000000000000000E /* FALLOW Companion.app */;
 			productType = "com.apple.product-type.application";
 		};
+		T10000000000000000000003 /* FallowTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C10000000000000000000005 /* Build configuration list for PBXNativeTarget "FallowTests" */;
+			buildPhases = (
+				S10000000000000000000003 /* Sources */,
+				A10000000000000000000003 /* Frameworks */,
+				R10000000000000000000003 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = FallowTests;
+			productName = FallowTests;
+			productReference = F100000000000000000000F1 /* FallowTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -350,6 +416,9 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					T10000000000000000000002 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					T10000000000000000000003 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -369,6 +438,7 @@
 			targets = (
 				T10000000000000000000001 /* FallowMac */,
 				T10000000000000000000002 /* FallowIOS */,
+				T10000000000000000000003 /* FallowTests */,
 			);
 		};
 /* End PBXProject section */
@@ -390,6 +460,7 @@
 				B100000000000000000000A6 /* SceneWater.jpg in Resources */,
 				B100000000000000000000A7 /* HomeGarden.jpg in Resources */,
 				B100000000000000000000B0 /* Assets.xcassets in Resources */,
+				B100000000000000000000E2 /* NotificationOrb.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -410,6 +481,15 @@
 				B10000000000000000000092 /* AuraTransition.wav in Resources */,
 				B10000000000000000000093 /* MagicalAura.wav in Resources */,
 				B100000000000000000000B1 /* Assets.xcassets in Resources */,
+				B100000000000000000000E3 /* NotificationOrb.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		R10000000000000000000003 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B100000000000000000000FC /* NotificationOrb.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -428,6 +508,8 @@
 				B10000000000000000000072 /* DemoSessionFactory.swift in Sources */,
 				B10000000000000000000074 /* DemoController.swift in Sources */,
 				B10000000000000000000060 /* FallowBehavior.swift in Sources */,
+				B100000000000000000000E0 /* FallowReturnPolicy.swift in Sources */,
+				B100000000000000000000D1 /* FallowNotificationService.swift in Sources */,
 				B10000000000000000000062 /* ThoughtDistiller.swift in Sources */,
 				B10000000000000000000080 /* FallowInterpreter.swift in Sources */,
 				B10000000000000000000082 /* OpenAIInterpreter.swift in Sources */,
@@ -461,6 +543,7 @@
 				B10000000000000000000073 /* DemoSessionFactory.swift in Sources */,
 				B10000000000000000000075 /* DemoController.swift in Sources */,
 				B10000000000000000000061 /* FallowBehavior.swift in Sources */,
+				B100000000000000000000E1 /* FallowReturnPolicy.swift in Sources */,
 				B10000000000000000000063 /* ThoughtDistiller.swift in Sources */,
 				B10000000000000000000081 /* FallowInterpreter.swift in Sources */,
 				B10000000000000000000083 /* OpenAIInterpreter.swift in Sources */,
@@ -488,6 +571,25 @@
 				B100000000000000000000D0 /* FallowNotificationService.swift in Sources */,
 				B1000000000000000000003B /* VoiceCaptureService.swift in Sources */,
 				B10000000000000000000090 /* BreakSounds.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		S10000000000000000000003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B100000000000000000000F0 /* FallowLifecycleTests.swift in Sources */,
+				B100000000000000000000F1 /* FallowSession.swift in Sources */,
+				B100000000000000000000F2 /* FallowBehavior.swift in Sources */,
+				B100000000000000000000F3 /* FallowReturnPolicy.swift in Sources */,
+				B100000000000000000000F4 /* DemoCopy.swift in Sources */,
+				B100000000000000000000F5 /* FallowInterpreter.swift in Sources */,
+				B100000000000000000000F6 /* OpenAIInterpreter.swift in Sources */,
+				B100000000000000000000F7 /* ThoughtDistiller.swift in Sources */,
+				B100000000000000000000F8 /* FallowSyncing.swift in Sources */,
+				B100000000000000000000F9 /* FallowNotificationService.swift in Sources */,
+				B100000000000000000000FA /* SessionModel.swift in Sources */,
+				B100000000000000000000FB /* OrbPhase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -672,6 +774,44 @@
 			};
 			name = Release;
 		};
+		D10000000000000000000007 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.tests;
+				PRODUCT_NAME = FallowTests;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D10000000000000000000008 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = app.fallow.tests;
+				PRODUCT_NAME = FallowTests;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -698,6 +838,15 @@
 			buildConfigurations = (
 				D10000000000000000000005 /* Debug */,
 				D10000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C10000000000000000000005 /* Build configuration list for PBXNativeTarget "FallowTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D10000000000000000000007 /* Debug */,
+				D10000000000000000000008 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
