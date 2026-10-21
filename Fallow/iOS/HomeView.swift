@@ -8,25 +8,32 @@ struct HomeView: View {
     #endif
 
     var body: some View {
-        ZStack(alignment: .top) {
-            if let session = store.active {
-                active(session)
-                    .transition(.fallowText)
-            } else {
-                empty
-                    .transition(.fallowText)
-            }
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                if let session = store.active {
+                    active(session)
+                        .transition(.fallowText)
+                } else {
+                    empty
+                        .transition(.fallowText)
+                }
 
-            wordmark
+                wordmark
+                    .position(x: geo.size.width / 2, y: Self.wordmarkCenter(geo.size.height))
+            }
         }
         .padding(.horizontal, 28)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
+    /// The open sky above the orb, where the wordmark sits.
+    private static func wordmarkCenter(_ height: CGFloat) -> CGFloat {
+        height * 0.22
+    }
+
     @ViewBuilder
     private var wordmark: some View {
-        let mark = FallowWordmark(size: 24)
-            .padding(.top, 18)
+        let mark = FallowWordmark(size: 32)
         #if DEBUG
         mark
             .contentShape(Rectangle())
@@ -53,7 +60,7 @@ struct HomeView: View {
         GeometryReader { geo in
             ZStack(alignment: .top) {
                 Text(session.restingLine)
-                    .font(FallowType.display(30))
+                    .font(FallowType.display(33))
                     .foregroundStyle(Theme.ink)
                     .multilineTextAlignment(.center)
                     .padding(.top, RestingView.titleTop(height: geo.size.height))
@@ -97,7 +104,7 @@ struct HomeView: View {
             Spacer(minLength: 0)
             VStack(spacing: 12) {
                 Text(DemoCopy.nothingResting)
-                    .font(FallowType.display(28))
+                    .font(FallowType.display(31))
                     .foregroundStyle(Theme.ink)
                 Text(DemoCopy.giveThought)
                     .font(FallowType.secondary)

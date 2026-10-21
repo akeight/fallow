@@ -102,6 +102,13 @@ struct LaunchSplash: View {
             Atmosphere(openness: 1, restScene: .openEnded, drifting: true)
                 .ignoresSafeArea()
 
+            GeometryReader { geo in
+                FallowWordmark(size: 32)
+                    .position(x: geo.size.width / 2, y: geo.size.height * 0.22)
+                    .opacity(arrival)
+            }
+            .allowsHitTesting(false)
+
             OrbBloom(
                 orb: orb,
                 config: store.orbConfig,
