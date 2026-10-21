@@ -12,6 +12,9 @@ struct FallowSession: Equatable, Codable, Identifiable {
     /// Never shown on Home, Rest, Return, or Past; only behind "View full note".
     var rawTranscript: String?
     var captureMethod: CaptureMethod
+    /// Optional, one line: what the person is trying to figure out, left for their future self.
+    /// Re-entry and the return nudge use it when it is there.
+    var trail: String?
 
     /// Nil until chosen. A low-confidence interpretation also leaves it nil.
     var creativeState: CreativeState?
@@ -28,10 +31,13 @@ struct FallowSession: Equatable, Codable, Identifiable {
 
     var startedAt: Date
     var releasedAt: Date?
+    /// When FALLOW plans to check back in, from `FallowReturnPolicy`. Nil when it should stay quiet.
+    var returnAt: Date?
     var returnRequestedAt: Date?
     var returnedAt: Date?
     var completedAt: Date?
 
+    /// Nil on a completed session when the person went back to the work without reflecting.
     var returnOutcome: ReturnOutcome?
     /// What feels different now, when something shifted.
     var returnedThought: String?
@@ -44,6 +50,7 @@ struct FallowSession: Equatable, Codable, Identifiable {
         unresolvedThought: String = "",
         rawTranscript: String? = nil,
         captureMethod: CaptureMethod = .text,
+        trail: String? = nil,
         creativeState: CreativeState? = nil,
         difficultyDisengaging: Bool = false,
         distance: FallowDistance? = nil,
@@ -52,6 +59,7 @@ struct FallowSession: Equatable, Codable, Identifiable {
         phase: SessionPhase = .capturing,
         startedAt: Date = Date(),
         releasedAt: Date? = nil,
+        returnAt: Date? = nil,
         returnRequestedAt: Date? = nil,
         returnedAt: Date? = nil,
         completedAt: Date? = nil,
@@ -64,6 +72,7 @@ struct FallowSession: Equatable, Codable, Identifiable {
         self.unresolvedThought = unresolvedThought
         self.rawTranscript = rawTranscript
         self.captureMethod = captureMethod
+        self.trail = trail
         self.creativeState = creativeState
         self.difficultyDisengaging = difficultyDisengaging
         self.distance = distance
@@ -72,6 +81,7 @@ struct FallowSession: Equatable, Codable, Identifiable {
         self.phase = phase
         self.startedAt = startedAt
         self.releasedAt = releasedAt
+        self.returnAt = returnAt
         self.returnRequestedAt = returnRequestedAt
         self.returnedAt = returnedAt
         self.completedAt = completedAt
@@ -177,11 +187,24 @@ extension FallowSession {
         phase = .readyToRelease
     }
 
-    /// The hold completed. The thought is resting.
-    mutating func markReleased(at date: Date = Date()) {
+    /// Optional and one line. Blank clears it.
+    mutating func setTrail(_ text: String) {
+        let line = text
+            .components(separatedBy: .newlines)
+            .joined(separator: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        trail = line.isEmpty ? nil : line
+    }
+
+    /// The hold completed. The thought is resting, and FALLOW decides when, if ever, to check back in.
+    mutating func markReleased(at date: Date = Date(), calendar: Calendar = .current) {
         resolveIntervention()
+        setTrail(trail ?? "")
         phase = .resting
         releasedAt = date
+        returnAt = creativeState.flatMap { state in
+            distance.flatMap { FallowReturnPolicy.returnDate(state: state, distance: $0, releasedAt: date, calendar: calendar) }
+        }
     }
 
     mutating func requestReturn(at date: Date = Date()) {
@@ -210,8 +233,10 @@ extension FallowSession {
         phase = .reflecting
     }
 
-    /// Back to resting without restarting anything.
+    /// Back to resting without restarting anything. Leaving a return longer is the person's call,
+    /// so FALLOW stops planning to check in; leaving a rest that never ended keeps its plan.
     mutating func leaveLonger() {
+        if phase != .resting { returnAt = nil }
         phase = .resting
         returnRequestedAt = nil
     }
@@ -223,6 +248,14 @@ extension FallowSession {
     mutating func complete(at date: Date = Date()) {
         phase = .complete
         completedAt = date
+    }
+
+    /// Straight back to the work without reflecting. Says nothing about whether the break helped,
+    /// so `returnOutcome` stays nil, and a reflection left half-typed is not kept as one.
+    mutating func skipReentry(at date: Date = Date()) {
+        returnedThought = nil
+        returnedAt = date
+        complete(at: date)
     }
 
     private mutating func resolveIntervention() {
@@ -298,6 +331,16 @@ enum CreativeState: String, CaseIterable, Identifiable, Equatable, Codable {
         case .runningOnEmpty: "I don’t have much left to give this."
         }
     }
+
+    /// What FALLOW says when the person chooses how far to step away.
+    var pausePrompt: String {
+        switch self {
+        case .looping: "You’ve been circling this for a while."
+        case .tooMuchInput: "You don’t need to choose this right now."
+        case .lostPerspective: "Change the input, not the idea."
+        case .runningOnEmpty: "You don’t need another iteration tonight."
+        }
+    }
 }
 
 /// How far away the person needs to get. Distance and rest mode are the same choice.
@@ -315,6 +358,19 @@ enum FallowDistance: String, CaseIterable, Identifiable, Equatable, Codable {
         case .someDistance: "Some distance"
         case .sleepOnIt: "Sleep on it"
         case .openEnded: "I don't know yet"
+        }
+    }
+
+    /// The same four choices in words that fit why the person is stepping away.
+    func title(for state: CreativeState?) -> String {
+        switch (state, self) {
+        case (.looping, .someDistance): "Take 20 minutes"
+        case (.looping, .sleepOnIt): "Leave it for today"
+        case (.looping, .openEnded): "Come back later"
+        case (.tooMuchInput, .someDistance): "Give it a few hours"
+        case (.lostPerspective, .someDistance): "Step away for a while"
+        case (.runningOnEmpty, .sleepOnIt): "Stop for tonight"
+        default: title
         }
     }
 }
