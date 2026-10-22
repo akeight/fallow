@@ -65,13 +65,15 @@ final class CompanionPanel: NSPanel {
                 moved = true
             }
             setFrameOrigin(NSPoint(x: origin.x + dx, y: origin.y + dy))
-            onQuietMove(false)
         }
         if moved {
             NSCursor.pop()
-            onQuietMove(true)
+            let move = onQuietMove
+            // After mouseDown returns. Resizing from inside the tracking loop nests layout and wedges the app.
+            DispatchQueue.main.async { move(true) }
         } else {
-            onQuietClick()
+            let click = onQuietClick
+            DispatchQueue.main.async(execute: click)
         }
     }
 }

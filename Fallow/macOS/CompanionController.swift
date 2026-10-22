@@ -57,12 +57,12 @@ final class CompanionController {
         #if DEBUG
         view.runDemo = { [weak self] scenario in self?.demo?.run(scenario) }
         #endif
-        let host = NSHostingView(rootView: view)
+        let host = CompanionHostingView(rootView: view)
         host.sizingOptions = []
         host.wantsLayer = true
         host.layer?.backgroundColor = NSColor.clear.cgColor
         panel.contentView = host
-        let leaveHost = NSHostingView(rootView: LeaveButton { [weak self] in
+        let leaveHost = CompanionHostingView(rootView: LeaveButton { [weak self] in
             self?.session.leave()
         })
         leaveHost.sizingOptions = []
@@ -85,10 +85,35 @@ final class CompanionController {
         }
         watchEscape()
         syncChrome()
-        panel.orderFrontRegardless()
     }
 
+    /// SwiftUI calls this from `onAppear` and `onChange`, which run inside the hosting view's layout.
+    /// Resizing the panel there calls `-layoutSubtreeIfNeeded` on a view that is already being laid out.
+    /// On current macOS that nested layout never returns, so Fallow has to be force-quit.
+    private var chromeScheduled = false
+    private var veilScheduled = false
+
     func syncChrome() {
+        guard !chromeScheduled else { return }
+        chromeScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.chromeScheduled = false
+            self.applyChrome()
+        }
+    }
+
+    func syncVeil() {
+        guard !veilScheduled else { return }
+        veilScheduled = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.veilScheduled = false
+            self.applyVeil()
+        }
+    }
+
+    private func applyChrome() {
         guard let screen = hostScreen() else { return }
         softening?.follow(screen)
         let area = panelFrame(size: panelSize, screen: screen)
@@ -111,7 +136,7 @@ final class CompanionController {
             place(window: area, area: area, center: center)
         }
         panel.alphaValue = 1
-        syncVeil()
+        applyVeil()
         panel.orderFrontRegardless()
         if session.phase != .dormant {
             NSApp.activate(ignoringOtherApps: true)
@@ -119,7 +144,7 @@ final class CompanionController {
         }
     }
 
-    func syncVeil() {
+    private func applyVeil() {
         let curved = OrbMotion.veilAmount(raw: session.softness)
         let veil = isHoldStep ? 0.32 + 0.68 * curved : curved
         softening?.setRecession(
@@ -207,7 +232,8 @@ final class CompanionController {
             layout.orbCenter = center
         }
         if window.integral != panel.frame.integral {
-            panel.setFrame(window, display: true)
+            // display: false avoids laying the hosting view out before this call returns.
+            panel.setFrame(window, display: false)
         }
     }
 
@@ -375,5 +401,17 @@ final class CompanionController {
             width: size.width,
             height: height
         )
+    }
+}
+
+/// A nested `-layoutSubtreeIfNeeded` never returns on current macOS, so the app has to be force-quit.
+private final class CompanionHostingView<Content: View>: NSHostingView<Content> {
+    private var layingOut = false
+
+    override func layoutSubtreeIfNeeded() {
+        guard !layingOut else { return }
+        layingOut = true
+        super.layoutSubtreeIfNeeded()
+        layingOut = false
     }
 }
